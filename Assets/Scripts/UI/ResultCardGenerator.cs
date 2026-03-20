@@ -148,14 +148,8 @@ namespace MergeGame.UI
         {
             string path = System.IO.Path.Combine(Application.temporaryCachePath, "overtone_result.png");
             System.IO.File.WriteAllBytes(path, tex.EncodeToPNG());
-
-            using (var intentClass = new AndroidJavaClass("android.content.Intent"))
-            using (var uriClass = new AndroidJavaClass("android.net.Uri"))
-            {
-                // Platform-specific share implementation
-                // For production, use a native share plugin (e.g., NativeShare)
-                Debug.Log($"Share: saved card to {path}");
-            }
+            // TODO: Use a native share plugin (e.g., NativeShare) for production
+            Debug.Log($"Share: saved card to {path}");
         }
 #endif
     }
