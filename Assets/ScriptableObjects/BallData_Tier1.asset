@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac4c01b53077410cbbb708309ffcfe4, type: 3}
+  m_Name: BallData_Tier1
+  m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
+  tierIndex: 0
+  radius: 0.22
+  color: {r: 0.050980393, g: 0.5803922, b: 0.53333336, a: 1}
+  sprite: {fileID: -3381212802278948306, guid: 4494868a512af486c92a3ce7610ee316, type: 3}
+  pointValue: 1
+  displayName: Cherry

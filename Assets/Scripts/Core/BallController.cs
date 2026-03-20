@@ -1,0 +1,393 @@
+using UnityEngine;
+using TMPro;
+using MergeGame.Data;
+using MergeGame.Audio;
+using MergeGame.Visual;
+
+namespace MergeGame.Core
+{
+    [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(CircleCollider2D))]
+    public class BallController : MonoBehaviour
+    {
+        [SerializeField] private SpriteRenderer spriteRenderer;
+        [SerializeField] private TextMeshPro tierLabel;
+
+        private BallData ballData;
+        private BallTierConfig tierConfig;
+        private PhysicsConfig physicsConfig;
+        private bool isMerging;
+        private bool hasLanded;
+
+        // Death line tracking
+        private float timeAboveDeathLine;
+        private bool isAboveDeathLine;
+        private bool gameOverTriggered;
+        private float flashTimer;
+
+        public BallData BallData => ballData;
+        public int TierIndex => ballData != null ? ballData.tierIndex : -1;
+        public bool HasLanded => hasLanded;
+
+        public void Initialize(BallData data, BallTierConfig config, PhysicsConfig physics = null)
+        {
+            ballData = data;
+            tierConfig = config;
+            physicsConfig = physics;
+            isMerging = false;
+            hasLanded = false;
+            timeAboveDeathLine = 0f;
+            isAboveDeathLine = false;
+            gameOverTriggered = false;
+            flashTimer = 0f;
+
+            ApplyVisuals();
+            ApplySize();
+            ApplyPhysicsConfig();
+            PlaySpawnAnimation();
+
+            // Add gold shimmer for tier 11
+            if (data != null && data.tierIndex >= 10)
+            {
+                if (GetComponent<GoldShimmer>() == null)
+                    gameObject.AddComponent<GoldShimmer>();
+            }
+        }
+
+        private void ApplyVisuals()
+        {
+            if (spriteRenderer != null && ballData != null)
+            {
+                spriteRenderer.color = ballData.color;
+                if (ballData.sprite != null)
+                {
+                    spriteRenderer.sprite = ballData.sprite;
+                }
+            }
+
+            // No tier labels in visual overhaul — tiers distinguished by color and size only
+            if (tierLabel != null)
+            {
+                tierLabel.gameObject.SetActive(false);
+            }
+        }
+
+        private void ApplySize()
+        {
+            if (ballData == null) return;
+
+            float diameter = ballData.radius * 2f;
+            transform.localScale = Vector3.one * diameter;
+
+            var collider = GetComponent<CircleCollider2D>();
+            if (collider != null)
+            {
+                collider.radius = 0.5f;
+            }
+        }
+
+        private void ApplyPhysicsConfig()
+        {
+            if (physicsConfig == null || ballData == null) return;
+
+            var rb = GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.mass = physicsConfig.GetMassForTier(ballData.tierIndex);
+                rb.linearDamping = physicsConfig.linearDrag;
+                rb.angularDamping = physicsConfig.angularDrag;
+                rb.gravityScale = physicsConfig.gravityScale;
+            }
+
+            var col = GetComponent<CircleCollider2D>();
+            if (col != null && col.sharedMaterial != null)
+            {
+                // Create instance to avoid modifying shared asset
+                var mat = new PhysicsMaterial2D();
+                mat.bounciness = physicsConfig.GetBouncinessForTier(ballData.tierIndex);
+                mat.friction = physicsConfig.GetFrictionForTier(ballData.tierIndex);
+                col.sharedMaterial = mat;
+            }
+        }
+
+        private void PlaySpawnAnimation()
+        {
+            StartCoroutine(ScaleUpCoroutine());
+        }
+
+        private System.Collections.IEnumerator ScaleUpCoroutine()
+        {
+            Vector3 targetScale = transform.localScale;
+            transform.localScale = targetScale * 0.5f;
+
+            float elapsed = 0f;
+            float duration = 0.15f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                t = 1f - (1f - t) * (1f - t);
+                transform.localScale = Vector3.Lerp(targetScale * 0.5f, targetScale, t);
+                yield return null;
+            }
+
+            transform.localScale = targetScale;
+        }
+
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            if (!hasLanded)
+            {
+                hasLanded = true;
+
+                // Haptic feedback for landing
+                if (HapticManager.Instance != null && ballData != null)
+                    HapticManager.Instance.PlayLanding(ballData.tierIndex);
+
+                // Squash animation on landing
+                StartCoroutine(SquashCoroutine());
+
+                // Track first landing for merge-before-floor achievement
+                if (MergeTracker.Instance != null)
+                    MergeTracker.Instance.RecordFirstLanding();
+            }
+
+            if (isMerging) return;
+
+            var otherBall = collision.gameObject.GetComponent<BallController>();
+            if (otherBall == null) return;
+            if (otherBall.isMerging) return;
+            if (otherBall.TierIndex != TierIndex) return;
+
+            if (GetInstanceID() > otherBall.GetInstanceID()) return;
+
+            Merge(otherBall);
+        }
+
+        private System.Collections.IEnumerator SquashCoroutine()
+        {
+            Vector3 baseScale = transform.localScale;
+            Vector3 squashed = new Vector3(baseScale.x * 1.15f, baseScale.y * 0.85f, baseScale.z);
+
+            float elapsed = 0f;
+            float duration = 0.1f;
+
+            // Squash
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                transform.localScale = Vector3.Lerp(baseScale, squashed, elapsed / duration);
+                yield return null;
+            }
+
+            // Recover
+            elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                transform.localScale = Vector3.Lerp(squashed, baseScale, elapsed / duration);
+                yield return null;
+            }
+
+            transform.localScale = baseScale;
+        }
+
+        private void Merge(BallController other)
+        {
+            isMerging = true;
+            other.isMerging = true;
+
+            Vector3 midpoint = (transform.position + other.transform.position) / 2f;
+            int currentTier = TierIndex;
+
+            bool isMaxTier = currentTier >= tierConfig.MaxTierIndex;
+
+            if (isMaxTier)
+            {
+                int points = ballData.pointValue * 2;
+                if (ScoreManager.Instance != null)
+                    ScoreManager.Instance.AddScore(points);
+
+                if (AudioManager.Instance != null)
+                    AudioManager.Instance.PlayMerge(currentTier);
+
+                // Track merge
+                RecordMerge(currentTier);
+
+                // Particles
+                SpawnMergeParticles(midpoint, ballData.color, currentTier);
+
+                Destroy(other.gameObject);
+                Destroy(gameObject);
+                return;
+            }
+
+            BallData nextTier = tierConfig.GetNextTier(currentTier);
+            if (nextTier == null)
+            {
+                Destroy(other.gameObject);
+                Destroy(gameObject);
+                return;
+            }
+
+            if (ScoreManager.Instance != null)
+                ScoreManager.Instance.AddScore(nextTier.pointValue);
+
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlayMerge(nextTier.tierIndex);
+
+            // Track merge
+            RecordMerge(nextTier.tierIndex);
+
+            // Particles
+            SpawnMergeParticles(midpoint, nextTier.color, nextTier.tierIndex);
+
+            // Screen shake for high-tier merges
+            if (nextTier.tierIndex >= 7 && physicsConfig != null)
+            {
+                float intensity = physicsConfig.GetShakeIntensity(nextTier.tierIndex);
+                if (intensity > 0f)
+                    StartCoroutine(MergeShakeCoroutine(intensity));
+            }
+
+            SpawnMergedBall(nextTier, midpoint);
+
+            Destroy(other.gameObject);
+            Destroy(gameObject);
+        }
+
+        private void RecordMerge(int resultTier)
+        {
+            // Merge tracker
+            if (MergeTracker.Instance != null)
+                MergeTracker.Instance.RecordMerge(resultTier);
+
+            // Haptic feedback
+            if (HapticManager.Instance != null)
+            {
+                int chainLength = MergeTracker.Instance != null ? MergeTracker.Instance.LongestChain : 0;
+                HapticManager.Instance.PlayMerge(resultTier, chainLength);
+            }
+
+            // Live rank update
+            if (ScoreManager.Instance != null && GameManager.Instance != null)
+            {
+                int rank = GameManager.Instance.GetLiveRank();
+                bool isReplay = DailySeedManager.Instance != null &&
+                                DailySeedManager.Instance.CurrentAttemptType == AttemptType.Replay;
+
+                // The LiveRankUI listens for ScoreManager.OnScoreChanged and updates itself
+            }
+        }
+
+        private void SpawnMergeParticles(Vector3 position, Color color, int tier)
+        {
+            if (MergeParticles.Instance != null)
+                MergeParticles.Instance.SpawnBurst(position, color, tier);
+        }
+
+        private System.Collections.IEnumerator MergeShakeCoroutine(float intensity)
+        {
+            var cam = Camera.main;
+            if (cam == null) yield break;
+
+            Vector3 originalPos = cam.transform.position;
+            float elapsed = 0f;
+            float duration = 0.15f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float strength = (1f - elapsed / duration) * intensity * 0.1f;
+                cam.transform.position = originalPos + (Vector3)Random.insideUnitCircle * strength;
+                yield return null;
+            }
+
+            cam.transform.position = originalPos;
+        }
+
+        private void SpawnMergedBall(BallData nextTier, Vector3 position)
+        {
+            GameObject newBall = Instantiate(
+                DropController.Instance.BallPrefab,
+                position,
+                Quaternion.identity
+            );
+
+            var controller = newBall.GetComponent<BallController>();
+            if (controller != null)
+            {
+                controller.Initialize(nextTier, tierConfig, physicsConfig);
+                controller.hasLanded = true;
+            }
+
+            var rb = newBall.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.bodyType = RigidbodyType2D.Dynamic;
+
+                // Post-merge pop force
+                if (physicsConfig != null && physicsConfig.postMergePopForce > 0f)
+                {
+                    rb.AddForce(Vector2.up * physicsConfig.postMergePopForce, ForceMode2D.Impulse);
+                }
+            }
+        }
+
+        public void SetAboveDeathLine(bool above)
+        {
+            if (!hasLanded) return;
+
+            isAboveDeathLine = above;
+            if (!above)
+            {
+                // Track survival time for achievements
+                if (timeAboveDeathLine > 0f && MergeTracker.Instance != null)
+                    MergeTracker.Instance.RecordDeathLineSurvival(timeAboveDeathLine);
+
+                timeAboveDeathLine = 0f;
+            }
+        }
+
+        private float WarningDuration
+        {
+            get
+            {
+                if (physicsConfig != null) return physicsConfig.deathLineWarningDuration;
+                return 5f;
+            }
+        }
+
+        private void Update()
+        {
+            if (isAboveDeathLine && hasLanded && !isMerging && !gameOverTriggered)
+            {
+                timeAboveDeathLine += Time.deltaTime;
+
+                // Flash red warning
+                if (spriteRenderer != null && ballData != null)
+                {
+                    flashTimer += Time.deltaTime;
+                    float flashSpeed = Mathf.Lerp(4f, 12f, timeAboveDeathLine / WarningDuration);
+                    float flash = Mathf.Sin(flashTimer * flashSpeed) * 0.5f + 0.5f;
+                    spriteRenderer.color = Color.Lerp(ballData.color, Color.red, flash);
+                }
+
+                if (timeAboveDeathLine >= WarningDuration)
+                {
+                    gameOverTriggered = true;
+                    if (GameManager.Instance != null)
+                    {
+                        GameManager.Instance.TriggerGameOver();
+                    }
+                }
+            }
+            else if (!isAboveDeathLine && spriteRenderer != null && ballData != null)
+            {
+                spriteRenderer.color = ballData.color;
+                flashTimer = 0f;
+            }
+        }
+    }
+}

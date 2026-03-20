@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac4c01b53077410cbbb708309ffcfe4, type: 3}
+  m_Name: BallData_Tier7
+  m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
+  tierIndex: 6
+  radius: 0.8
+  color: {r: 0.95686275, g: 0.24705882, b: 0.36862746, a: 1}
+  sprite: {fileID: -8393708205468362259, guid: 0e7445f8a956949bd83736109b06e43d, type: 3}
+  pointValue: 28
+  displayName: Pear

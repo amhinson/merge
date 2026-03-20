@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dac4c01b53077410cbbb708309ffcfe4, type: 3}
+  m_Name: BallData_Tier10
+  m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
+  tierIndex: 9
+  radius: 1.2
+  color: {r: 0.91764706, g: 0.7019608, b: 0.03137255, a: 1}
+  sprite: {fileID: -6427142302409193893, guid: 8cb9cc6c49376410cb53a5e93d4eac6f, type: 3}
+  pointValue: 55
+  displayName: Melon

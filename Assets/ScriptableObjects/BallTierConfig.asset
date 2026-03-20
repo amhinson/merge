@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d23db7b436bc444a2946925c86dfc68f, type: 3}
+  m_Name: BallTierConfig
+  m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallTierConfig
+  tiers:
+  - {fileID: 11400000, guid: afebfa75b848b46fcb5edbc9096306c3, type: 2}
+  - {fileID: 11400000, guid: 0223dfb35ee574b44b3d0496525bbae9, type: 2}
+  - {fileID: 11400000, guid: 02d2d1eb819774214b90dc39bbcf2776, type: 2}
+  - {fileID: 11400000, guid: 5b81379132a594e0896a0d66b5a80c08, type: 2}
+  - {fileID: 11400000, guid: 7a2152730a7d44629b33625a6766bf96, type: 2}
+  - {fileID: 11400000, guid: c60c2d96108a4444d95765329f272be4, type: 2}
+  - {fileID: 11400000, guid: 8a70e5f8432d144b5822fd146cf23673, type: 2}
+  - {fileID: 11400000, guid: aa947954a087143fe93116592bb61d9d, type: 2}
+  - {fileID: 11400000, guid: 5f06691bfe3eb4e1da78a4daaca6669a, type: 2}
+  - {fileID: 11400000, guid: f38cfb1f499554d66b580a9f50cc53b8, type: 2}
+  - {fileID: 11400000, guid: 9c45005f3d6c44f628f093aa2cbb5114, type: 2}
+  maxDropTier: 5
