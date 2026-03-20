@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Text.RegularExpressions;
+using MergeGame.Backend;
 
 namespace MergeGame.Core
 {
@@ -27,6 +28,26 @@ namespace MergeGame.Core
             Instance = this;
 
             LoadOrCreateIdentity();
+        }
+
+        private void Start()
+        {
+            // Register player with backend on startup (best-effort)
+            RegisterWithBackend();
+        }
+
+        private void RegisterWithBackend()
+        {
+            if (SupabaseClient.Instance == null) return;
+
+            string json = $"{{\"device_uuid\":\"{DeviceUUID}\",\"display_name\":\"{DisplayName}\"}}";
+            SupabaseClient.Instance.CallFunction("register-player", json, (success, response) =>
+            {
+                if (success)
+                    Debug.Log("PlayerIdentity: Registered with backend");
+                else
+                    Debug.LogWarning($"PlayerIdentity: Backend registration failed — {response}");
+            });
         }
 
         private void LoadOrCreateIdentity()

@@ -15,8 +15,8 @@ namespace MergeGame.Backend
 
         // ===== PLACEHOLDER: Replace with your Supabase project credentials =====
         [Header("Supabase Config — SET THESE")]
-        [SerializeField] private string supabaseUrl = "https://YOUR_PROJECT_ID.supabase.co";
-        [SerializeField] private string supabaseAnonKey = "YOUR_ANON_KEY_HERE";
+        [SerializeField] private string supabaseUrl = "https://negfbluxywxsadggnwwd.supabase.co";
+        [SerializeField] private string supabasePublishableKey = "sb_publishable_7ACIeBkB8iBcNxxDkN7Vhg_MxMuO1fW";
         // ========================================================================
 
         private string FunctionsUrl => $"{supabaseUrl}/functions/v1";
@@ -44,6 +44,7 @@ namespace MergeGame.Backend
         private IEnumerator CallFunctionCoroutine(string functionName, string jsonBody, Action<bool, string> callback)
         {
             string url = $"{FunctionsUrl}/{functionName}";
+            Debug.Log($"Supabase POST {functionName}: {jsonBody}");
             byte[] bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
 
             using (var request = new UnityWebRequest(url, "POST"))
@@ -51,19 +52,15 @@ namespace MergeGame.Backend
                 request.uploadHandler = new UploadHandlerRaw(bodyBytes);
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
-                request.SetRequestHeader("apikey", supabaseAnonKey);
-                request.SetRequestHeader("Authorization", $"Bearer {supabaseAnonKey}");
-                request.timeout = 10;
+                request.SetRequestHeader("apikey", supabasePublishableKey);
+                request.timeout = 30;
 
                 yield return request.SendWebRequest();
 
                 bool success = request.result == UnityWebRequest.Result.Success;
                 string response = request.downloadHandler?.text ?? "";
 
-                if (!success)
-                {
-                    Debug.LogWarning($"Supabase {functionName} failed: {request.error} — {response}");
-                }
+                Debug.Log($"Supabase {functionName} → {request.responseCode} {(success ? "OK" : request.error)} — {response}");
 
                 callback?.Invoke(success, response);
             }
@@ -77,19 +74,15 @@ namespace MergeGame.Backend
 
             using (var request = UnityWebRequest.Get(url))
             {
-                request.SetRequestHeader("apikey", supabaseAnonKey);
-                request.SetRequestHeader("Authorization", $"Bearer {supabaseAnonKey}");
-                request.timeout = 10;
+                request.SetRequestHeader("apikey", supabasePublishableKey);
+                request.timeout = 30;
 
                 yield return request.SendWebRequest();
 
                 bool success = request.result == UnityWebRequest.Result.Success;
                 string response = request.downloadHandler?.text ?? "";
 
-                if (!success)
-                {
-                    Debug.LogWarning($"Supabase {functionName} failed: {request.error} — {response}");
-                }
+                Debug.Log($"Supabase {functionName} → {request.responseCode} {(success ? "OK" : request.error)} — {response}");
 
                 callback?.Invoke(success, response);
             }

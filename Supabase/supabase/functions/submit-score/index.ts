@@ -1,16 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, verifyApiKey } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+
+  const authError = verifyApiKey(req);
+  if (authError) return authError;
 
   try {
     const supabase = createClient(
@@ -28,7 +26,6 @@ serve(async (req) => {
       );
     }
 
-    // Upsert player record
     const { error: playerError } = await supabase
       .from("players")
       .upsert(
@@ -43,7 +40,6 @@ serve(async (req) => {
       );
     }
 
-    // Check if score already exists for this UUID + date
     const { data: existing } = await supabase
       .from("daily_scores")
       .select("id")
@@ -58,7 +54,6 @@ serve(async (req) => {
       );
     }
 
-    // Insert score
     const { error: scoreError } = await supabase.from("daily_scores").insert({
       device_uuid,
       game_date,

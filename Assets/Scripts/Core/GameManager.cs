@@ -137,30 +137,38 @@ namespace MergeGame.Core
 
             // Handle scored attempt
             var daily = DailySeedManager.Instance;
-            if (daily != null && daily.CurrentAttemptType == AttemptType.Scored)
+            if (daily == null)
             {
+                Debug.LogWarning("GameManager: DailySeedManager.Instance is null — skipping score submission");
+            }
+            else if (daily.CurrentAttemptType == AttemptType.Scored)
+            {
+                Debug.Log($"GameManager: Submitting scored attempt — score={finalScore}, date={daily.GameDate}, day={daily.DayNumber}");
                 daily.MarkScoredAttemptComplete();
 
-                // Update streak
                 if (StreakManager.Instance != null)
                     StreakManager.Instance.RecordScoredAttempt();
 
-                // Submit score to leaderboard
                 if (LeaderboardService.Instance != null && MergeTracker.Instance != null)
                 {
                     LeaderboardService.Instance.SubmitScore(
                         finalScore,
                         daily.GameDate,
                         daily.DayNumber,
-                        MergeTracker.Instance.GetTopMergeTiers()
+                        MergeTracker.Instance.GetTopMergeTiers(),
+                        (success) => Debug.Log($"GameManager: Score submit result: {success}")
                     );
                 }
+                else
+                {
+                    Debug.LogWarning($"GameManager: LeaderboardService={LeaderboardService.Instance != null}, MergeTracker={MergeTracker.Instance != null}");
+                }
 
-                // Sync streak to backend
                 SyncStreakToBackend();
             }
-            else if (daily != null)
+            else
             {
+                Debug.Log($"GameManager: Replay attempt — not submitting (attemptType={daily.CurrentAttemptType})");
                 if (MergeTracker.Instance != null)
                     MergeTracker.Instance.IncrementReplayCount();
             }
@@ -177,8 +185,8 @@ namespace MergeGame.Core
                            $"\"current_streak\":{StreakManager.Instance.CurrentStreak}," +
                            $"\"longest_streak\":{StreakManager.Instance.LongestStreak}}}";
 
-            // Best-effort sync — no callback needed
-            SupabaseClient.Instance.CallFunction("update-display-name", json, null);
+            // Best-effort sync
+            SupabaseClient.Instance.CallFunction("sync-streak", json, null);
         }
 
         public void OnPlayButtonPressed()
