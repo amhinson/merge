@@ -19,6 +19,9 @@ namespace MergeGame.UI
 
         private void Update()
         {
+#if !DEBUG && !UNITY_EDITOR
+            return;
+#endif
             // Keyboard toggle
             if (Input.GetKeyDown(KeyCode.BackQuote))
             {
@@ -29,7 +32,7 @@ namespace MergeGame.UI
             if (Input.GetMouseButtonDown(0))
             {
                 Vector2 pos = Input.mousePosition;
-                if (pos.x < Screen.width * 0.15f && pos.y > Screen.height * 0.85f)
+                if (pos.x < UnityEngine.Screen.width * 0.15f && pos.y > UnityEngine.Screen.height * 0.85f)
                 {
                     cornerTapCount++;
                     cornerTapTimer = 1.5f;

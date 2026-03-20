@@ -103,18 +103,22 @@ namespace MergeGame.Backend
 
             SupabaseClient.Instance.CallFunctionGet("get-leaderboard", $"game_date={gameDate}", (success, response) =>
             {
-                if (success)
+                Debug.Log($"Leaderboard fetch success={success}, response={response}");
+                if (success && !string.IsNullOrEmpty(response))
                 {
                     try
                     {
-                        var parsed = JsonUtility.FromJson<LeaderboardResponse>($"{{\"entries\":{response}}}");
+                        // Response is a JSON array — wrap it for JsonUtility
+                        string wrapped = $"{{\"entries\":{response}}}";
+                        var parsed = JsonUtility.FromJson<LeaderboardResponse>(wrapped);
                         cachedLeaderboard = new List<LeaderboardEntry>(parsed.entries ?? new LeaderboardEntry[0]);
                         lastLeaderboardFetch = Time.time;
+                        Debug.Log($"Parsed {cachedLeaderboard.Count} leaderboard entries");
                         OnLeaderboardUpdated?.Invoke(cachedLeaderboard);
                     }
                     catch (Exception e)
                     {
-                        Debug.LogWarning($"Failed to parse leaderboard: {e.Message}");
+                        Debug.LogWarning($"Failed to parse leaderboard: {e.Message}\nResponse: {response}");
                         cachedLeaderboard = new List<LeaderboardEntry>();
                     }
                 }

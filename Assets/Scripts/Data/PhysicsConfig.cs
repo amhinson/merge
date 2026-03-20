@@ -31,7 +31,7 @@ namespace MergeGame.Data
         public AnimationCurve shakeIntensityByTier = AnimationCurve.Linear(0, 0, 10, 1f);
 
         [Header("Container")]
-        public float containerWidth = 5f;
+        public float containerWidth = 4.5f;
         public float containerHeight = 8f;
         public float wallBounciness = 0.1f;
         public float wallFriction = 0.5f;
@@ -40,6 +40,15 @@ namespace MergeGame.Data
         [Header("Death Line")]
         public float deathLineY = 3.5f;
         public float deathLineWarningDuration = 5f;
+        [Tooltip("Distance below death line at which it becomes visible")]
+        public float deathLineProximityThreshold = 1.5f;
+
+        [Header("Screen Shake (triggers on every merge)")]
+        public float shakeIntensity = 0.06f;
+        public float shakeDuration = 0.12f;
+        public float shakeDecaySpeed = 8f;
+        [Tooltip("Small random rotation component in degrees")]
+        public float shakeRotation = 0.5f;
 
         public float GetMassForTier(int tier)
         {

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
   tierIndex: 8
   radius: 1.1
-  color: {r: 0.9607843, g: 0.61960787, b: 0.043137256, a: 1}
+  color: {r: 0.5176471, g: 0.8, b: 0.08627451, a: 1}
   sprite: {fileID: -7751327940134579707, guid: eb7f00ee9046c480eaa85305cec704aa, type: 3}
-  pointValue: 45
+  pointValue: 30
   displayName: Pineapple

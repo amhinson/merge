@@ -49,10 +49,15 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  containerWidth: 5
+  containerWidth: 4.5
   containerHeight: 8
   wallBounciness: 0.1
   wallFriction: 0.5
   containerBottomY: -4.5
   deathLineY: 3.5
   deathLineWarningDuration: 5
+  deathLineProximityThreshold: 1.5
+  shakeIntensity: 0.06
+  shakeDuration: 0.12
+  shakeDecaySpeed: 8
+  shakeRotation: 0.5

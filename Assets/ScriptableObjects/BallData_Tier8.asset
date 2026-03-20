@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
   tierIndex: 7
   radius: 0.9
-  color: {r: 0.9764706, g: 0.4509804, b: 0.08627451, a: 1}
+  color: {r: 0.91764706, g: 0.7019608, b: 0.03137255, a: 1}
   sprite: {fileID: -8310107920998968107, guid: 3308c5e443b7542f9a0b1aea07cfcd51, type: 3}
-  pointValue: 36
+  pointValue: 20
   displayName: Peach

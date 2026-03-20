@@ -21,7 +21,6 @@ namespace MergeGame.Core
 
         // Death line tracking
         private float timeAboveDeathLine;
-        private bool isAboveDeathLine;
         private bool gameOverTriggered;
         private float flashTimer;
 
@@ -37,7 +36,6 @@ namespace MergeGame.Core
             isMerging = false;
             hasLanded = false;
             timeAboveDeathLine = 0f;
-            isAboveDeathLine = false;
             gameOverTriggered = false;
             flashTimer = 0f;
 
@@ -82,7 +80,8 @@ namespace MergeGame.Core
             var collider = GetComponent<CircleCollider2D>();
             if (collider != null)
             {
-                collider.radius = 0.5f;
+                // Match collider to visible pixel art (32px sprite, ~1.5px transparent border)
+                collider.radius = 0.45f;
             }
         }
 
@@ -215,8 +214,9 @@ namespace MergeGame.Core
                 // Track merge
                 RecordMerge(currentTier);
 
-                // Particles
+                // Particles + shake on every merge
                 SpawnMergeParticles(midpoint, ballData.color, currentTier);
+                TriggerMergeShake();
 
                 Destroy(other.gameObject);
                 Destroy(gameObject);
@@ -243,13 +243,8 @@ namespace MergeGame.Core
             // Particles
             SpawnMergeParticles(midpoint, nextTier.color, nextTier.tierIndex);
 
-            // Screen shake for high-tier merges
-            if (nextTier.tierIndex >= 7 && physicsConfig != null)
-            {
-                float intensity = physicsConfig.GetShakeIntensity(nextTier.tierIndex);
-                if (intensity > 0f)
-                    StartCoroutine(MergeShakeCoroutine(intensity));
-            }
+            // Screen shake on every merge — same intensity
+            TriggerMergeShake();
 
             SpawnMergedBall(nextTier, midpoint);
 
@@ -287,24 +282,45 @@ namespace MergeGame.Core
                 MergeParticles.Instance.SpawnBurst(position, color, tier);
         }
 
-        private System.Collections.IEnumerator MergeShakeCoroutine(float intensity)
+        private void TriggerMergeShake()
         {
+            // Use a static coroutine host so it survives this object being destroyed
             var cam = Camera.main;
-            if (cam == null) yield break;
+            if (cam == null) return;
+            if (physicsConfig == null) return;
+
+            var host = GameManager.Instance;
+            if (host != null)
+                host.StartCoroutine(MergeShakeCoroutine(cam));
+        }
+
+        private System.Collections.IEnumerator MergeShakeCoroutine(Camera cam)
+        {
+            if (physicsConfig == null) yield break;
 
             Vector3 originalPos = cam.transform.position;
+            Quaternion originalRot = cam.transform.rotation;
             float elapsed = 0f;
-            float duration = 0.15f;
+            float duration = physicsConfig.shakeDuration;
+            float intensity = physicsConfig.shakeIntensity;
+            float rotAmount = physicsConfig.shakeRotation;
 
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                float strength = (1f - elapsed / duration) * intensity * 0.1f;
-                cam.transform.position = originalPos + (Vector3)Random.insideUnitCircle * strength;
+                float decay = 1f - Mathf.Pow(elapsed / duration, physicsConfig.shakeDecaySpeed);
+
+                Vector2 offset = Random.insideUnitCircle * intensity * decay;
+                cam.transform.position = originalPos + new Vector3(offset.x, offset.y, 0f);
+
+                float rotOffset = Random.Range(-rotAmount, rotAmount) * decay;
+                cam.transform.rotation = Quaternion.Euler(0, 0, rotOffset);
+
                 yield return null;
             }
 
             cam.transform.position = originalPos;
+            cam.transform.rotation = originalRot;
         }
 
         private void SpawnMergedBall(BallData nextTier, Vector3 position)
@@ -337,31 +353,44 @@ namespace MergeGame.Core
 
         public void SetAboveDeathLine(bool above)
         {
-            if (!hasLanded) return;
+            // Only used as a hint — actual position check happens in Update
+        }
 
-            isAboveDeathLine = above;
-            if (!above)
-            {
-                // Track survival time for achievements
-                if (timeAboveDeathLine > 0f && MergeTracker.Instance != null)
-                    MergeTracker.Instance.RecordDeathLineSurvival(timeAboveDeathLine);
-
-                timeAboveDeathLine = 0f;
-            }
+        private float DeathLineY
+        {
+            get { return physicsConfig != null ? physicsConfig.deathLineY : 3.5f; }
         }
 
         private float WarningDuration
         {
-            get
-            {
-                if (physicsConfig != null) return physicsConfig.deathLineWarningDuration;
-                return 5f;
-            }
+            get { return physicsConfig != null ? physicsConfig.deathLineWarningDuration : 5f; }
+        }
+
+        private bool IsActuallyAboveDeathLine()
+        {
+            if (ballData == null) return false;
+            float ballTop = transform.position.y + ballData.radius;
+            return ballTop >= DeathLineY;
         }
 
         private void Update()
         {
-            if (isAboveDeathLine && hasLanded && !isMerging && !gameOverTriggered)
+            if (!hasLanded || isMerging || gameOverTriggered)
+            {
+                // Restore color if not in danger
+                if (spriteRenderer != null && ballData != null && timeAboveDeathLine > 0f)
+                {
+                    spriteRenderer.color = ballData.color;
+                    timeAboveDeathLine = 0f;
+                    flashTimer = 0f;
+                }
+                return;
+            }
+
+            // Check actual position every frame — don't rely on trigger state
+            bool aboveLine = IsActuallyAboveDeathLine();
+
+            if (aboveLine)
             {
                 timeAboveDeathLine += Time.deltaTime;
 
@@ -383,10 +412,18 @@ namespace MergeGame.Core
                     }
                 }
             }
-            else if (!isAboveDeathLine && spriteRenderer != null && ballData != null)
+            else
             {
-                spriteRenderer.color = ballData.color;
+                // Ball dropped below the line — reset timer and restore color
+                if (timeAboveDeathLine > 0f)
+                {
+                    if (MergeTracker.Instance != null)
+                        MergeTracker.Instance.RecordDeathLineSurvival(timeAboveDeathLine);
+                }
+                timeAboveDeathLine = 0f;
                 flashTimer = 0f;
+                if (spriteRenderer != null && ballData != null)
+                    spriteRenderer.color = ballData.color;
             }
         }
     }

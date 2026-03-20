@@ -87,10 +87,9 @@ namespace MergeGame.Core
             }
 
             // Scale haptic intensity with chain
-            int baseDuration = 15;
-            int chainBonus = Mathf.Min(chainIndex * 5, 25);
 #if UNITY_IOS || UNITY_ANDROID
-            Vibrate(baseDuration + chainBonus);
+            int duration = 15 + Mathf.Min(chainIndex * 5, 25);
+            Vibrate(duration);
 #endif
         }
 
