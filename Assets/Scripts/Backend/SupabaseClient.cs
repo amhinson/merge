@@ -8,18 +8,27 @@ namespace MergeGame.Backend
 {
     /// <summary>
     /// Low-level HTTP client for Supabase Edge Functions.
+    /// Automatically selects dev or prod credentials based on build type.
+    /// Dev: used in Editor and Development builds.
+    /// Prod: used in Release builds.
     /// </summary>
     public class SupabaseClient : MonoBehaviour
     {
         public static SupabaseClient Instance { get; private set; }
 
-        // ===== PLACEHOLDER: Replace with your Supabase project credentials =====
-        [Header("Supabase Config — SET THESE")]
-        [SerializeField] private string supabaseUrl = "https://negfbluxywxsadggnwwd.supabase.co";
-        [SerializeField] private string supabasePublishableKey = "sb_publishable_7ACIeBkB8iBcNxxDkN7Vhg_MxMuO1fW";
-        // ========================================================================
+        // ===== DEV CREDENTIALS =====
+        private const string DevUrl = "https://qbgrghcpvmsnoyzmglgv.supabase.co";
+        private const string DevKey = "sb_publishable_MvO6gq-SZ4E5QmW_tq_ltg_TaR37Wty";
 
+        // ===== PROD CREDENTIALS — SET THESE =====
+        private const string ProdUrl = "https://negfbluxywxsadggnwwd.supabase.co";
+        private const string ProdKey = "sb_publishable_7ACIeBkB8iBcNxxDkN7Vhg_MxMuO1fW";
+
+        private string supabaseUrl;
+        private string supabaseKey;
         private string FunctionsUrl => $"{supabaseUrl}/functions/v1";
+
+        public bool IsProduction { get; private set; }
 
         private void Awake()
         {
@@ -29,6 +38,17 @@ namespace MergeGame.Backend
                 return;
             }
             Instance = this;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            supabaseUrl = DevUrl;
+            supabaseKey = DevKey;
+            IsProduction = false;
+#else
+            supabaseUrl = ProdUrl;
+            supabaseKey = ProdKey;
+            IsProduction = true;
+#endif
+            Debug.Log($"Supabase: {(IsProduction ? "PROD" : "DEV")} → {supabaseUrl}");
         }
 
         public void CallFunction(string functionName, string jsonBody, Action<bool, string> callback)
@@ -52,7 +72,7 @@ namespace MergeGame.Backend
                 request.uploadHandler = new UploadHandlerRaw(bodyBytes);
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
-                request.SetRequestHeader("apikey", supabasePublishableKey);
+                request.SetRequestHeader("apikey", supabaseKey);
                 request.timeout = 30;
 
                 yield return request.SendWebRequest();
@@ -74,7 +94,7 @@ namespace MergeGame.Backend
 
             using (var request = UnityWebRequest.Get(url))
             {
-                request.SetRequestHeader("apikey", supabasePublishableKey);
+                request.SetRequestHeader("apikey", supabaseKey);
                 request.timeout = 30;
 
                 yield return request.SendWebRequest();

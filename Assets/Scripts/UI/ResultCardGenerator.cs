@@ -20,7 +20,7 @@ namespace MergeGame.UI
         [SerializeField] private RenderTexture cardRenderTexture;
 
         [Header("Card Elements — Modular, repositionable")]
-        [SerializeField] private TextMeshProUGUI dayLabel;       // "Daily Drop #47"
+        [SerializeField] private TextMeshProUGUI dayLabel;       // "Overtone #47"
         [SerializeField] private TextMeshProUGUI scoreLabel;     // Score in large type
         [SerializeField] private TextMeshProUGUI streakLabel;    // Current streak
         [SerializeField] private Transform topMergesContainer;   // Parent for merge ball icons
@@ -47,7 +47,7 @@ namespace MergeGame.UI
         public void PopulateCard(int dayNumber, int score, int streak, int[] topMergeTiers)
         {
             if (dayLabel != null)
-                dayLabel.text = $"Daily Drop #{dayNumber}";
+                dayLabel.text = $"Overtone #{dayNumber}";
 
             if (scoreLabel != null)
                 scoreLabel.text = score.ToString();
@@ -146,7 +146,7 @@ namespace MergeGame.UI
 #if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
         private void ShareNative(Texture2D tex)
         {
-            string path = System.IO.Path.Combine(Application.temporaryCachePath, "dailydrop_result.png");
+            string path = System.IO.Path.Combine(Application.temporaryCachePath, "overtone_result.png");
             System.IO.File.WriteAllBytes(path, tex.EncodeToPNG());
 
             using (var intentClass = new AndroidJavaClass("android.content.Intent"))

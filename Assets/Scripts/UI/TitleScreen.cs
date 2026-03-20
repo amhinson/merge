@@ -31,15 +31,14 @@ namespace MergeGame.UI
         // Neon letter colors matching tier palette
         private static readonly Color[] LetterColors = new[]
         {
-            HexColor("00FFE0"), // D
-            HexColor("4D9FFF"), // A
-            HexColor("8B5CF6"), // I
-            HexColor("FF2D95"), // L
-            HexColor("FF6BC2"), // Y
-            HexColor("FF4545"), // D
-            HexColor("FF8A2D"), // R
-            HexColor("FFBB33"), // O
-            HexColor("39FF6B"), // P
+            HexColor("00FFE0"), // O
+            HexColor("4D9FFF"), // V
+            HexColor("8B5CF6"), // E
+            HexColor("FF2D95"), // R
+            HexColor("FF6BC2"), // T
+            HexColor("FF4545"), // O
+            HexColor("FF8A2D"), // N
+            HexColor("FFBB33"), // E
         };
 
         public Button PlayButton => playButton;
@@ -66,7 +65,7 @@ namespace MergeGame.UI
             if (titleText != null)
             {
                 titleText.richText = true;
-                string source = "DAILY DROP";
+                string source = "OVERTONE";
                 string colored = "";
                 int colorIdx = 0;
                 foreach (char c in source)

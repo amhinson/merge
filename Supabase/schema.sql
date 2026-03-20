@@ -1,5 +1,5 @@
 -- ============================================================
--- Supabase Schema for Daily Drop
+-- Supabase Schema for Overtone
 -- Run this in the Supabase SQL Editor to set up tables and RLS
 -- ============================================================
 

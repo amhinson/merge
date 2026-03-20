@@ -229,24 +229,28 @@ namespace MergeGame.Editor
             bg.color = BgColor;
 
             // Title
-            var title = CreateText(panel.transform, "Title", "DAILY DROP", 64, TextColor);
+            var title = CreateText(panel.transform, "Title", "OVERTONE", 64, TextColor);
             SetAnchors(title.rectTransform, 0.05f, 0.72f, 0.95f, 0.82f);
+
+            // Tagline (directly below title)
+            var tagline = CreateText(panel.transform, "Tagline", "a daily drop", 20, MutedText);
+            SetAnchors(tagline.rectTransform, 0.2f, 0.68f, 0.8f, 0.73f);
+
+            // Day number
+            var dayText = CreateText(panel.transform, "DayText", "Day #1", 28, MutedText);
+            SetAnchors(dayText.rectTransform, 0.2f, 0.62f, 0.8f, 0.68f);
 
             // Decorative ball (RawImage — rendered via offscreen camera)
             var ballImgObj = new GameObject("DecorativeBall");
             ballImgObj.transform.SetParent(panel.transform, false);
             var ballImgRT = ballImgObj.AddComponent<RectTransform>();
-            SetAnchors(ballImgRT, 0.38f, 0.60f, 0.62f, 0.72f);
+            SetAnchors(ballImgRT, 0.38f, 0.52f, 0.62f, 0.62f);
             var decorBallImg = ballImgObj.AddComponent<UnityEngine.UI.RawImage>();
             decorBallImg.color = Color.white;
 
-            // Day number
-            var dayText = CreateText(panel.transform, "DayText", "Day #1", 28, MutedText);
-            SetAnchors(dayText.rectTransform, 0.2f, 0.57f, 0.8f, 0.63f);
-
             // Streak text
             var streakText = CreateText(panel.transform, "StreakText", "", 26, new Color(1f, 0.7f, 0.3f));
-            SetAnchors(streakText.rectTransform, 0.15f, 0.51f, 0.85f, 0.57f);
+            SetAnchors(streakText.rectTransform, 0.15f, 0.46f, 0.85f, 0.52f);
 
             // Play button
             var playBtn = CreateStyledButton(panel.transform, "PlayButton", "PLAY", 36, 0.25f, 0.35f, 0.75f, 0.45f);
@@ -378,7 +382,7 @@ namespace MergeGame.Editor
             var homeBtn = CreateIconButton(panel.transform, "HomeBtn", 0.02f, 0.90f, 0.14f, 0.98f);
 
             // Day label
-            var dayLabel = CreateText(panel.transform, "DayLabel", "Daily Drop #1", 24, MutedText);
+            var dayLabel = CreateText(panel.transform, "DayLabel", "Overtone #1", 24, MutedText);
             SetAnchors(dayLabel.rectTransform, 0.1f, 0.78f, 0.9f, 0.83f);
 
             // Score (large, with tick-up)
