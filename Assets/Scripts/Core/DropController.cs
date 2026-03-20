@@ -207,9 +207,8 @@ namespace MergeGame.Core
             if (controller != null)
                 controller.Initialize(nextBallData, tierConfig, physicsConfig);
 
-            // Scale down
-            float diameter = nextBallData.radius * 2f;
-            nextBallObj.transform.localScale = Vector3.one * diameter * previewScale;
+            // Scale down for preview (sprite is at native size, so scale < 1 makes it smaller)
+            nextBallObj.transform.localScale = Vector3.one * previewScale;
 
             var rb = nextBallObj.GetComponent<Rigidbody2D>();
             if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;

@@ -18,6 +18,7 @@ namespace MergeGame.Visual
         private float phaseOffset;
         private float lastPhaseSnap; // Only regenerate every few frames
         private int tier;
+        private float radius;
         private Color neonColor;
 
         // Pre-baked sprites per phase step (shared across all balls of same tier)
@@ -28,6 +29,7 @@ namespace MergeGame.Visual
         {
             ballData = data;
             tier = data != null ? data.tierIndex : 0;
+            radius = data != null ? data.radius : 0.5f;
             neonColor = color;
             spriteRenderer = GetComponent<SpriteRenderer>();
             phaseOffset = Random.Range(0f, Mathf.PI * 2f);
@@ -71,7 +73,7 @@ namespace MergeGame.Visual
             if (spriteCache[tier][step] == null)
             {
                 float stepPhase = (step / (float)PhaseSteps) * Mathf.PI * 2f;
-                spriteCache[tier][step] = NeonBallRenderer.GenerateSprite(tier, neonColor, stepPhase);
+                spriteCache[tier][step] = NeonBallRenderer.GenerateSpriteForRadius(tier, neonColor, radius, stepPhase);
             }
 
             spriteRenderer.sprite = spriteCache[tier][step];

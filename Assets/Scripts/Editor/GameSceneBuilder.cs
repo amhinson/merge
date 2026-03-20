@@ -248,17 +248,6 @@ namespace MergeGame.Editor
             var streakText = CreateText(panel.transform, "StreakText", "", 26, new Color(1f, 0.7f, 0.3f));
             SetAnchors(streakText.rectTransform, 0.15f, 0.51f, 0.85f, 0.57f);
 
-            // Streak dots row
-            var streakDots = new GameObject("StreakDots");
-            streakDots.transform.SetParent(panel.transform, false);
-            var sdRT = streakDots.AddComponent<RectTransform>();
-            SetAnchors(sdRT, 0.2f, 0.48f, 0.8f, 0.52f);
-            var sdLayout = streakDots.AddComponent<HorizontalLayoutGroup>();
-            sdLayout.spacing = 4;
-            sdLayout.childAlignment = TextAnchor.MiddleCenter;
-            sdLayout.childForceExpandWidth = false;
-            sdLayout.childForceExpandHeight = false;
-
             // Play button
             var playBtn = CreateStyledButton(panel.transform, "PlayButton", "PLAY", 36, 0.25f, 0.35f, 0.75f, 0.45f);
             var playBtnLabel = playBtn.GetComponentInChildren<TextMeshProUGUI>();
@@ -276,7 +265,6 @@ namespace MergeGame.Editor
             so.FindProperty("titleText").objectReferenceValue = title;
             so.FindProperty("dayText").objectReferenceValue = dayText;
             so.FindProperty("streakText").objectReferenceValue = streakText;
-            so.FindProperty("streakDotsContainer").objectReferenceValue = streakDots.transform;
             so.FindProperty("decorativeBallImage").objectReferenceValue = decorBallImg;
             so.FindProperty("tierConfig").objectReferenceValue = tierConfig;
             so.FindProperty("playButton").objectReferenceValue = playBtn.GetComponent<Button>();
@@ -769,7 +757,7 @@ namespace MergeGame.Editor
             {
                 var def = tierDefs[i];
                 string spritePath = $"Assets/Sprites/Ball_Tier{i + 1}.png";
-                byte[] png = NeonBallRenderer.GenerateBallPNG(i, TierColors[i]);
+                byte[] png = NeonBallRenderer.GenerateBallPNG(i, TierColors[i], def.radius, 0f);
                 System.IO.File.WriteAllBytes(spritePath, png);
 
                 string dataPath = $"Assets/ScriptableObjects/BallData_Tier{i + 1}.asset";
@@ -865,7 +853,7 @@ namespace MergeGame.Editor
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             var col = ball.AddComponent<CircleCollider2D>();
-            col.radius = 0.42f;
+            col.radius = 0.5f; // Overridden per-ball by BallController.ApplySize()
             if (physicsMat != null) col.sharedMaterial = physicsMat;
 
             var controller = ball.AddComponent<BallController>();

@@ -13,6 +13,8 @@ namespace MergeGame.Core
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private TextMeshPro tierLabel;
 
+        private static int nextSortingOrder = 10; // Incrementing counter for unique z-order
+
         private BallData ballData;
         private BallTierConfig tierConfig;
         private PhysicsConfig physicsConfig;
@@ -55,12 +57,12 @@ namespace MergeGame.Core
         {
             if (spriteRenderer != null && ballData != null)
             {
-                // Neon balls use white tint — color is baked into the sprite
                 spriteRenderer.color = Color.white;
                 if (ballData.sprite != null)
-                {
                     spriteRenderer.sprite = ballData.sprite;
-                }
+
+                // Unique sorting order — newer balls render on top
+                spriteRenderer.sortingOrder = nextSortingOrder++;
             }
 
             if (tierLabel != null)
@@ -73,15 +75,15 @@ namespace MergeGame.Core
         {
             if (ballData == null) return;
 
-            float diameter = ballData.radius * 2f;
-            transform.localScale = Vector3.one * diameter;
+            // Sprite is generated at native display resolution — no scaling needed
+            transform.localScale = Vector3.one;
 
             var collider = GetComponent<CircleCollider2D>();
             if (collider != null)
             {
-                // Match collider to visible pixel art (32px sprite, ~1.5px transparent border)
-                // Ball is ~40px of 48px sprite (4px glow border each side)
-                collider.radius = 0.42f;
+                // Collider radius in local space = ball radius in world units
+                // (since localScale is 1, local = world)
+                collider.radius = ballData.radius;
             }
         }
 

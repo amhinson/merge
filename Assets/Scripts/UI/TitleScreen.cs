@@ -18,8 +18,6 @@ namespace MergeGame.UI
         [SerializeField] private TextMeshProUGUI dayText;
         [SerializeField] private TextMeshProUGUI streakText;
 
-        [Header("Streak Visual")]
-        [SerializeField] private Transform streakDotsContainer;
 
         [Header("References")]
         [SerializeField] private BallTierConfig tierConfig;
@@ -92,7 +90,6 @@ namespace MergeGame.UI
                 dayText.text = $"Day #{DailySeedManager.Instance.DayNumber}";
             }
 
-            // Streak with dots
             RefreshStreak();
 
             // Decorative ball
@@ -109,70 +106,51 @@ namespace MergeGame.UI
             // Decorative ball cluster (only spawn once)
         }
 
+        // Streak color thresholds — easy to adjust
+        private static readonly (int minDays, string hex)[] StreakColorThresholds = new[]
+        {
+            (100, "FFD700"),  // Gold
+            (60,  "FFBB33"),  // Warm amber
+            (30,  "FF8A2D"),  // Neon orange
+            (21,  "FF2D95"),  // Magenta
+            (14,  "8B5CF6"),  // Violet
+            (7,   "4D9FFF"),  // Blue
+            (3,   "00FFE0"),  // Cyan
+            (1,   "888888"),  // Muted gray
+        };
+
         private void RefreshStreak()
         {
             if (StreakManager.Instance == null) return;
             int streak = StreakManager.Instance.CurrentStreak;
 
-            if (streakText != null)
+            if (streakText == null) return;
+
+            if (streak <= 0)
             {
-                if (streak > 0)
+                streakText.text = "";
+                streakText.gameObject.SetActive(false);
+                return;
+            }
+
+            streakText.richText = true;
+            streakText.gameObject.SetActive(true);
+
+            string flameHex = "FF8A2D"; // Flame always warm amber
+            string numberHex = "888888";
+
+            // Find the color for this streak count
+            foreach (var (minDays, hex) in StreakColorThresholds)
+            {
+                if (streak >= minDays)
                 {
-                    streakText.richText = true;
-                    string flameColor = ColorUtility.ToHtmlStringRGB(HexColor("FF8A2D"));
-                    string mutedColor = ColorUtility.ToHtmlStringRGB(HexColor("888888"));
-                    streakText.text = $"<color=#{flameColor}>*</color> {streak} <size=70%><color=#{mutedColor}>streak</color></size>";
-                    streakText.gameObject.SetActive(true);
-                }
-                else
-                {
-                    streakText.text = "";
-                    streakText.gameObject.SetActive(false);
+                    numberHex = hex;
+                    break;
                 }
             }
 
-            // Streak dots
-            if (streakDotsContainer != null)
-            {
-                // Clear existing
-                foreach (Transform child in streakDotsContainer)
-                    Destroy(child.gameObject);
-
-                if (streak <= 0) return;
-
-                int dotsToShow = Mathf.Min(streak, 30);
-                Color dotColor = HexColor("FF8A2D");
-
-                // Create a small circle texture for dots
-                var dotSprite = CreateCircleDot();
-
-                for (int i = 0; i < dotsToShow; i++)
-                {
-                    var dot = new GameObject($"Dot{i}");
-                    dot.transform.SetParent(streakDotsContainer, false);
-                    var img = dot.AddComponent<Image>();
-                    img.sprite = dotSprite;
-                    img.color = dotColor;
-                    var le = dot.AddComponent<LayoutElement>();
-                    float dotSize = streak <= 15 ? 12 : 8;
-                    le.preferredWidth = dotSize;
-                    le.preferredHeight = dotSize;
-                }
-
-                if (streak > 30)
-                {
-                    var plus = new GameObject("Plus");
-                    plus.transform.SetParent(streakDotsContainer, false);
-                    var tmp = plus.AddComponent<TextMeshProUGUI>();
-                    tmp.text = "+";
-                    tmp.fontSize = 14;
-                    tmp.color = dotColor;
-                    tmp.alignment = TextAlignmentOptions.Center;
-                    var le = plus.AddComponent<LayoutElement>();
-                    le.preferredWidth = 16;
-                    le.preferredHeight = 12;
-                }
-            }
+            string mutedHex = "666666";
+            streakText.text = $"<color=#{flameHex}>*</color> <color=#{numberHex}>{streak}</color> <size=70%><color=#{mutedHex}>streak</color></size>";
         }
 
 
@@ -222,24 +200,6 @@ namespace MergeGame.UI
             // Assign to the UI RawImage
             decorativeBallImage.texture = ballRT;
             decorativeBallImage.color = Color.white;
-        }
-
-        private static Sprite CreateCircleDot()
-        {
-            int s = 8;
-            var tex = new Texture2D(s, s, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Point;
-            int center = s / 2;
-            int r = s / 2 - 1;
-            for (int y = 0; y < s; y++)
-                for (int x = 0; x < s; x++)
-                {
-                    int dx = x - center;
-                    int dy = y - center;
-                    tex.SetPixel(x, y, dx * dx + dy * dy <= r * r ? Color.white : Color.clear);
-                }
-            tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), s);
         }
 
         private static Color HexColor(string hex)
