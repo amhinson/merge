@@ -26,16 +26,16 @@ namespace MergeGame.Editor
 
         private static readonly Color[] TierColors = new[]
         {
-            HexColor("0D9488"), // Tier 1:  Teal
-            HexColor("2563EB"), // Tier 2:  Bold blue
-            HexColor("7C3AED"), // Tier 3:  Deep purple
-            HexColor("C026D3"), // Tier 4:  Magenta-pink
-            HexColor("E11D48"), // Tier 5:  Crimson
-            HexColor("F43F5E"), // Tier 6:  Rose-red
-            HexColor("F97316"), // Tier 7:  Orange
-            HexColor("EAB308"), // Tier 8:  Yellow
-            HexColor("84CC16"), // Tier 9:  Lime green
-            HexColor("10B981"), // Tier 10: Emerald
+            HexColor("00FFE0"), // Tier 1:  Electric cyan
+            HexColor("4D9FFF"), // Tier 2:  Soft blue
+            HexColor("8B5CF6"), // Tier 3:  Violet
+            HexColor("FF2D95"), // Tier 4:  Hot magenta
+            HexColor("FF6BC2"), // Tier 5:  Neon pink
+            HexColor("FF4545"), // Tier 6:  Warm red
+            HexColor("FF8A2D"), // Tier 7:  Neon orange
+            HexColor("FFBB33"), // Tier 8:  Warm amber
+            HexColor("39FF6B"), // Tier 9:  Neon green
+            HexColor("E8F0FF"), // Tier 10: White-hot
             HexColor("FFD700"), // Tier 11: Gold
         };
 
@@ -84,7 +84,6 @@ namespace MergeGame.Editor
             managers.AddComponent<SupabaseClient>();
             managers.AddComponent<LeaderboardService>();
             managers.AddComponent<MergeParticles>();
-            managers.AddComponent<FontFixer>();
 
             // Debug overlay
             var debugOverlay = managers.AddComponent<DebugOverlay>();
@@ -231,32 +230,55 @@ namespace MergeGame.Editor
 
             // Title
             var title = CreateText(panel.transform, "Title", "DAILY DROP", 64, TextColor);
-            SetAnchors(title.rectTransform, 0.05f, 0.68f, 0.95f, 0.78f);
+            SetAnchors(title.rectTransform, 0.05f, 0.72f, 0.95f, 0.82f);
+
+            // Decorative ball (RawImage — rendered via offscreen camera)
+            var ballImgObj = new GameObject("DecorativeBall");
+            ballImgObj.transform.SetParent(panel.transform, false);
+            var ballImgRT = ballImgObj.AddComponent<RectTransform>();
+            SetAnchors(ballImgRT, 0.38f, 0.60f, 0.62f, 0.72f);
+            var decorBallImg = ballImgObj.AddComponent<UnityEngine.UI.RawImage>();
+            decorBallImg.color = Color.white;
 
             // Day number
             var dayText = CreateText(panel.transform, "DayText", "Day #1", 28, MutedText);
-            SetAnchors(dayText.rectTransform, 0.2f, 0.62f, 0.8f, 0.68f);
+            SetAnchors(dayText.rectTransform, 0.2f, 0.57f, 0.8f, 0.63f);
 
-            // Streak
+            // Streak text
             var streakText = CreateText(panel.transform, "StreakText", "", 26, new Color(1f, 0.7f, 0.3f));
-            SetAnchors(streakText.rectTransform, 0.15f, 0.55f, 0.85f, 0.62f);
+            SetAnchors(streakText.rectTransform, 0.15f, 0.51f, 0.85f, 0.57f);
+
+            // Streak dots row
+            var streakDots = new GameObject("StreakDots");
+            streakDots.transform.SetParent(panel.transform, false);
+            var sdRT = streakDots.AddComponent<RectTransform>();
+            SetAnchors(sdRT, 0.2f, 0.48f, 0.8f, 0.52f);
+            var sdLayout = streakDots.AddComponent<HorizontalLayoutGroup>();
+            sdLayout.spacing = 4;
+            sdLayout.childAlignment = TextAnchor.MiddleCenter;
+            sdLayout.childForceExpandWidth = false;
+            sdLayout.childForceExpandHeight = false;
 
             // Play button
-            var playBtn = CreateStyledButton(panel.transform, "PlayButton", "PLAY", 36, 0.25f, 0.38f, 0.75f, 0.48f);
+            var playBtn = CreateStyledButton(panel.transform, "PlayButton", "PLAY", 36, 0.25f, 0.35f, 0.75f, 0.45f);
             var playBtnLabel = playBtn.GetComponentInChildren<TextMeshProUGUI>();
 
-            // Leaderboard icon (top left) — large tap target
+            // Leaderboard icon (top left)
             var lbBtn = CreateIconButton(panel.transform, "LeaderboardBtn", 0.02f, 0.90f, 0.14f, 0.98f);
 
             // Settings icon (top right)
             var settingsBtn = CreateIconButton(panel.transform, "SettingsBtn", 0.86f, 0.90f, 0.98f, 0.98f);
 
-            // TitleScreen component
+            // Wire TitleScreen
+            var tierConfig = AssetDatabase.LoadAssetAtPath<BallTierConfig>("Assets/ScriptableObjects/BallTierConfig.asset");
             var titleScreen = panel.AddComponent<TitleScreen>();
             var so = new SerializedObject(titleScreen);
             so.FindProperty("titleText").objectReferenceValue = title;
             so.FindProperty("dayText").objectReferenceValue = dayText;
             so.FindProperty("streakText").objectReferenceValue = streakText;
+            so.FindProperty("streakDotsContainer").objectReferenceValue = streakDots.transform;
+            so.FindProperty("decorativeBallImage").objectReferenceValue = decorBallImg;
+            so.FindProperty("tierConfig").objectReferenceValue = tierConfig;
             so.FindProperty("playButton").objectReferenceValue = playBtn.GetComponent<Button>();
             so.FindProperty("playButtonLabel").objectReferenceValue = playBtnLabel;
             so.FindProperty("leaderboardButton").objectReferenceValue = lbBtn.GetComponent<Button>();
@@ -747,7 +769,7 @@ namespace MergeGame.Editor
             {
                 var def = tierDefs[i];
                 string spritePath = $"Assets/Sprites/Ball_Tier{i + 1}.png";
-                byte[] png = PixelBallRenderer.GenerateBallPNG(i, TierColors[i], 32);
+                byte[] png = NeonBallRenderer.GenerateBallPNG(i, TierColors[i]);
                 System.IO.File.WriteAllBytes(spritePath, png);
 
                 string dataPath = $"Assets/ScriptableObjects/BallData_Tier{i + 1}.asset";
@@ -776,7 +798,7 @@ namespace MergeGame.Editor
                 if (imp != null)
                 {
                     imp.textureType = TextureImporterType.Sprite;
-                    imp.spritePixelsPerUnit = 32;
+                    imp.spritePixelsPerUnit = 48;
                     imp.filterMode = FilterMode.Point;
                     imp.textureCompression = TextureImporterCompression.Uncompressed;
                     imp.SaveAndReimport();
@@ -843,7 +865,7 @@ namespace MergeGame.Editor
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             var col = ball.AddComponent<CircleCollider2D>();
-            col.radius = 0.45f;
+            col.radius = 0.42f;
             if (physicsMat != null) col.sharedMaterial = physicsMat;
 
             var controller = ball.AddComponent<BallController>();

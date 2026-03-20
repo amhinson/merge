@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
   tierIndex: 9
   radius: 1.2
-  color: {r: 0.0627451, g: 0.7254902, b: 0.5058824, a: 1}
+  color: {r: 0.9098039, g: 0.9411765, b: 1, a: 1}
   sprite: {fileID: -6427142302409193893, guid: 8cb9cc6c49376410cb53a5e93d4eac6f, type: 3}
   pointValue: 40
   displayName: Melon

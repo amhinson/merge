@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
   tierIndex: 1
   radius: 0.3
-  color: {r: 0.14509805, g: 0.3882353, b: 0.92156863, a: 1}
+  color: {r: 0.3019608, g: 0.62352943, b: 1, a: 1}
   sprite: {fileID: 6749149697053947927, guid: 7fa83be88e1a4403c81dbed348c93517, type: 3}
   pointValue: 2
   displayName: Strawberry

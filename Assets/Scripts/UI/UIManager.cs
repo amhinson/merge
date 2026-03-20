@@ -142,6 +142,9 @@ namespace MergeGame.UI
 
         public void ShowPlaying()
         {
+            // Clean up title screen decorations
+            if (titleScreen != null) titleScreen.CleanupCluster();
+
             if (ScreenManager.Instance != null)
             {
                 ScreenManager.Instance.TransitionTo(Screen.Gameplay);

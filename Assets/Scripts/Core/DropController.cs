@@ -94,6 +94,11 @@ namespace MergeGame.Core
         {
             if (!isActive) return;
 
+#if UNITY_EDITOR
+            // Debug: number keys 1-9 = tier 1-9, 0 = tier 10, minus = tier 11
+            CheckDebugTierOverride();
+#endif
+
             // Keep next ball positioned under the UI anchor
             UpdateNextBallPosition();
 
@@ -248,5 +253,40 @@ namespace MergeGame.Core
         {
             if (nextBallObj != null) { Destroy(nextBallObj); nextBallObj = null; }
         }
+
+#if UNITY_EDITOR
+        private void CheckDebugTierOverride()
+        {
+            int tier = -1;
+            if (Input.GetKeyDown(KeyCode.Alpha1)) tier = 0;
+            else if (Input.GetKeyDown(KeyCode.Alpha2)) tier = 1;
+            else if (Input.GetKeyDown(KeyCode.Alpha3)) tier = 2;
+            else if (Input.GetKeyDown(KeyCode.Alpha4)) tier = 3;
+            else if (Input.GetKeyDown(KeyCode.Alpha5)) tier = 4;
+            else if (Input.GetKeyDown(KeyCode.Alpha6)) tier = 5;
+            else if (Input.GetKeyDown(KeyCode.Alpha7)) tier = 6;
+            else if (Input.GetKeyDown(KeyCode.Alpha8)) tier = 7;
+            else if (Input.GetKeyDown(KeyCode.Alpha9)) tier = 8;
+            else if (Input.GetKeyDown(KeyCode.Alpha0)) tier = 9;
+            else if (Input.GetKeyDown(KeyCode.Minus)) tier = 10;
+
+            if (tier < 0 || tierConfig == null) return;
+
+            var data = tierConfig.GetTier(tier);
+            if (data == null) return;
+
+            // Override the current drop ball
+            currentBallData = data;
+            if (previewBall != null)
+            {
+                var controller = previewBall.GetComponent<BallController>();
+                if (controller != null)
+                    controller.Initialize(data, tierConfig, physicsConfig);
+            }
+
+            Debug.Log($"Debug: next drop overridden to Tier {tier + 1}");
+        }
+#endif
     }
 }
+

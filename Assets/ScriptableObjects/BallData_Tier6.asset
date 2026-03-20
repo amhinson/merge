@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
   tierIndex: 5
   radius: 0.7
-  color: {r: 0.95686275, g: 0.24705882, b: 0.36862746, a: 1}
+  color: {r: 1, g: 0.27058825, b: 0.27058825, a: 1}
   sprite: {fileID: 1985276213634587681, guid: 7fafb507198f24ed5805f3451a85ab0b, type: 3}
   pointValue: 10
   displayName: Apple

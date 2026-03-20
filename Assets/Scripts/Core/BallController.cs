@@ -44,26 +44,25 @@ namespace MergeGame.Core
             ApplyPhysicsConfig();
             PlaySpawnAnimation();
 
-            // Add gold shimmer for tier 11
-            if (data != null && data.tierIndex >= 10)
-            {
-                if (GetComponent<GoldShimmer>() == null)
-                    gameObject.AddComponent<GoldShimmer>();
-            }
+            // Add waveform animator
+            var waveAnim = GetComponent<WaveformAnimator>();
+            if (waveAnim == null)
+                waveAnim = gameObject.AddComponent<WaveformAnimator>();
+            waveAnim.Initialize(data, data.color);
         }
 
         private void ApplyVisuals()
         {
             if (spriteRenderer != null && ballData != null)
             {
-                spriteRenderer.color = ballData.color;
+                // Neon balls use white tint — color is baked into the sprite
+                spriteRenderer.color = Color.white;
                 if (ballData.sprite != null)
                 {
                     spriteRenderer.sprite = ballData.sprite;
                 }
             }
 
-            // No tier labels in visual overhaul — tiers distinguished by color and size only
             if (tierLabel != null)
             {
                 tierLabel.gameObject.SetActive(false);
@@ -81,7 +80,8 @@ namespace MergeGame.Core
             if (collider != null)
             {
                 // Match collider to visible pixel art (32px sprite, ~1.5px transparent border)
-                collider.radius = 0.45f;
+                // Ball is ~40px of 48px sprite (4px glow border each side)
+                collider.radius = 0.42f;
             }
         }
 
@@ -380,7 +380,7 @@ namespace MergeGame.Core
                 // Restore color if not in danger
                 if (spriteRenderer != null && ballData != null && timeAboveDeathLine > 0f)
                 {
-                    spriteRenderer.color = ballData.color;
+                    spriteRenderer.color = Color.white;
                     timeAboveDeathLine = 0f;
                     flashTimer = 0f;
                 }
@@ -400,7 +400,7 @@ namespace MergeGame.Core
                     flashTimer += Time.deltaTime;
                     float flashSpeed = Mathf.Lerp(4f, 12f, timeAboveDeathLine / WarningDuration);
                     float flash = Mathf.Sin(flashTimer * flashSpeed) * 0.5f + 0.5f;
-                    spriteRenderer.color = Color.Lerp(ballData.color, Color.red, flash);
+                    spriteRenderer.color = Color.Lerp(Color.white, Color.red, flash);
                 }
 
                 if (timeAboveDeathLine >= WarningDuration)
@@ -423,7 +423,7 @@ namespace MergeGame.Core
                 timeAboveDeathLine = 0f;
                 flashTimer = 0f;
                 if (spriteRenderer != null && ballData != null)
-                    spriteRenderer.color = ballData.color;
+                    spriteRenderer.color = Color.white;
             }
         }
     }
