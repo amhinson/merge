@@ -174,6 +174,30 @@ namespace MergeGame.Backend
             });
         }
 
+        /// <summary>Fetch rank with total player count.</summary>
+        public void FetchPlayerRankFull(string gameDate, System.Action<int, int> callback)
+        {
+            if (SupabaseClient.Instance == null || MergeGame.Core.PlayerIdentity.Instance == null)
+            {
+                callback?.Invoke(-1, 0);
+                return;
+            }
+            string query = $"device_uuid={MergeGame.Core.PlayerIdentity.Instance.DeviceUUID}&game_date={gameDate}";
+            SupabaseClient.Instance.CallFunctionGet("get-player-rank", query, (success, response) =>
+            {
+                if (success)
+                {
+                    try
+                    {
+                        var parsed = JsonUtility.FromJson<PlayerRankResponse>(response);
+                        callback?.Invoke(parsed.rank, parsed.total_players);
+                    }
+                    catch { callback?.Invoke(-1, 0); }
+                }
+                else { callback?.Invoke(-1, 0); }
+            });
+        }
+
         /// <summary>
         /// Get approximate live rank by comparing score against cached leaderboard.
         /// Does not make a network call.

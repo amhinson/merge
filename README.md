@@ -1,4 +1,5 @@
-Graphics are a little slow? When dropping.
+Leaderboard should account for same scores being the same rank, both in top 3, user score underneath, and whole board.
+Transitions showing grid UI in between.
 
 Don't like the way the merge re-centers. Should handle combos betters.
 Emphasize everyone gets the same drop in a day somehow.
