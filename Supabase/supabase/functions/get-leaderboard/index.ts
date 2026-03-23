@@ -18,6 +18,9 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const game_date = url.searchParams.get("game_date");
+    const device_uuid = url.searchParams.get("device_uuid") || "";
+    const limit = parseInt(url.searchParams.get("limit") || "100");
+    const offset = parseInt(url.searchParams.get("offset") || "0");
 
     if (!game_date) {
       return new Response(
@@ -38,7 +41,7 @@ serve(async (req) => {
       )
       .eq("game_date", game_date)
       .order("score", { ascending: false })
-      .limit(100);
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return new Response(
@@ -48,11 +51,11 @@ serve(async (req) => {
     }
 
     // Flatten with dense ranking — tied scores get the same rank
-    let currentRank = 1;
+    let currentRank = offset + 1;
     let previousScore = -1;
     const entries = (data || []).map((row: any, index: number) => {
       if (row.score !== previousScore) {
-        currentRank = index + 1;
+        currentRank = offset + index + 1;
         previousScore = row.score;
       }
       return {
@@ -61,6 +64,7 @@ serve(async (req) => {
         score: row.score,
         largest_merges: row.largest_merges || [],
         rank: currentRank,
+        is_current_player: row.device_uuid === device_uuid,
       };
     });
 
