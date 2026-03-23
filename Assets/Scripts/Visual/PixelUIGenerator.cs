@@ -236,6 +236,52 @@ namespace MergeGame.Visual
             return true;
         }
 
+        /// <summary>
+        /// Create the standard 9-slice RoundedRect sprite used by the Overtone design system.
+        /// 32x32 white, 8px corner radius. Tint via Image.color.
+        /// Cached after first creation.
+        /// </summary>
+        public static Sprite GetRoundedRect9Slice()
+        {
+            if (cachedRoundedRect9Slice != null) return cachedRoundedRect9Slice;
+
+            const int size = 32;
+            const int radius = 8;
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.wrapMode = TextureWrapMode.Clamp;
+
+            ClearTexture(tex);
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    if (IsInsideRoundedRect(x, y, size, size, radius))
+                        tex.SetPixel(x, y, Color.white);
+                }
+            }
+
+            tex.Apply();
+
+            // 9-slice border = radius on all sides
+            var border = new Vector4(radius, radius, radius, radius);
+            cachedRoundedRect9Slice = Sprite.Create(
+                tex,
+                new Rect(0, 0, size, size),
+                new Vector2(0.5f, 0.5f),
+                100f,
+                0,
+                SpriteMeshType.FullRect,
+                border
+            );
+            cachedRoundedRect9Slice.name = "RoundedRect9Slice";
+            return cachedRoundedRect9Slice;
+        }
+
+        private static Sprite cachedRoundedRect9Slice;
+
         private static void ClearTexture(Texture2D tex)
         {
             Color[] clear = new Color[tex.width * tex.height];

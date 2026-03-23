@@ -139,7 +139,7 @@ namespace MergeGame.Editor
             canvas.sortingOrder = 10;
             var scaler = canvasObj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080, 1920);
+            scaler.referenceResolution = new Vector2(390, 844);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
             canvasObj.AddComponent<GraphicRaycaster>();
@@ -178,27 +178,83 @@ namespace MergeGame.Editor
             // ===== SETTINGS SCREEN =====
             var (settingsPanel, settingsScreen) = CreateSettingsPanel(safeArea.transform);
 
-            // Add CanvasGroups for transitions
+            // Add CanvasGroups for transitions (legacy screens)
             var titleCG = titlePanel.AddComponent<CanvasGroup>();
             var gameplayCG = gameplayPanel.AddComponent<CanvasGroup>();
             var resultsCG = resultsPanel.AddComponent<CanvasGroup>();
             var lbCG = lbPanel.AddComponent<CanvasGroup>();
             var settingsCG = settingsPanel.AddComponent<CanvasGroup>();
 
+            // ===== NEW SPEC SCREENS =====
+            // These self-build their UI on OnEnable via OvertoneUI factory methods.
+            var onboardingPanel = CreateNewScreenPanel(safeArea.transform, "OnboardingScreen", tierConfig);
+            onboardingPanel.AddComponent<OnboardingScreen>();
+            SetProperty(onboardingPanel.GetComponent<OnboardingScreen>(), "tierConfig", tierConfig);
+
+            var homeFreshPanel = CreateNewScreenPanel(safeArea.transform, "HomeFreshScreen", tierConfig);
+            homeFreshPanel.AddComponent<HomeFreshScreen>();
+            SetProperty(homeFreshPanel.GetComponent<HomeFreshScreen>(), "tierConfig", tierConfig);
+
+            var homePlayedPanel = CreateNewScreenPanel(safeArea.transform, "HomePlayedScreen", tierConfig);
+            homePlayedPanel.AddComponent<HomePlayedScreen>();
+            SetProperty(homePlayedPanel.GetComponent<HomePlayedScreen>(), "tierConfig", tierConfig);
+
+            var resultOverlayPanel = CreateNewScreenPanel(safeArea.transform, "ResultOverlay", tierConfig);
+            resultOverlayPanel.AddComponent<ResultOverlayScreen>();
+            SetProperty(resultOverlayPanel.GetComponent<ResultOverlayScreen>(), "tierConfig", tierConfig);
+
+            var shareSheetPanel = CreateNewScreenPanel(safeArea.transform, "ShareSheet", tierConfig);
+            shareSheetPanel.AddComponent<ShareSheetScreen>();
+            SetProperty(shareSheetPanel.GetComponent<ShareSheetScreen>(), "tierConfig", tierConfig);
+
+            var newSettingsPanel = CreateNewScreenPanel(safeArea.transform, "NewSettingsScreen", tierConfig);
+            newSettingsPanel.AddComponent<NewSettingsScreen>();
+
+            var newLeaderboardPanel = CreateNewScreenPanel(safeArea.transform, "NewLeaderboardScreen", tierConfig);
+            newLeaderboardPanel.AddComponent<NewLeaderboardScreen>();
+
+            // Add GameScreenHUD to gameplay panel
+            var gameHUD = gameplayPanel.AddComponent<GameScreenHUD>();
+            SetProperty(gameHUD, "tierConfig", tierConfig);
+
+            // CanvasGroups for new screens
+            var onboardingCG = onboardingPanel.GetComponent<CanvasGroup>();
+            var homeFreshCG = homeFreshPanel.GetComponent<CanvasGroup>();
+            var homePlayedCG = homePlayedPanel.GetComponent<CanvasGroup>();
+            var resultOverlayCG = resultOverlayPanel.GetComponent<CanvasGroup>();
+            var shareSheetCG = shareSheetPanel.GetComponent<CanvasGroup>();
+            var newSettingsCG = newSettingsPanel.GetComponent<CanvasGroup>();
+            var newLeaderboardCG = newLeaderboardPanel.GetComponent<CanvasGroup>();
+
             // Hide all except title
             gameplayPanel.SetActive(false);
             resultsPanel.SetActive(false);
             lbPanel.SetActive(false);
             settingsPanel.SetActive(false);
+            onboardingPanel.SetActive(false);
+            homeFreshPanel.SetActive(false);
+            homePlayedPanel.SetActive(false);
+            resultOverlayPanel.SetActive(false);
+            shareSheetPanel.SetActive(false);
+            newSettingsPanel.SetActive(false);
+            newLeaderboardPanel.SetActive(false);
 
-            // ScreenManager
+            // ScreenManager — wire both legacy and new fields
             var screenManager = canvasObj.AddComponent<ScreenManager>();
             var smSO = new SerializedObject(screenManager);
+            // Legacy fields
             smSO.FindProperty("titleScreen").objectReferenceValue = titleCG;
             smSO.FindProperty("gameplayScreen").objectReferenceValue = gameplayCG;
             smSO.FindProperty("resultsScreen").objectReferenceValue = resultsCG;
-            smSO.FindProperty("leaderboardScreen").objectReferenceValue = lbCG;
-            smSO.FindProperty("settingsScreen").objectReferenceValue = settingsCG;
+            // New spec fields
+            smSO.FindProperty("onboardingScreen").objectReferenceValue = onboardingCG;
+            smSO.FindProperty("homeFreshScreen").objectReferenceValue = homeFreshCG;
+            smSO.FindProperty("homePlayedScreen").objectReferenceValue = homePlayedCG;
+            smSO.FindProperty("gameScreen").objectReferenceValue = gameplayCG;
+            smSO.FindProperty("resultOverlay").objectReferenceValue = resultOverlayCG;
+            smSO.FindProperty("shareSheet").objectReferenceValue = shareSheetCG;
+            smSO.FindProperty("settingsScreen").objectReferenceValue = newSettingsCG;
+            smSO.FindProperty("leaderboardScreen").objectReferenceValue = newLeaderboardCG;
             smSO.ApplyModifiedPropertiesWithoutUndo();
 
             // UIManager
@@ -603,6 +659,17 @@ namespace MergeGame.Editor
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
+            return panel;
+        }
+
+        /// <summary>
+        /// Create a full-screen panel for new spec screens.
+        /// These self-build their UI on OnEnable, so just need the panel + CanvasGroup.
+        /// </summary>
+        private static GameObject CreateNewScreenPanel(Transform parent, string name, BallTierConfig tierConfig)
+        {
+            var panel = CreateFullPanel(parent, name);
+            panel.AddComponent<CanvasGroup>();
             return panel;
         }
 

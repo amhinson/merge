@@ -130,7 +130,9 @@ namespace MergeGame.UI
 
             if (ScreenManager.Instance != null)
             {
-                ScreenManager.Instance.TransitionTo(Screen.Title);
+                // Route to correct home screen based on session state
+                var target = Core.GameSession.HasPlayedToday ? Screen.HomePlayed : Screen.HomeFresh;
+                ScreenManager.Instance.TransitionTo(target);
             }
             else
             {
@@ -165,9 +167,13 @@ namespace MergeGame.UI
 
         public void ShowGameOver(int finalScore, int highScore)
         {
+            // Snapshot merge counts into session
+            Core.GameSession.CaptureMergeCounts();
+
             if (ScreenManager.Instance != null)
             {
-                ScreenManager.Instance.TransitionTo(Screen.Results);
+                // ResultOverlay is an overlay — game screen stays visible underneath
+                ScreenManager.Instance.NavigateTo(Screen.ResultOverlay);
             }
             else
             {

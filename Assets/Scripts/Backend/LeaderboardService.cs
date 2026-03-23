@@ -29,6 +29,16 @@ namespace MergeGame.Backend
     }
 
     [Serializable]
+    public class PlayerProfileResponse
+    {
+        public string display_name;
+        public int today_score;    // 0 if not played
+        public int day_number;
+        public int current_streak;
+        public int longest_streak;
+    }
+
+    [Serializable]
     public class SubmitScoreRequest
     {
         public string device_uuid;
@@ -191,6 +201,38 @@ namespace MergeGame.Backend
             {
                 FetchLeaderboard(gameDate);
             }
+        }
+
+        /// <summary>
+        /// Fetch player profile for today: today's score, day number, streak.
+        /// Used at app launch to determine Fresh vs Played home screen.
+        /// </summary>
+        public void FetchPlayerProfile(string deviceUUID, string gameDate, Action<PlayerProfileResponse> callback)
+        {
+            if (SupabaseClient.Instance == null)
+            {
+                callback?.Invoke(null);
+                return;
+            }
+
+            string json = $"{{\"device_uuid\":\"{deviceUUID}\",\"game_date\":\"{gameDate}\"}}";
+            SupabaseClient.Instance.CallFunction("get-player-profile", json, (success, response) =>
+            {
+                if (success && !string.IsNullOrEmpty(response))
+                {
+                    try
+                    {
+                        var parsed = JsonUtility.FromJson<PlayerProfileResponse>(response);
+                        callback?.Invoke(parsed);
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning($"Failed to parse player profile: {e.Message}");
+                    }
+                }
+                callback?.Invoke(null);
+            });
         }
 
         public void UpdateDisplayName(string newName, Action<bool> callback = null)

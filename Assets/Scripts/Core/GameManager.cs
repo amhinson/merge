@@ -52,6 +52,52 @@ namespace MergeGame.Core
             if (DailySeedManager.Instance != null)
                 DailySeedManager.Instance.RefreshDay();
 
+            // Initialize session state
+            GameSession.Init();
+
+            // Fetch player profile to determine home screen state
+            FetchProfileAndShowHome();
+        }
+
+        private void FetchProfileAndShowHome()
+        {
+            if (LeaderboardService.Instance != null && PlayerIdentity.Instance != null)
+            {
+                LeaderboardService.Instance.FetchPlayerProfile(
+                    PlayerIdentity.Instance.DeviceUUID,
+                    GameSession.TodayDateStr,
+                    (profile) =>
+                    {
+                        if (profile != null)
+                        {
+                            GameSession.TodayScore = profile.today_score;
+                            GameSession.TodayDayNumber = profile.day_number;
+
+                            if (GameSession.CurrentPlayer == null)
+                                GameSession.CurrentPlayer = new Player();
+                            GameSession.CurrentPlayer.display_name = profile.display_name;
+                            GameSession.CurrentPlayer.current_streak = profile.current_streak;
+                            GameSession.CurrentPlayer.longest_streak = profile.longest_streak;
+                        }
+
+                        NavigateToInitialScreen();
+                    });
+            }
+            else
+            {
+                // No backend — go straight to home
+                NavigateToInitialScreen();
+            }
+        }
+
+        private void NavigateToInitialScreen()
+        {
+            if (GameSession.IsFirstLaunch && ScreenManager.Instance != null)
+            {
+                ScreenManager.Instance.ShowImmediate(UI.Screen.Onboarding);
+                return;
+            }
+
             SetState(GameState.Menu);
         }
 
@@ -101,6 +147,10 @@ namespace MergeGame.Core
             ShakesRemaining = maxShakes;
             OnShakesChanged?.Invoke(ShakesRemaining);
 
+            // Set practice mode based on whether already scored today
+            GameSession.IsPractice = DailySeedManager.Instance != null &&
+                DailySeedManager.Instance.HasCompletedScoredAttempt();
+
             // Prepare daily seed and attempt tracking
             if (DailySeedManager.Instance != null)
                 DailySeedManager.Instance.PrepareNewGame();
@@ -149,6 +199,9 @@ namespace MergeGame.Core
                 if (StreakManager.Instance != null)
                     StreakManager.Instance.RecordScoredAttempt();
 
+                // Store score in session
+                GameSession.TodayScore = finalScore;
+
                 if (LeaderboardService.Instance != null && MergeTracker.Instance != null)
                 {
                     LeaderboardService.Instance.SubmitScore(
@@ -156,7 +209,16 @@ namespace MergeGame.Core
                         daily.GameDate,
                         daily.DayNumber,
                         MergeTracker.Instance.GetTopMergeTiers(),
-                        (success) => Debug.Log($"GameManager: Score submit result: {success}")
+                        (success) =>
+                        {
+                            Debug.Log($"GameManager: Score submit result: {success}");
+                            // Fetch rank for result overlay
+                            if (success)
+                            {
+                                GameSession.ResultRank = GetLiveRank();
+                                // total_players comes from rank fetch
+                            }
+                        }
                     );
                 }
                 else

@@ -7,27 +7,45 @@ namespace MergeGame.UI
     public enum Screen
     {
         None,
-        Title,
-        Gameplay,
-        Results,
+        Onboarding,
+        HomeFresh,
+        HomePlayed,
+        Game,
+        ResultOverlay,  // overlay — keeps Game visible underneath
+        ShareSheet,     // overlay — keeps underlying screen visible
+        Settings,
         Leaderboard,
-        Settings
+
+        // Legacy aliases (map to new screens internally)
+        Title = HomeFresh,
+        Gameplay = Game,
+        Results = ResultOverlay
     }
 
     /// <summary>
-    /// Manages screen transitions with consistent fade + subtle scale.
-    /// All transitions use the same animation — uniform and predictable.
+    /// Manages screen transitions with fade + subtle scale.
+    /// Supports overlays (ResultOverlay, ShareSheet) that layer on top of base screens.
     /// </summary>
     public class ScreenManager : MonoBehaviour
     {
         public static ScreenManager Instance { get; private set; }
 
-        [Header("Screens")]
+        [Header("Base Screens")]
+        [SerializeField] private CanvasGroup onboardingScreen;
+        [SerializeField] private CanvasGroup homeFreshScreen;
+        [SerializeField] private CanvasGroup homePlayedScreen;
+        [SerializeField] private CanvasGroup gameScreen;
+        [SerializeField] private CanvasGroup settingsScreen;
+        [SerializeField] private CanvasGroup leaderboardScreen;
+
+        [Header("Overlays")]
+        [SerializeField] private CanvasGroup resultOverlay;
+        [SerializeField] private CanvasGroup shareSheet;
+
+        [Header("Legacy (backward compat — optional)")]
         [SerializeField] private CanvasGroup titleScreen;
         [SerializeField] private CanvasGroup gameplayScreen;
         [SerializeField] private CanvasGroup resultsScreen;
-        [SerializeField] private CanvasGroup leaderboardScreen;
-        [SerializeField] private CanvasGroup settingsScreen;
 
         [Header("Transition")]
         [SerializeField] private float transitionDuration = 0.25f;
@@ -35,14 +53,18 @@ namespace MergeGame.UI
 
         public Screen CurrentScreen { get; private set; } = Screen.None;
 
+        /// <summary>The base screen underneath any active overlay.</summary>
+        public Screen BaseScreen { get; private set; } = Screen.None;
+
         private Coroutine activeTransition;
+
+        // ───── Lifecycle ─────
 
         private void Awake()
         {
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
-
                 return;
             }
             Instance = this;
@@ -50,32 +72,149 @@ namespace MergeGame.UI
 
         private void Start()
         {
-            // Ensure title screen is shown on startup, hiding all others
-            ShowImmediate(Screen.Title);
+            // Don't auto-show a screen — let GameManager / startup flow decide
         }
 
-        public void TransitionTo(Screen screen)
+        // ───── Navigation ─────
+
+        public void NavigateTo(Screen screen)
         {
             if (screen == CurrentScreen) return;
+
+            if (IsOverlay(screen))
+            {
+                ShowOverlay(screen);
+                return;
+            }
+
+            // Transitioning to a base screen — dismiss any overlays first
+            DismissAllOverlays();
+
             if (activeTransition != null) StopCoroutine(activeTransition);
             activeTransition = StartCoroutine(TransitionCoroutine(screen));
         }
+
+        /// <summary>Backward-compatible alias.</summary>
+        public void TransitionTo(Screen screen) => NavigateTo(screen);
+
+        /// <summary>Dismiss the topmost overlay, returning to the screen beneath.</summary>
+        public void DismissOverlay()
+        {
+            if (IsOverlay(CurrentScreen))
+            {
+                var group = GetScreenGroup(CurrentScreen);
+                if (group != null)
+                    StartCoroutine(FadeOutOverlay(group, CurrentScreen));
+            }
+        }
+
+        /// <summary>Show a screen immediately without animation.</summary>
+        public void ShowImmediate(Screen screen)
+        {
+            DismissAllOverlays();
+            HideAllBaseScreens();
+
+            CurrentScreen = screen;
+            BaseScreen = IsOverlay(screen) ? BaseScreen : screen;
+
+            var group = GetScreenGroup(screen);
+            SetGroupActive(group, true);
+        }
+
+        // ───── Overlay logic ─────
+
+        private static bool IsOverlay(Screen screen)
+        {
+            return screen == Screen.ResultOverlay || screen == Screen.ShareSheet;
+        }
+
+        private void ShowOverlay(Screen screen)
+        {
+            // Keep current base screen visible
+            if (!IsOverlay(CurrentScreen))
+                BaseScreen = CurrentScreen;
+
+            var group = GetScreenGroup(screen);
+            if (group == null) return;
+
+            CurrentScreen = screen;
+            group.gameObject.SetActive(true);
+            group.transform.SetAsLastSibling();
+
+            if (activeTransition != null) StopCoroutine(activeTransition);
+            activeTransition = StartCoroutine(FadeInOverlay(group));
+        }
+
+        private IEnumerator FadeInOverlay(CanvasGroup group)
+        {
+            group.alpha = 0f;
+            group.interactable = true;
+            group.blocksRaycasts = true;
+
+            float elapsed = 0f;
+            while (elapsed < transitionDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / transitionDuration);
+                float eased = 1f - (1f - t) * (1f - t);
+                group.alpha = eased;
+
+                RectTransform rt = group.GetComponent<RectTransform>();
+                if (rt != null)
+                    rt.localScale = Vector3.Lerp(Vector3.one * 0.96f, Vector3.one, eased);
+
+                yield return null;
+            }
+
+            group.alpha = 1f;
+            var finalRT = group.GetComponent<RectTransform>();
+            if (finalRT != null) finalRT.localScale = Vector3.one;
+            activeTransition = null;
+        }
+
+        private IEnumerator FadeOutOverlay(CanvasGroup group, Screen overlayScreen)
+        {
+            float elapsed = 0f;
+            float duration = transitionDuration * 0.8f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                group.alpha = 1f - t;
+                yield return null;
+            }
+
+            group.alpha = 0f;
+            group.gameObject.SetActive(false);
+
+            // Return to base screen
+            CurrentScreen = BaseScreen;
+        }
+
+        private void DismissAllOverlays()
+        {
+            SetGroupActive(resultOverlay, false);
+            SetGroupActive(shareSheet, false);
+
+            // Legacy
+            if (resultsScreen != null && resultsScreen != resultOverlay)
+                SetGroupActive(resultsScreen, false);
+        }
+
+        // ───── Base screen transitions ─────
 
         private IEnumerator TransitionCoroutine(Screen target)
         {
             CanvasGroup current = GetScreenGroup(CurrentScreen);
             CanvasGroup next = GetScreenGroup(target);
 
-            // Activate next screen and ensure it starts invisible
             if (next != null)
             {
                 next.gameObject.SetActive(true);
                 next.alpha = 0f;
-                // Put next on top so it fades in over current
                 next.transform.SetAsLastSibling();
             }
 
-            // Keep current at full alpha while next fades in on top
             float elapsed = 0f;
             while (elapsed < transitionDuration)
             {
@@ -83,7 +222,6 @@ namespace MergeGame.UI
                 float t = Mathf.Clamp01(elapsed / transitionDuration);
                 float eased = 1f - (1f - t) * (1f - t);
 
-                // Current stays fully opaque — no gap
                 if (next != null)
                 {
                     next.alpha = eased;
@@ -94,7 +232,6 @@ namespace MergeGame.UI
                 yield return null;
             }
 
-            // Next is now fully visible — hide old screen
             if (current != null)
             {
                 current.alpha = 0f;
@@ -108,77 +245,40 @@ namespace MergeGame.UI
             }
 
             CurrentScreen = target;
+            BaseScreen = target;
             activeTransition = null;
         }
 
-        // Keep FadeOut for potential future use but it's no longer called in transitions
-        private IEnumerator FadeOut(CanvasGroup group)
-        {
-            float elapsed = 0f;
-            float half = transitionDuration * 0.5f;
-            while (elapsed < half)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / half;
-                group.alpha = 1f - t;
-                yield return null;
-            }
-            group.alpha = 0f;
-            group.gameObject.SetActive(false);
-        }
-
-        private IEnumerator FadeIn(CanvasGroup group)
-        {
-            group.gameObject.SetActive(true);
-            group.alpha = 0f;
-
-            RectTransform rt = group.GetComponent<RectTransform>();
-            Vector3 targetScale = Vector3.one;
-
-            if (rt != null) rt.localScale = Vector3.one * scaleFrom;
-
-            float elapsed = 0f;
-            float half = transitionDuration * 0.5f;
-            while (elapsed < half)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / half;
-                float eased = 1f - (1f - t) * (1f - t); // ease out
-                group.alpha = eased;
-                if (rt != null)
-                    rt.localScale = Vector3.Lerp(Vector3.one * scaleFrom, targetScale, eased);
-                yield return null;
-            }
-            group.alpha = 1f;
-            if (rt != null) rt.localScale = targetScale;
-        }
+        // ───── Screen lookup ─────
 
         private CanvasGroup GetScreenGroup(Screen screen)
         {
             switch (screen)
             {
-                case Screen.Title: return titleScreen;
-                case Screen.Gameplay: return gameplayScreen;
-                case Screen.Results: return resultsScreen;
-                case Screen.Leaderboard: return leaderboardScreen;
-                case Screen.Settings: return settingsScreen;
+                case Screen.Onboarding:    return onboardingScreen;
+                case Screen.HomeFresh:     return homeFreshScreen ?? titleScreen;
+                case Screen.HomePlayed:    return homePlayedScreen ?? homeFreshScreen ?? titleScreen;
+                case Screen.Game:          return gameScreen ?? gameplayScreen;
+                case Screen.ResultOverlay: return resultOverlay ?? resultsScreen;
+                case Screen.ShareSheet:    return shareSheet;
+                case Screen.Settings:      return settingsScreen;
+                case Screen.Leaderboard:   return leaderboardScreen;
                 default: return null;
             }
         }
 
-        /// <summary>Show a screen immediately without transition (for initial setup).</summary>
-        public void ShowImmediate(Screen screen)
+        private void HideAllBaseScreens()
         {
-            // Hide all
+            SetGroupActive(onboardingScreen, false);
+            SetGroupActive(homeFreshScreen, false);
+            SetGroupActive(homePlayedScreen, false);
+            SetGroupActive(gameScreen, false);
+            SetGroupActive(settingsScreen, false);
+            SetGroupActive(leaderboardScreen, false);
+
+            // Legacy
             SetGroupActive(titleScreen, false);
             SetGroupActive(gameplayScreen, false);
-            SetGroupActive(resultsScreen, false);
-            SetGroupActive(leaderboardScreen, false);
-            SetGroupActive(settingsScreen, false);
-
-            CurrentScreen = screen;
-            var group = GetScreenGroup(screen);
-            SetGroupActive(group, true);
         }
 
         private void SetGroupActive(CanvasGroup group, bool active)
@@ -186,6 +286,8 @@ namespace MergeGame.UI
             if (group == null) return;
             group.gameObject.SetActive(active);
             group.alpha = active ? 1f : 0f;
+            group.interactable = active;
+            group.blocksRaycasts = active;
         }
     }
 }

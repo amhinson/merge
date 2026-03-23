@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cursor:*)"
+      "Bash(cursor:*)",
+      "Bash(ls -la /Users/alex/projects/personal/merge/*.md)",
+      "Bash(curl -L \"https://fonts.google.com/download?family=DM+Mono\" -o /tmp/DM_Mono.zip)",
+      "Bash(unzip -o /tmp/DM_Mono.zip -d /tmp/DM_Mono)",
+      "Bash(cp /tmp/DM_Mono/DMMono-Medium.ttf /Users/alex/projects/personal/merge/Assets/Fonts/DMMono-Medium.ttf)"
     ]
   }
 }
