@@ -24,19 +24,20 @@ namespace MergeGame.Editor
         private static readonly Color MutedText = new Color(0.55f, 0.55f, 0.60f);
         private static readonly Color AccentTeal = HexColor("0D9488");
 
+        // Tier colors: tier 0 = smallest (Level 11), tier 10 = largest (Level 1)
         private static readonly Color[] TierColors = new[]
         {
-            HexColor("4DD9C0"), // Tier 1:  Cyan
-            HexColor("E8587A"), // Tier 2:  Pink
-            HexColor("F0B429"), // Tier 3:  Amber
-            HexColor("A78BFA"), // Tier 4:  Violet
-            HexColor("A3E635"), // Tier 5:  Lime
-            HexColor("38BDF8"), // Tier 6:  Sky
-            HexColor("FB923C"), // Tier 7:  Orange
-            HexColor("FB7185"), // Tier 8:  Rose
-            HexColor("4DD9C0"), // Tier 9:  Cyan (same as 1)
-            HexColor("F0B429"), // Tier 10: Amber (same as 3)
-            HexColor("E8587A"), // Tier 11: Pink (same as 2)
+            HexColor("E8587A"), // tier 0 (L11): Pink
+            HexColor("F0B429"), // tier 1 (L10): Amber
+            HexColor("4DD9C0"), // tier 2 (L9):  Cyan
+            HexColor("FB7185"), // tier 3 (L8):  Rose
+            HexColor("FB923C"), // tier 4 (L7):  Orange
+            HexColor("38BDF8"), // tier 5 (L6):  Sky
+            HexColor("A3E635"), // tier 6 (L5):  Lime
+            HexColor("A78BFA"), // tier 7 (L4):  Violet
+            HexColor("F0B429"), // tier 8 (L3):  Amber
+            HexColor("E8587A"), // tier 9 (L2):  Pink
+            HexColor("4DD9C0"), // tier 10 (L1): Cyan
         };
 
         // Cached sprites
@@ -174,7 +175,10 @@ namespace MergeGame.Editor
             var (resultsPanel, resultsScreen) = CreateResultsScreenPanel(safeArea.transform, tierConfig);
 
             // ===== LEADERBOARD SCREEN =====
-            var (lbPanel, lbBackBtn) = CreateLeaderboardPanel(safeArea.transform);
+            // Old leaderboard panel replaced by NewLeaderboardScreen
+            var lbPanel = CreateFullPanel(safeArea.transform, "LeaderboardScreen_Legacy");
+            lbPanel.SetActive(false);
+            Button lbBackBtn = null;
 
             // ===== SETTINGS SCREEN =====
             var (settingsPanel, settingsScreen) = CreateSettingsPanel(safeArea.transform);
@@ -277,8 +281,9 @@ namespace MergeGame.Editor
             uiSO.FindProperty("scoreTickUp").objectReferenceValue = scoreTickUp;
             uiSO.FindProperty("playButton").objectReferenceValue = titleScreen.PlayButton;
             uiSO.FindProperty("restartButton").objectReferenceValue = resultsScreen.PlayAgainButton;
-            uiSO.FindProperty("leaderboardBackButton").objectReferenceValue = lbBackBtn;
-            uiSO.FindProperty("leaderboardUI").objectReferenceValue = lbPanel.GetComponent<LeaderboardUI>();
+            // Old leaderboard UI removed — new screens handle their own
+            // uiSO.FindProperty("leaderboardBackButton") — not wired
+            // uiSO.FindProperty("leaderboardUI") — not wired
             uiSO.FindProperty("tierConfig").objectReferenceValue = tierConfig;
             uiSO.ApplyModifiedPropertiesWithoutUndo();
 
@@ -298,7 +303,7 @@ namespace MergeGame.Editor
             SetAnchors(title.rectTransform, 0.05f, 0.72f, 0.95f, 0.82f);
 
             // Tagline (directly below title)
-            var tagline = CreateText(panel.transform, "Tagline", "a daily drop", 20, MutedText);
+            var tagline = CreateText(panel.transform, "Tagline", "a daily merge game", 20, MutedText);
             SetAnchors(tagline.rectTransform, 0.2f, 0.68f, 0.8f, 0.73f);
 
             // Day number

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
   tierIndex: 3
   radius: 0.5
-  color: {r: 0.654902, g: 0.54509807, b: 0.98039216, a: 1}
+  color: {r: 0.9843137, g: 0.44313726, b: 0.52156866, a: 1}
   sprite: {fileID: 1599433969690217857, guid: 1e655a15054ba48e8a1c1fc7f0d880e0, type: 3}
   pointValue: 5
   displayName: Dekopon

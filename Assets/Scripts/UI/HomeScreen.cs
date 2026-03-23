@@ -11,7 +11,7 @@ namespace MergeGame.UI
     /// <summary>
     /// Shared base for HomeFresh and HomePlayed screens.
     /// Layout (top to bottom):
-    ///   - Logo block: OVER / TONE (stacked), A DAILY DROP, settings icon top-right
+    ///   - Logo block: OVER / TONE (stacked), A DAILY MERGE GAME, settings icon top-right
     ///   - Flex spacer
     ///   - Ball cluster (3 balls centered)
     ///   - Flex spacer
@@ -29,6 +29,7 @@ namespace MergeGame.UI
         protected TextMeshProUGUI dayNumberLabel;
         protected TextMeshProUGUI dateLabel;
         protected Transform leaderboardRowContainer;
+        private GameObject leaderboardWrapper;
         protected GameObject loadingIndicator;
         protected Transform ctaContainer;
         protected RectTransform contentRoot;
@@ -47,10 +48,12 @@ namespace MergeGame.UI
             Refresh();
         }
 
+        private bool isFetching;
+
         public virtual void Refresh()
         {
             RefreshPuzzleRow();
-            FetchLeaderboard();
+            if (!isFetching) FetchLeaderboard();
         }
 
         // ───── UI Construction ─────
@@ -94,11 +97,12 @@ namespace MergeGame.UI
             // === Flex spacer ===
             AddFlex(content.transform, 1f);
 
-            // === BOTTOM SECTION: puzzle row, leaderboard, CTA ===
-            // Hook for subclass content (stats row for HomePlayed)
+            // === BOTTOM SECTION ===
+            BuildPuzzleRow(content.transform);
+
+            // Hook for subclass content (stats row for HomePlayed — sits between puzzle row and leaderboard)
             BuildMiddleSection(content.transform);
 
-            BuildPuzzleRow(content.transform);
             BuildLeaderboardCard(content.transform);
 
             // CTA container
@@ -131,36 +135,27 @@ namespace MergeGame.UI
             settingsRT.anchorMin = new Vector2(1, 1);
             settingsRT.anchorMax = new Vector2(1, 1);
             settingsRT.pivot = new Vector2(1, 1);
-            settingsRT.anchoredPosition = new Vector2(-20, -(OS.safeAreaTop + 12));
-            settingsRT.sizeDelta = new Vector2(32, 32);
+            settingsRT.anchoredPosition = new Vector2(-24, -OS.safeAreaTop);
+            settingsRT.sizeDelta = new Vector2(34, 34);
 
-            // Background — subtle border square
+            // Outline-only sprite (transparent fill, just the border ring)
             var bgImg = settingsGO.AddComponent<Image>();
-            bgImg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
-            bgImg.type = Image.Type.Sliced;
-            bgImg.color = Color.clear;
+            bgImg.sprite = GetOutlineRoundedRect();
+            bgImg.type = Image.Type.Simple;
+            bgImg.color = OC.border;
 
-            // Border
-            var outline = OvertoneUI.CreateUIObject("Outline", settingsGO.transform);
-            var outlineImg = outline.AddComponent<Image>();
-            outlineImg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
-            outlineImg.type = Image.Type.Sliced;
-            outlineImg.color = OC.border;
-            outlineImg.raycastTarget = false;
-            OvertoneUI.StretchFill(outline.GetComponent<RectTransform>());
-
-            // Gear icon — use a pixel-art gear sprite instead of a glyph
+            // Gear icon — pixel-art sprite (TMP fonts don't have ⚙ glyph)
             var gearGO = OvertoneUI.CreateUIObject("GearIcon", settingsGO.transform);
-            var gearImg = gearGO.AddComponent<Image>();
-            gearImg.sprite = Visual.PixelUIGenerator.CreateGearIcon(16, OC.muted);
-            gearImg.preserveAspect = true;
-            gearImg.raycastTarget = false;
             var gearRT = gearGO.GetComponent<RectTransform>();
             gearRT.anchorMin = new Vector2(0.5f, 0.5f);
             gearRT.anchorMax = new Vector2(0.5f, 0.5f);
             gearRT.pivot = new Vector2(0.5f, 0.5f);
             gearRT.anchoredPosition = Vector2.zero;
-            gearRT.sizeDelta = new Vector2(18, 18);
+            gearRT.sizeDelta = new Vector2(16, 16);
+            var gearImg = gearGO.AddComponent<Image>();
+            gearImg.sprite = Visual.PixelUIGenerator.CreateGearIcon(32, new Color(1, 1, 1, 0.35f));
+            gearImg.preserveAspect = true;
+            gearImg.raycastTarget = false;
 
             var btn = settingsGO.AddComponent<Button>();
             btn.targetGraphic = bgImg;
@@ -224,7 +219,7 @@ namespace MergeGame.UI
             var tagGO = OvertoneUI.CreateUIObject("Tagline", inner.transform);
             tagGO.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 16);
             var tagTMP = tagGO.AddComponent<TextMeshProUGUI>();
-            tagTMP.text = "A DAILY DROP";
+            tagTMP.text = "A DAILY MERGE GAME";
             tagTMP.font = OvertoneUI.DMMono;
             tagTMP.fontSize = 10;
             tagTMP.color = OC.muted;
@@ -246,9 +241,9 @@ namespace MergeGame.UI
             clusterLE.preferredHeight = 100;
             clusterLE.minHeight = 80;
 
-            // Ball order: pink (76px), cyan (92px), amber (64px)
-            int[] tiers = { 1, 0, 2 };
-            float[] sizes = { 76f, 92f, 64f };
+            // Design shows: pink (L2, tier 9), cyan (L1, tier 10, largest center), amber (L3, tier 8)
+            int[] tiers = { 9, 10, 8 };
+            float[] sizes = { 66f, 82f, 56f };
 
             for (int i = 0; i < 3; i++)
             {
@@ -257,18 +252,22 @@ namespace MergeGame.UI
                 ballRT.sizeDelta = new Vector2(sizes[i], sizes[i]);
 
                 var img = ballGO.AddComponent<Image>();
-                Color color = OC.cyan;
-                if (tierConfig != null)
-                {
-                    var data = tierConfig.GetTier(tiers[i]);
-                    if (data != null) color = data.color;
-                }
 
-                // Smooth circle — same approach as onboarding
-                img.sprite = GetCircleSprite();
+                // Use real ball sprite from NeonBallRenderer
+                float uiRadius = sizes[i] / (2f * 48f);
+                var png = Visual.NeonBallRenderer.GenerateBallPNG(tiers[i], Color.white, uiRadius, 0f);
+                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                tex.filterMode = FilterMode.Bilinear;
+                tex.LoadImage(png);
+                img.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f), tex.width);
                 img.type = Image.Type.Simple;
                 img.preserveAspect = true;
-                img.color = color;
+                img.color = Color.white;
+
+                // Animate the waveform
+                var anim = ballGO.AddComponent<Visual.UIBallAnimator>();
+                anim.Initialize(tiers[i], uiRadius);
 
                 ballGO.AddComponent<LayoutElement>();
             }
@@ -335,47 +334,66 @@ namespace MergeGame.UI
 
         protected void BuildLeaderboardCard(Transform parent)
         {
-            // Padded wrapper
+            // Spacer above leaderboard
+            AddSpacer(parent, 8);
+
+            // Fixed-height container — height updates dynamically when rows are populated
             var wrapper = OvertoneUI.CreateUIObject("LeaderboardWrapper", parent);
-            var wrapperVLG = wrapper.AddComponent<VerticalLayoutGroup>();
-            wrapperVLG.padding = new RectOffset(24, 24, 0, 4);
-            wrapperVLG.childControlWidth = true;
-            wrapperVLG.childControlHeight = false;
-            wrapperVLG.childForceExpandWidth = true;
-            // No minHeight — let content determine size
+            var wrapperLE = wrapper.AddComponent<LayoutElement>();
+            wrapperLE.preferredHeight = 60; // header + empty state, updated when rows arrive
+            wrapperLE.minHeight = 40;
+            wrapperLE.flexibleHeight = 0;
+            leaderboardWrapper = wrapper;
 
-            // Card — fits its content, no extra expansion
-            var card = OvertoneUI.CreateCard(wrapper.transform, "LeaderboardCard");
-            var cardVLG = card.AddComponent<VerticalLayoutGroup>();
-            cardVLG.childControlWidth = true;
-            cardVLG.childControlHeight = true;
-            cardVLG.childForceExpandWidth = true;
-            cardVLG.childForceExpandHeight = false;
-            cardVLG.spacing = 0;
+            // Card background (manual anchoring, inset 24px from edges)
+            var card = OvertoneUI.CreateUIObject("LeaderboardCard", wrapper.transform);
+            var cardRT = card.GetComponent<RectTransform>();
+            cardRT.anchorMin = Vector2.zero; cardRT.anchorMax = Vector2.one;
+            cardRT.offsetMin = new Vector2(24, 0); cardRT.offsetMax = new Vector2(-24, 0);
+            // Card border (rendered FIRST, slightly larger, behind the fill)
+            var cardOutline = OvertoneUI.CreateUIObject("Border", card.transform);
+            var coRT = cardOutline.GetComponent<RectTransform>();
+            coRT.anchorMin = Vector2.zero; coRT.anchorMax = Vector2.one;
+            coRT.offsetMin = new Vector2(-1, -1); coRT.offsetMax = new Vector2(1, 1);
+            var coImg = cardOutline.AddComponent<Image>();
+            coImg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
+            coImg.type = Image.Type.Sliced;
+            coImg.color = OC.border;
+            coImg.raycastTarget = false;
+            // Card fill (on top of border, exact card size)
+            var cardFill = OvertoneUI.CreateUIObject("Fill", card.transform);
+            var cfRT = cardFill.GetComponent<RectTransform>();
+            cfRT.anchorMin = Vector2.zero; cfRT.anchorMax = Vector2.one;
+            cfRT.offsetMin = Vector2.zero; cfRT.offsetMax = Vector2.zero;
+            var cardBg = cardFill.AddComponent<Image>();
+            cardBg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
+            cardBg.type = Image.Type.Sliced;
+            cardBg.color = OC.surface; // exactly #161B24
+            cardBg.raycastTarget = false;
 
-            // Fit card height to its content
-            var cardCSF = card.AddComponent<ContentSizeFitter>();
-            cardCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            // Header row
-            var header = OvertoneUI.CreateUIObject("CardHeader", card.transform);
-            var headerHLG = header.AddComponent<HorizontalLayoutGroup>();
-            headerHLG.spacing = 0;
-            headerHLG.childAlignment = TextAnchor.MiddleLeft;
-            headerHLG.childControlWidth = true;
-            headerHLG.childControlHeight = true;
-            headerHLG.childForceExpandWidth = false;
-            headerHLG.padding = new RectOffset(10, 10, 7, 7);
-            header.AddComponent<LayoutElement>().preferredHeight = 28;
-
-            var headerLabel = OvertoneUI.CreateLabel(header.transform, "TODAY'S TOP",
-                OvertoneUI.PressStart2P, OFont.labelXs, OC.muted, "HeaderLabel");
+            // Header: "TODAY'S TOP" (left) + "ALL →" (right), 24px tall at top
+            var headerLabelGO = OvertoneUI.CreateUIObject("HeaderLabel", card.transform);
+            var hlRT = headerLabelGO.GetComponent<RectTransform>();
+            hlRT.anchorMin = new Vector2(0, 1); hlRT.anchorMax = new Vector2(0.6f, 1);
+            hlRT.pivot = new Vector2(0, 1);
+            hlRT.anchoredPosition = new Vector2(10, 0);
+            hlRT.sizeDelta = new Vector2(0, 24);
+            var headerLabel = headerLabelGO.AddComponent<TextMeshProUGUI>();
+            headerLabel.text = "TODAY'S TOP";
+            headerLabel.font = OvertoneUI.PressStart2P;
+            headerLabel.fontSize = OFont.labelXs;
+            headerLabel.color = OC.muted;
+            headerLabel.alignment = TextAlignmentOptions.Left;
+            headerLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
             headerLabel.enableWordWrapping = false;
+            headerLabel.raycastTarget = false;
 
-            var headerSpacer = OvertoneUI.CreateUIObject("Spacer", header.transform);
-            headerSpacer.AddComponent<LayoutElement>().flexibleWidth = 1;
-
-            var allBtnGO = OvertoneUI.CreateUIObject("AllButton", header.transform);
+            var allBtnGO = OvertoneUI.CreateUIObject("AllButton", card.transform);
+            var abRT = allBtnGO.GetComponent<RectTransform>();
+            abRT.anchorMin = new Vector2(0.6f, 1); abRT.anchorMax = new Vector2(1, 1);
+            abRT.pivot = new Vector2(1, 1);
+            abRT.anchoredPosition = new Vector2(-10, 0);
+            abRT.sizeDelta = new Vector2(0, 24);
             var allTMP = allBtnGO.AddComponent<TextMeshProUGUI>();
             allTMP.text = "ALL \u2192";
             allTMP.font = OvertoneUI.PressStart2P;
@@ -383,6 +401,7 @@ namespace MergeGame.UI
             allTMP.color = OC.cyan;
             allTMP.enableWordWrapping = false;
             allTMP.alignment = TextAlignmentOptions.Right;
+            allTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
             var allBtn = allBtnGO.AddComponent<Button>();
             allBtn.onClick.AddListener(() =>
             {
@@ -390,26 +409,37 @@ namespace MergeGame.UI
                     ScreenManager.Instance.NavigateTo(Screen.Leaderboard);
             });
 
-            OvertoneUI.CreateDivider(card.transform, "HeaderDivider");
+            // Divider line at y=-24 from top
+            var divGO = OvertoneUI.CreateUIObject("Divider", card.transform);
+            var divRT = divGO.GetComponent<RectTransform>();
+            divRT.anchorMin = new Vector2(0, 1); divRT.anchorMax = new Vector2(1, 1);
+            divRT.pivot = new Vector2(0.5f, 1);
+            divRT.anchoredPosition = new Vector2(0, -24);
+            divRT.sizeDelta = new Vector2(0, 1);
+            divGO.AddComponent<Image>().color = OC.border;
 
-            // Row container
+            // Row container — VLG below the header (starts at y=-25)
             var rowContainer = OvertoneUI.CreateUIObject("Rows", card.transform);
+            var rcRT = rowContainer.GetComponent<RectTransform>();
+            rcRT.anchorMin = new Vector2(0, 0); rcRT.anchorMax = new Vector2(1, 1);
+            rcRT.offsetMin = new Vector2(0, 0); rcRT.offsetMax = new Vector2(0, -25);
             var rowVLG = rowContainer.AddComponent<VerticalLayoutGroup>();
             rowVLG.childControlWidth = true;
-            rowVLG.childControlHeight = false;
+            rowVLG.childControlHeight = true;  // MUST be true for LayoutElement.preferredHeight to work
             rowVLG.childForceExpandWidth = true;
+            rowVLG.childForceExpandHeight = false; // don't expand rows beyond preferred
             rowVLG.spacing = 0;
             leaderboardRowContainer = rowContainer.transform;
 
             // Loading indicator
-            loadingIndicator = OvertoneUI.CreateUIObject("Loading", card.transform);
+            loadingIndicator = OvertoneUI.CreateUIObject("Loading", rowContainer.transform);
             var loadingTMP = loadingIndicator.AddComponent<TextMeshProUGUI>();
             loadingTMP.text = "...";
             loadingTMP.font = OvertoneUI.DMMono;
             loadingTMP.fontSize = OFont.body;
             loadingTMP.color = OC.muted;
             loadingTMP.alignment = TextAlignmentOptions.Center;
-            loadingIndicator.AddComponent<LayoutElement>().preferredHeight = 32;
+            loadingIndicator.AddComponent<LayoutElement>().preferredHeight = 28;
         }
 
         // ───── Data refresh ─────
@@ -427,12 +457,15 @@ namespace MergeGame.UI
 
         protected void FetchLeaderboard()
         {
+            isFetching = true;
             if (loadingIndicator != null) loadingIndicator.SetActive(true);
 
             if (LeaderboardService.Instance != null)
             {
                 LeaderboardService.Instance.FetchLeaderboard(GameSession.TodayDateStr, (entries) =>
                 {
+                    isFetching = false;
+                    if (this == null || !gameObject.activeInHierarchy) return;
                     cachedEntries = entries;
                     if (loadingIndicator != null) loadingIndicator.SetActive(false);
                     PopulateLeaderboardRows(entries);
@@ -440,7 +473,7 @@ namespace MergeGame.UI
             }
             else
             {
-                // No backend — show empty state immediately
+                isFetching = false;
                 if (loadingIndicator != null) loadingIndicator.SetActive(false);
                 PopulateLeaderboardRows(null);
             }
@@ -450,11 +483,12 @@ namespace MergeGame.UI
         {
             if (leaderboardRowContainer == null) return;
 
-            // Always hide loading indicator when populating
             if (loadingIndicator != null) loadingIndicator.SetActive(false);
 
             foreach (Transform child in leaderboardRowContainer)
                 Destroy(child.gameObject);
+
+            int rowCount = 0;
 
             if (entries == null || entries.Count == 0)
             {
@@ -463,34 +497,161 @@ namespace MergeGame.UI
                 var emptyTMP = emptyGO.AddComponent<TextMeshProUGUI>();
                 emptyTMP.text = "No scores yet today";
                 emptyTMP.font = OvertoneUI.DMMono;
-                emptyTMP.fontSize = OFont.bodySm;
-                emptyTMP.color = OC.dim;
+                emptyTMP.fontSize = 11;
+                emptyTMP.color = OC.muted;
                 emptyTMP.alignment = TextAlignmentOptions.Center;
                 emptyTMP.raycastTarget = false;
-                emptyGO.AddComponent<LayoutElement>().preferredHeight = 32;
-                return;
+                var emptyLE = emptyGO.AddComponent<LayoutElement>();
+                emptyLE.preferredHeight = 40;
+                emptyLE.minHeight = 40;
+                rowCount = 1;
             }
-
-            string[] medals = { "\U0001F947", "\U0001F948", "\U0001F949" };
-
-            int count = Mathf.Min(entries.Count, 3);
-            for (int i = 0; i < count; i++)
+            else
             {
-                var entry = entries[i];
-                var (rowGO, rankTMP, nameTMP, scoreTMP) =
-                    OvertoneUI.CreateLeaderboardRow(leaderboardRowContainer, $"Row{i}");
+                // Rank indicators — colored circles with number, since TMP can't render emoji
+                string[] rankLabels = { "#1", "#2", "#3" };
+                Color[] rankColors = { OC.amber, OC.A(Color.white, 0.5f), OC.A(OC.orange, 0.7f) };
+                int count = Mathf.Min(entries.Count, 3);
 
-                string rankText = i < 3 ? medals[i] : $"#{entry.rank}";
-                rankTMP.text = rankText;
-                if (i < 3) rankTMP.color = OC.amber;
-                nameTMP.text = entry.display_name ?? "???";
-                scoreTMP.text = entry.score.ToString("N0");
+                for (int i = 0; i < count; i++)
+                {
+                    var entry = entries[i];
 
-                bool isMe = !string.IsNullOrEmpty(entry.device_uuid) &&
-                            entry.device_uuid == GameSession.DeviceUUID;
-                if (isMe)
-                    OvertoneUI.HighlightLeaderboardRow(rowGO, rankTMP, nameTMP, scoreTMP);
+                    // Divider between rows (not before first)
+                    if (i > 0)
+                    {
+                        var div = OvertoneUI.CreateUIObject($"Div{i}", leaderboardRowContainer);
+                        div.AddComponent<Image>().color = OC.border;
+                        div.GetComponent<Image>().raycastTarget = false;
+                        var divLE = div.AddComponent<LayoutElement>();
+                        divLE.preferredHeight = 1;
+                        divLE.minHeight = 1;
+                    }
+
+                    bool isMe = !string.IsNullOrEmpty(entry.device_uuid) &&
+                                entry.device_uuid == GameSession.DeviceUUID;
+
+                    var rowGO = BuildScoreRow(
+                        leaderboardRowContainer,
+                        rankLabels[i], 8,                            // rank text, fontSize 8
+                        entry.display_name ?? "???",
+                        entry.score.ToString("N0"),
+                        isMe ? OC.cyan : OC.muted,                  // name color
+                        isMe ? OC.cyan : OC.A(Color.white, 0.35f),  // score color
+                        isMe ? OC.A(OC.cyan, 0.06f) : Color.clear,  // bg tint
+                        $"Row{i}",
+                        true,                                        // use pixel font for rank
+                        rankColors[i]);
+                }
+                rowCount = count;
             }
+
+            // "Your rank" row — show if player has completed a scored attempt today
+            bool hasPlayed = GameSession.HasPlayedToday ||
+                (DailySeedManager.Instance != null && DailySeedManager.Instance.HasCompletedScoredAttempt());
+            if (hasPlayed)
+            {
+                // Divider above your rank
+                var yourDiv = OvertoneUI.CreateUIObject("YourDiv", leaderboardRowContainer);
+                yourDiv.AddComponent<Image>().color = OC.border;
+                yourDiv.GetComponent<Image>().raycastTarget = false;
+                var ydLE = yourDiv.AddComponent<LayoutElement>();
+                ydLE.preferredHeight = 1;
+                ydLE.minHeight = 1;
+
+                string rankText = GameSession.ResultRank > 0 ? $"#{GameSession.ResultRank}" : "#—";
+                string playerName = GameSession.CurrentPlayer?.display_name ?? "YOU";
+
+                BuildScoreRow(
+                    leaderboardRowContainer,
+                    rankText, 7,                    // rank text, PressStart2P size 7
+                    playerName,
+                    GameSession.TodayScore.ToString("N0"),
+                    OC.cyan, OC.cyan,               // all cyan
+                    OC.A(OC.cyan, 0.04f),           // very subtle bg tint
+                    "YourRank",
+                    true,                           // use PressStart2P for rank
+                    OC.cyan);                       // rank color cyan
+                rowCount++;
+            }
+
+            // Resize wrapper: header(25) + rows(38 each) + dividers(~1 each)
+            int dividers = Mathf.Max(0, rowCount - 1) + (hasPlayed ? 1 : 0);
+            float totalHeight = 25 + rowCount * 38 + dividers;
+            if (leaderboardWrapper != null)
+            {
+                var le = leaderboardWrapper.GetComponent<LayoutElement>();
+                if (le != null) { le.preferredHeight = totalHeight; le.minHeight = totalHeight; }
+            }
+        }
+
+        private GameObject BuildScoreRow(Transform parent, string rankText, float rankFontSize,
+            string nameText, string scoreText, Color nameColor, Color scoreColor,
+            Color bgColor, string name, bool usePixelFontForRank = false,
+            Color? rankColor = null)
+        {
+            var row = OvertoneUI.CreateUIObject(name, parent);
+            var rowLE = row.AddComponent<LayoutElement>();
+            rowLE.preferredHeight = 38;
+            rowLE.minHeight = 38;
+            rowLE.flexibleHeight = 0;
+
+            // Background
+            var rowBg = row.AddComponent<Image>();
+            rowBg.color = bgColor;
+            rowBg.raycastTarget = false;
+
+            // Rank (left, 32pt wide)
+            var rankGO = OvertoneUI.CreateUIObject("Rank", row.transform);
+            var rankRT = rankGO.GetComponent<RectTransform>();
+            rankRT.anchorMin = new Vector2(0, 0); rankRT.anchorMax = new Vector2(0, 1);
+            rankRT.pivot = new Vector2(0, 0.5f);
+            rankRT.anchoredPosition = new Vector2(10, 0);
+            rankRT.sizeDelta = new Vector2(32, 0);
+            var rankTMP = rankGO.AddComponent<TextMeshProUGUI>();
+            rankTMP.text = rankText;
+            rankTMP.font = usePixelFontForRank ? OvertoneUI.PressStart2P : OvertoneUI.DMMono;
+            rankTMP.fontSize = rankFontSize;
+            rankTMP.color = rankColor ?? (usePixelFontForRank ? nameColor : OC.dim);
+            rankTMP.alignment = TextAlignmentOptions.Left;
+            rankTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
+            rankTMP.enableWordWrapping = false;
+            rankTMP.raycastTarget = false;
+
+            // Name (center, flex)
+            var nameGO = OvertoneUI.CreateUIObject("Name", row.transform);
+            var nameRT = nameGO.GetComponent<RectTransform>();
+            nameRT.anchorMin = new Vector2(0, 0); nameRT.anchorMax = new Vector2(1, 1);
+            nameRT.offsetMin = new Vector2(44, 0); nameRT.offsetMax = new Vector2(-90, 0);
+            var nameTMP = nameGO.AddComponent<TextMeshProUGUI>();
+            nameTMP.text = nameText;
+            nameTMP.font = OvertoneUI.DMMono;
+            nameTMP.fontSize = 13;
+            nameTMP.color = nameColor;
+            nameTMP.alignment = TextAlignmentOptions.Left;
+            nameTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
+            nameTMP.enableWordWrapping = false;
+            nameTMP.overflowMode = TextOverflowModes.Ellipsis;
+            nameTMP.raycastTarget = false;
+
+            // Score (right, 80pt)
+            var scoreGO = OvertoneUI.CreateUIObject("Score", row.transform);
+            var scoreRT = scoreGO.GetComponent<RectTransform>();
+            scoreRT.anchorMin = new Vector2(1, 0); scoreRT.anchorMax = new Vector2(1, 1);
+            scoreRT.pivot = new Vector2(1, 0.5f);
+            scoreRT.anchoredPosition = new Vector2(-10, 0);
+            scoreRT.sizeDelta = new Vector2(80, 0);
+            var scoreTMP = scoreGO.AddComponent<TextMeshProUGUI>();
+            scoreTMP.text = scoreText;
+            scoreTMP.font = OvertoneUI.DMMono;
+            scoreTMP.fontSize = 13;
+            scoreTMP.color = scoreColor;
+            scoreTMP.alignment = TextAlignmentOptions.Right;
+            scoreTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
+            scoreTMP.enableWordWrapping = false;
+            scoreTMP.raycastTarget = false;
+
+            return row;
         }
 
         // ───── Helpers ─────
@@ -509,6 +670,99 @@ namespace MergeGame.UI
             var le = spacer.AddComponent<LayoutElement>();
             le.preferredHeight = height;
             le.minHeight = height;
+        }
+
+        private static Sprite _outlineRoundedRect;
+        protected static Sprite GetOutlineRoundedRect()
+        {
+            if (_outlineRoundedRect != null) return _outlineRoundedRect;
+
+            int size = 64;
+            int radius = 10;
+            float borderWidth = 1.5f;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+
+            Color[] pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+            float center = size / 2f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = Mathf.Max(0, Mathf.Abs(x - center + 0.5f) - (center - radius));
+                    float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+
+                    // Inside the rounded rect
+                    if (dist <= radius)
+                    {
+                        // Only draw the border ring, not the fill
+                        float innerDist = radius - dist;
+                        if (innerDist <= borderWidth)
+                        {
+                            float alpha = Mathf.Clamp01(innerDist / borderWidth);
+                            // Also anti-alias outer edge
+                            float outerAA = Mathf.Clamp01(radius - dist + 0.5f);
+                            pixels[y * size + x] = new Color(1, 1, 1, alpha * outerAA);
+                        }
+                        // else: interior stays transparent
+                    }
+                    else if (dist <= radius + 1f)
+                    {
+                        // Anti-alias outer edge
+                        float aa = Mathf.Clamp01(radius + 1f - dist);
+                        pixels[y * size + x] = new Color(1, 1, 1, aa);
+                    }
+                }
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply();
+
+            _outlineRoundedRect = Sprite.Create(tex, new Rect(0, 0, size, size),
+                new Vector2(0.5f, 0.5f), size); // PPU = size so it renders at 1 unit
+            _outlineRoundedRect.name = "OutlineRoundedRect";
+            return _outlineRoundedRect;
+        }
+
+        private static Sprite _smoothRoundedRect;
+        protected static Sprite GetSmootherRoundedRect()
+        {
+            if (_smoothRoundedRect != null) return _smoothRoundedRect;
+
+            int size = 64;
+            int radius = 12;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.wrapMode = TextureWrapMode.Clamp;
+
+            Color[] pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+            float center = size / 2f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    // Signed distance to rounded rect
+                    float dx = Mathf.Max(0, Mathf.Abs(x - center + 0.5f) - (center - radius));
+                    float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (dist <= radius)
+                        tex.SetPixel(x, y, Color.white);
+                    else if (dist <= radius + 1f) // anti-alias edge
+                        tex.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp01(radius + 1f - dist)));
+                }
+            }
+            tex.Apply();
+
+            var border = new Vector4(radius + 1, radius + 1, radius + 1, radius + 1);
+            _smoothRoundedRect = Sprite.Create(tex, new Rect(0, 0, size, size),
+                new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, border);
+            _smoothRoundedRect.name = "SmoothRoundedRect";
+            return _smoothRoundedRect;
         }
 
         private static Sprite GetCircleSprite()

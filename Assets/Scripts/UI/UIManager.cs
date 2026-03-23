@@ -103,8 +103,7 @@ namespace MergeGame.UI
             if (DropController.Instance != null)
                 DropController.Instance.OnNextBallChanged += UpdateNextBallPreview;
 
-            if (LeaderboardService.Instance != null)
-                LeaderboardService.Instance.OnLeaderboardUpdated += OnLeaderboardDataUpdated;
+            // OnLeaderboardUpdated event no longer needed — home screens handle their own data
         }
 
         private void OnDestroy()
@@ -118,8 +117,7 @@ namespace MergeGame.UI
                 DropController.Instance.OnNextBallChanged -= UpdateNextBallPreview;
             if (GameManager.Instance != null)
                 GameManager.Instance.OnShakesChanged -= UpdateShakeCount;
-            if (LeaderboardService.Instance != null)
-                LeaderboardService.Instance.OnLeaderboardUpdated -= OnLeaderboardDataUpdated;
+            // OnLeaderboardUpdated unsubscribe removed
         }
 
         // ===== Screen transitions =====
@@ -130,8 +128,10 @@ namespace MergeGame.UI
 
             if (ScreenManager.Instance != null)
             {
-                // Route to correct home screen based on session state
-                var target = Core.GameSession.HasPlayedToday ? Screen.HomePlayed : Screen.HomeFresh;
+                // Route based on whether scored attempt was completed today
+                bool hasPlayed = Core.GameSession.HasPlayedToday ||
+                    (Core.DailySeedManager.Instance != null && Core.DailySeedManager.Instance.HasCompletedScoredAttempt());
+                var target = hasPlayed ? Screen.HomePlayed : Screen.HomeFresh;
                 ScreenManager.Instance.TransitionTo(target);
             }
             else
@@ -160,7 +160,7 @@ namespace MergeGame.UI
             if (scoreTickUp != null) scoreTickUp.SetImmediate(0);
             if (ScoreManager.Instance != null)
                 UpdateHighScore(ScoreManager.Instance.HighScore);
-            if (miniLeaderboard != null) miniLeaderboard.Clear();
+            // miniLeaderboard removed from gameplay UI
         }
 
         public void ShowGameOver(int finalScore, int highScore)
@@ -212,13 +212,7 @@ namespace MergeGame.UI
             if (scoreTickUp != null)
                 scoreTickUp.AnimateTo(score);
 
-            // Update mini leaderboard with live rank
-            if (miniLeaderboard != null)
-            {
-                bool isReplay = DailySeedManager.Instance != null &&
-                    DailySeedManager.Instance.CurrentAttemptType == AttemptType.Replay;
-                miniLeaderboard.UpdateWithScore(score, isReplay);
-            }
+            // miniLeaderboard removed from gameplay UI
         }
 
         private void UpdateHighScore(int highScore)
@@ -284,8 +278,7 @@ namespace MergeGame.UI
 
         private void OnLeaderboardDataUpdated(System.Collections.Generic.List<LeaderboardEntry> entries)
         {
-            if (miniLeaderboard != null)
-                miniLeaderboard.SetCachedEntries(entries);
+            // miniLeaderboard removed from gameplay UI
         }
 
         // ===== Button handlers =====

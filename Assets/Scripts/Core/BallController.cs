@@ -146,8 +146,7 @@ namespace MergeGame.Core
                 if (HapticManager.Instance != null && ballData != null)
                     HapticManager.Instance.PlayLanding(ballData.tierIndex);
 
-                // Squash animation on landing
-                StartCoroutine(SquashCoroutine());
+                // Landing squash removed for cleaner look
 
                 // Track first landing for merge-before-floor achievement
                 if (MergeTracker.Instance != null)
@@ -199,7 +198,10 @@ namespace MergeGame.Core
             isMerging = true;
             other.isMerging = true;
 
-            Vector3 midpoint = (transform.position + other.transform.position) / 2f;
+            // Spawn at the LOWER ball's position — promotes chain merges
+            Vector3 spawnPos = transform.position.y <= other.transform.position.y
+                ? transform.position
+                : other.transform.position;
             int currentTier = TierIndex;
 
             bool isMaxTier = currentTier >= tierConfig.MaxTierIndex;
@@ -217,7 +219,7 @@ namespace MergeGame.Core
                 RecordMerge(currentTier);
 
                 // Particles (no shake on merge)
-                SpawnMergeParticles(midpoint, ballData.color, currentTier);
+                SpawnMergeParticles(spawnPos, ballData.color, currentTier);
 
                 Destroy(other.gameObject);
                 Destroy(gameObject);
@@ -242,9 +244,9 @@ namespace MergeGame.Core
             RecordMerge(nextTier.tierIndex);
 
             // Particles (no shake on merge)
-            SpawnMergeParticles(midpoint, nextTier.color, nextTier.tierIndex);
+            SpawnMergeParticles(spawnPos, nextTier.color, nextTier.tierIndex);
 
-            SpawnMergedBall(nextTier, midpoint);
+            SpawnMergedBall(nextTier, spawnPos);
 
             Destroy(other.gameObject);
             Destroy(gameObject);

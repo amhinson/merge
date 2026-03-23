@@ -107,6 +107,17 @@ namespace MergeGame.UI
             le.preferredHeight = height;
             le.flexibleWidth = 1;
 
+            // Scanline overlay (subtle CRT texture)
+            var scanGO = CreateUIObject("Scanlines", go.transform);
+            var scanImg = scanGO.AddComponent<Image>();
+            scanImg.sprite = GetScanlineSprite();
+            scanImg.type = Image.Type.Simple;
+            scanImg.color = new Color(0, 0, 0, 0.25f);
+            scanImg.raycastTarget = false;
+            StretchFill(scanGO.GetComponent<RectTransform>());
+            // Clip scanlines to button shape
+            go.AddComponent<RectMask2D>();
+
             var labelGO = CreateUIObject("Label", go.transform);
             var tmp = labelGO.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
@@ -120,6 +131,38 @@ namespace MergeGame.UI
 
             return (go, tmp);
         }
+
+        /// <summary>
+        /// Scanline texture — tall enough to cover any button, with 1px lines every 3px.
+        /// Used as Image.Type.Simple stretched to fill.
+        /// </summary>
+        private static Sprite GetScanlineSprite()
+        {
+            if (cachedScanlineSprite != null) return cachedScanlineSprite;
+
+            int w = 4;
+            int h = 128; // tall enough for any button
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode = TextureWrapMode.Repeat;
+
+            for (int y = 0; y < h; y++)
+            {
+                bool isLine = (y % 4) < 2; // 2px line, 2px gap
+                Color c = isLine ? Color.white : Color.clear;
+                for (int x = 0; x < w; x++)
+                    tex.SetPixel(x, y, c);
+            }
+            tex.Apply();
+
+            // PPU matches the canvas reference height so scanlines are pixel-accurate
+            cachedScanlineSprite = Sprite.Create(tex, new Rect(0, 0, w, h),
+                new Vector2(0.5f, 0.5f), 100f);
+            cachedScanlineSprite.name = "ScanlineOverlay";
+            return cachedScanlineSprite;
+        }
+
+        private static Sprite cachedScanlineSprite;
 
         // ───── Ghost Button ─────
 
@@ -298,31 +341,34 @@ namespace MergeGame.UI
         {
             var go = CreateUIObject(name, parent);
             var le = go.AddComponent<LayoutElement>();
-            le.preferredHeight = 38;
+            le.preferredHeight = 34;
+            le.minHeight = 34;
+            le.flexibleHeight = 0; // never expand beyond preferred
             le.flexibleWidth = 1;
 
             var bg = go.AddComponent<Image>();
             bg.color = Color.clear;
 
             var hlg = go.AddComponent<HorizontalLayoutGroup>();
-            hlg.spacing = 0;
-            hlg.padding = new RectOffset(8, 8, 0, 0);
+            hlg.spacing = 6;
+            hlg.padding = new RectOffset(10, 10, 0, 0);
             hlg.childAlignment = TextAnchor.MiddleLeft;
             hlg.childControlWidth = false;
             hlg.childControlHeight = true;
             hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = true;
 
-            // Rank
+            // Rank/Medal
             var rankGO = CreateUIObject("Rank", go.transform);
             var rankTMP = rankGO.AddComponent<TextMeshProUGUI>();
-            rankTMP.font = PressStart2P;
-            rankTMP.fontSize = OFont.labelXs;
+            rankTMP.font = DMMono;
+            rankTMP.fontSize = OFont.body;
             rankTMP.color = OC.dim;
             rankTMP.alignment = TextAlignmentOptions.Left;
             rankTMP.raycastTarget = false;
+            rankTMP.enableWordWrapping = false;
             var rankLE = rankGO.AddComponent<LayoutElement>();
-            rankLE.preferredWidth = 32;
+            rankLE.preferredWidth = 24;
 
             // Name
             var nameGO = CreateUIObject("Name", go.transform);
@@ -459,5 +505,47 @@ namespace MergeGame.UI
         }
 
         private static Sprite cachedGradientSprite;
+
+        /// <summary>High-res anti-aliased rounded rect for smooth borders.</summary>
+        private static Sprite _smoothRR;
+        public static Sprite SmoothRoundedRect
+        {
+            get
+            {
+                if (_smoothRR != null) return _smoothRR;
+
+                int size = 64;
+                int radius = 12;
+                var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                tex.filterMode = FilterMode.Bilinear;
+                tex.wrapMode = TextureWrapMode.Clamp;
+
+                Color[] pixels = new Color[size * size];
+                for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+                float center = size / 2f;
+                for (int y = 0; y < size; y++)
+                {
+                    for (int x = 0; x < size; x++)
+                    {
+                        float dx = Mathf.Max(0, Mathf.Abs(x - center + 0.5f) - (center - radius));
+                        float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
+                        float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                        if (dist <= radius)
+                            pixels[y * size + x] = Color.white;
+                        else if (dist <= radius + 1f)
+                            pixels[y * size + x] = new Color(1, 1, 1, Mathf.Clamp01(radius + 1f - dist));
+                    }
+                }
+                tex.SetPixels(pixels);
+                tex.Apply();
+
+                var border = new Vector4(radius + 1, radius + 1, radius + 1, radius + 1);
+                _smoothRR = Sprite.Create(tex, new Rect(0, 0, size, size),
+                    new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, border);
+                _smoothRR.name = "SmoothRoundedRect";
+                return _smoothRR;
+            }
+        }
     }
 }

@@ -22,13 +22,10 @@ namespace MergeGame.UI
 
         public void Populate(List<LeaderboardEntry> entries)
         {
-            if (entriesContainer == null)
-            {
-                Debug.LogWarning("LeaderboardUI: entriesContainer is null");
-                return;
-            }
-
-            Debug.Log($"LeaderboardUI.Populate: {entries?.Count ?? 0} entries, container={entriesContainer.name}, childCount={entriesContainer.childCount}");
+            Debug.LogWarning($"[OLD LeaderboardUI] Populate called! active={gameObject.activeInHierarchy}, " +
+                $"name={gameObject.name}, entries={entries?.Count ?? 0}");
+            if (!gameObject.activeInHierarchy) return;
+            if (entriesContainer == null) return;
 
             // Clear existing rows
             foreach (Transform child in entriesContainer)

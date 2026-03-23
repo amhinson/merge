@@ -3,53 +3,53 @@ using UnityEngine;
 namespace MergeGame.Visual
 {
     /// <summary>
-    /// Generates waveform ball sprites matching the Overtone design spec.
-    /// Each ball has: radial gradient background, circle stroke, pixel block waveform,
-    /// specular highlight, and outer glow.
+    /// Generates waveform ball sprites matching the Overtone design.
+    /// Each ball has: radial gradient body, circle stroke, and one of three wave styles
+    /// (Thread/Dash/Dot) that scrolls slowly.
     /// </summary>
     public static class NeonBallRenderer
     {
         private const int PixelsPerUnit = 48;
-        private const int Padding = 4; // extra space for glow
+        private const int Padding = 4;
 
-        // Ball colors per tier (0-indexed)
-        public static readonly Color[] BallColors = new Color[]
+        // Ball colors per tier (0-indexed). Tier 0 = smallest ball, tier 10 = largest.
+        // Level 11 (smallest) → tier 0, Level 1 (largest) → tier 10
+        public static readonly Color[] BallColors =
         {
-            HexColor("4DD9C0"), // 1: cyan
-            HexColor("E8587A"), // 2: pink
-            HexColor("F0B429"), // 3: amber
-            HexColor("A78BFA"), // 4: violet
-            HexColor("A3E635"), // 5: lime
-            HexColor("38BDF8"), // 6: sky
-            HexColor("FB923C"), // 7: orange
-            HexColor("FB7185"), // 8: rose
-            HexColor("4DD9C0"), // 9: cyan (same as 1)
-            HexColor("F0B429"), // 10: amber (same as 3)
-            HexColor("E8587A"), // 11: pink (same as 2)
+            HexColor("E8587A"), // tier 0 (Level 11, smallest): pink
+            HexColor("F0B429"), // tier 1 (Level 10): amber
+            HexColor("4DD9C0"), // tier 2 (Level 9): cyan
+            HexColor("FB7185"), // tier 3 (Level 8): rose
+            HexColor("FB923C"), // tier 4 (Level 7): orange
+            HexColor("38BDF8"), // tier 5 (Level 6): sky
+            HexColor("A3E635"), // tier 6 (Level 5): lime
+            HexColor("A78BFA"), // tier 7 (Level 4): violet
+            HexColor("F0B429"), // tier 8 (Level 3): amber
+            HexColor("E8587A"), // tier 9 (Level 2): pink
+            HexColor("4DD9C0"), // tier 10 (Level 1, largest): cyan
         };
 
-        // Per-tier waveform config: pixelW, pixelH, waveType, freq
-        private static readonly (int pw, int ph, int waveType, int freq)[] WaveConfig = new[]
+        // Per-tier config (tier 0=smallest to tier 10=largest): freq, waveType, lineOpacity
+        // All use thread style. waveType: 0=sine, 1=sawtooth, 2=triangle, 3=square
+        private static readonly (int freq, int waveType, float lineOpacity)[] WaveConfig =
         {
-            (6, 4, 0, 3),  // 1: Sine freq=3
-            (5, 4, 0, 4),  // 2: Sine freq=4
-            (4, 3, 2, 2),  // 3: Triangle freq=2
-            (4, 3, 0, 5),  // 4: Sine freq=5
-            (3, 3, 1, 3),  // 5: Sawtooth freq=3
-            (3, 2, 0, 6),  // 6: Sine freq=6
-            (3, 2, 3, 4),  // 7: Square freq=4
-            (2, 2, 2, 3),  // 8: Triangle freq=3
-            (2, 2, 0, 5),  // 9: Sine freq=5
-            (2, 2, 1, 4),  // 10: Sawtooth freq=4
-            (2, 2, 0, 3),  // 11: Sine freq=3
+            (3, 0, 0.75f), // tier 0 (L11): Sine
+            (4, 1, 0.68f), // tier 1 (L10): Sawtooth
+            (5, 0, 0.75f), // tier 2 (L9):  Sine
+            (3, 2, 0.70f), // tier 3 (L8):  Triangle
+            (4, 3, 0.68f), // tier 4 (L7):  Square
+            (6, 0, 0.75f), // tier 5 (L6):  Sine
+            (3, 1, 0.70f), // tier 6 (L5):  Sawtooth
+            (5, 0, 0.75f), // tier 7 (L4):  Sine
+            (2, 2, 0.70f), // tier 8 (L3):  Triangle
+            (4, 0, 0.75f), // tier 9 (L2):  Sine
+            (3, 0, 0.75f), // tier 10 (L1): Sine
         };
 
-        // Wave types: 0=Sine, 1=Sawtooth, 2=Triangle, 3=Square
-
-        // Per-tier scroll speeds (seconds per full cycle)
-        public static readonly float[] ScrollSpeeds = new[]
+        // Per-tier scroll speeds in seconds (tier 0=smallest to tier 10=largest)
+        public static readonly float[] ScrollSpeeds =
         {
-            2.4f, 1.9f, 2.8f, 2.2f, 2.6f, 1.6f, 2.0f, 2.5f, 1.8f, 2.3f, 2.1f
+            13f, 10f, 14f, 12f, 15f, 13f, 11f, 16f, 10f, 14f, 12f
         };
 
         public static Color GetBallColor(int tier)
@@ -59,7 +59,7 @@ namespace MergeGame.Visual
 
         // ===== Main generation =====
 
-        public static byte[] GenerateBallPNG(int tier, Color neonColor, float radius, float phase = 0f)
+        public static byte[] GenerateBallPNG(int tier, Color ignored, float radius, float phase = 0f)
         {
             Color ballColor = GetBallColor(tier);
             int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * PixelsPerUnit));
@@ -71,32 +71,16 @@ namespace MergeGame.Visual
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
 
-            // Clear
             var pixels = new Color[size * size];
             for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
 
-            // === 1. Outer glow (slightly larger blurred circle behind the ball) ===
-            float glowRadius = r + 3f;
-            for (int py = 0; py < size; py++)
-            {
-                for (int px = 0; px < size; px++)
-                {
-                    float dx = px - cx;
-                    float dy = py - cy;
-                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                    if (dist > glowRadius + 3f) continue;
-                    if (dist > r) // only glow OUTSIDE the ball body
-                    {
-                        float glowFade = 1f - Mathf.Clamp01((dist - r) / 5f);
-                        float glowAlpha = glowFade * glowFade * 0.3f;
-                        if (glowAlpha > 0.01f)
-                            pixels[py * size + px] = new Color(ballColor.r, ballColor.g, ballColor.b, glowAlpha);
-                    }
-                }
-            }
+            Color baseFill = HexColor("161B24"); // opaque dark base
 
-            // === 2. Ball body — opaque dark base + colored radial gradient ===
-            Color baseFill = HexColor("161B24"); // matches grid background
+            // Gradient center (top-left biased: 42% cx, 36% cy from top)
+            float gradCx = cx - r * 0.16f;
+            float gradCy = cy + r * 0.28f; // upper area (in Unity tex coords, +y is up)
+
+            // === 1. Ball body — opaque base + radial gradient ===
             for (int py = 0; py < size; py++)
             {
                 for (int px = 0; px < size; px++)
@@ -106,21 +90,39 @@ namespace MergeGame.Visual
                     float dist = Mathf.Sqrt(dx * dx + dy * dy);
                     if (dist > r) continue;
 
-                    // Opaque dark base so grid doesn't show through
+                    // Opaque dark base
                     pixels[py * size + px] = baseFill;
 
-                    // Colored radial gradient on top: brighter at top-left, darker at edges
-                    float gradientT = Mathf.Clamp01(dist / r);
-                    float topLeftBias = Mathf.Clamp01(1f - (dx + dy) / (r * 1.5f));
-                    float alpha = Mathf.Lerp(0.45f, 0.10f, gradientT) * Mathf.Lerp(0.7f, 1f, topLeftBias);
+                    // Radial gradient from top-left center
+                    float gdx = px - gradCx;
+                    float gdy = py - gradCy;
+                    float gradDist = Mathf.Sqrt(gdx * gdx + gdy * gdy);
+                    float gradT = Mathf.Clamp01(gradDist / (r * 1.2f));
 
-                    Color bodyColor = new Color(ballColor.r, ballColor.g, ballColor.b, alpha);
-                    pixels[py * size + px] = BlendOver(pixels[py * size + px], bodyColor);
+                    float alpha = Mathf.Lerp(0.72f, 0.32f, gradT);
+                    Color grad = new Color(ballColor.r, ballColor.g, ballColor.b, alpha);
+                    pixels[py * size + px] = BlendOver(pixels[py * size + px], grad);
                 }
             }
 
-            // === 3. Circle stroke ===
-            float strokeWidth = Mathf.Max(1f, r * 0.035f);
+            // === 1b. Scanlines (subtle CRT texture) ===
+            Color scanColor = new Color(0, 0, 0, 0.10f);
+            float scanSpacing = 3f;
+            for (float sy = 0; sy < r * 2f; sy += scanSpacing)
+            {
+                float localY = sy - r; // -r to +r
+                float chordHalf = Mathf.Sqrt(Mathf.Max(0, r * r - localY * localY));
+                int x0 = Mathf.Max(0, Mathf.FloorToInt(cx - chordHalf));
+                int x1 = Mathf.Min(size - 1, Mathf.CeilToInt(cx + chordHalf));
+                int py = Mathf.RoundToInt(cy + localY);
+                if (py < 0 || py >= size) continue;
+
+                for (int px = x0; px <= x1; px++)
+                    pixels[py * size + px] = BlendOver(pixels[py * size + px], scanColor);
+            }
+
+            // === 2. Circle stroke ===
+            float strokeWidth = Mathf.Max(1.0f, r * 0.028f);
             for (int py = 0; py < size; py++)
             {
                 for (int px = 0; px < size; px++)
@@ -129,47 +131,25 @@ namespace MergeGame.Visual
                     float dy = py - cy;
                     float dist = Mathf.Sqrt(dx * dx + dy * dy);
                     float edgeDist = Mathf.Abs(dist - r);
-                    if (edgeDist < strokeWidth)
+                    if (edgeDist < strokeWidth && dist <= r + strokeWidth)
                     {
-                        float strokeAlpha = (1f - edgeDist / strokeWidth) * 0.85f;
-                        Color strokeColor = new Color(ballColor.r, ballColor.g, ballColor.b, strokeAlpha);
-                        pixels[py * size + px] = BlendOver(pixels[py * size + px], strokeColor);
+                        float strokeAlpha = (1f - edgeDist / strokeWidth) * 0.55f;
+                        Color stroke = new Color(ballColor.r, ballColor.g, ballColor.b, strokeAlpha);
+                        pixels[py * size + px] = BlendOver(pixels[py * size + px], stroke);
                     }
                 }
             }
 
-            // === 4. Pixel block waveform ===
+            // === 3. Wave (thread style for all balls) ===
             if (tier >= 0 && tier < WaveConfig.Length)
             {
                 var wc = WaveConfig[tier];
-                DrawPixelWaveform(pixels, size, cx, cy, r, ballColor, wc.pw, wc.ph, wc.waveType, wc.freq, phase);
-            }
+                float amp = r * 0.22f;
+                float haloW = Mathf.Max(2.5f, r * 0.10f);
+                float lineW = Mathf.Max(0.8f, r * 0.032f);
 
-            // === 5. Specular highlight ===
-            {
-                float specCx = cx - r * 0.22f; // upper-left
-                float specCy = cy + r * 0.30f;
-                float specRx = r * 0.20f;
-                float specRy = r * 0.10f;
-                for (int py = 0; py < size; py++)
-                {
-                    for (int px = 0; px < size; px++)
-                    {
-                        float dx = px - cx;
-                        float dy = py - cy;
-                        if (dx * dx + dy * dy > r * r) continue; // clip to circle
-
-                        float sx = (px - specCx) / specRx;
-                        float sy = (py - specCy) / specRy;
-                        float sd = sx * sx + sy * sy;
-                        if (sd < 1f)
-                        {
-                            float specAlpha = (1f - sd) * 0.13f;
-                            Color specColor = new Color(1f, 1f, 1f, specAlpha);
-                            pixels[py * size + px] = BlendOver(pixels[py * size + px], specColor);
-                        }
-                    }
-                }
+                DrawThreadWave(pixels, size, cx, cy, r, ballColor,
+                    wc.freq, wc.waveType, amp, phase, haloW, lineW, wc.lineOpacity);
             }
 
             tex.SetPixels(pixels);
@@ -177,95 +157,95 @@ namespace MergeGame.Visual
             return tex.EncodeToPNG();
         }
 
-        // ===== Pixel block waveform =====
+        // ===== Thread wave (all balls use this) =====
 
-        private static void DrawPixelWaveform(Color[] pixels, int size,
-            float cx, float cy, float r, Color ballColor,
-            int pixelW, int pixelH, int waveType, int freq, float phase)
+        private static void DrawThreadWave(Color[] pixels, int size, float cx, float cy, float r,
+            Color ballColor, int freq, int waveType, float amp, float phase,
+            float haloWidth, float lineWidth, float lineOpacity)
         {
-            float diameter = r * 2f;
-            int cols = Mathf.FloorToInt(diameter / pixelW);
-            if (cols <= 0) return;
+            float startX = cx - r;
+            float endX = cx + r;
+            int sampleCount = Mathf.Max(16, Mathf.RoundToInt((endX - startX) * 2f));
 
-            float amp = r * 0.28f;
-            float waveCenterY = cy - r * 0.22f; // wave sits in the lower portion (0.72 from top = 0.28 from center downward... cy - offset)
+            // Halo pass (wide, low opacity)
+            DrawPolylineWave(pixels, size, cx, cy, r, ballColor, freq, waveType, amp, phase,
+                startX, endX, sampleCount, haloWidth, 0.12f);
 
-            // The spec says cy = radius * 0.72 from top. In pixel coords (y=0 is bottom in Unity tex):
-            // topOfBall = cy + r, waveCenterFromTop = r * 0.72
-            // waveCenterY = (cy + r) - r * 0.72 = cy + r * 0.28
-            waveCenterY = cy + r * 0.28f;
+            // Line pass (thin, per-tier opacity)
+            DrawPolylineWave(pixels, size, cx, cy, r, ballColor, freq, waveType, amp, phase,
+                startX, endX, sampleCount, lineWidth, lineOpacity);
+        }
 
-            float startX = cx - (cols * pixelW) / 2f;
+        private static void DrawPolylineWave(Color[] pixels, int size, float cx, float cy, float r,
+            Color ballColor, int freq, int waveType, float amp, float phase,
+            float startX, float endX, int sampleCount, float strokeW, float opacity)
+        {
+            float ballWidth = endX - startX;
+            Color lineColor = new Color(ballColor.r, ballColor.g, ballColor.b, opacity);
 
-            for (int col = 0; col < cols; col++)
+            for (int i = 0; i < sampleCount - 1; i++)
             {
-                float t = (float)col / cols + phase;
-                float waveY = waveCenterY + amp * GetWaveValue(waveType, freq, t);
+                float x0 = Mathf.Lerp(startX, endX, (float)i / (sampleCount - 1));
+                float x1 = Mathf.Lerp(startX, endX, (float)(i + 1) / (sampleCount - 1));
+                float t0 = (x0 - startX) / ballWidth + phase;
+                float t1 = (x1 - startX) / ballWidth + phase;
+                float y0 = cy + amp * GetWaveValue(waveType, freq, t0);
+                float y1 = cy + amp * GetWaveValue(waveType, freq, t1);
 
-                // Edge pixel (bright crest)
-                DrawPixelRect(pixels, size, cx, cy, r, ballColor,
-                    startX + col * pixelW + 0.5f,
-                    waveY + 0.5f,
-                    pixelW - 1, pixelH - 1,
-                    0.95f);
+                DrawLineSegment(pixels, size, cx, cy, r, x0, y0, x1, y1, strokeW, lineColor);
+            }
+        }
 
-                // Fill pixels below the edge, fading down
-                int maxRows = Mathf.CeilToInt((cy + r - waveY) / pixelH);
-                for (int row = 1; row < maxRows; row++)
+        private static void DrawLineSegment(Color[] pixels, int size, float circleCx, float circleCy, float circleR,
+            float x0, float y0, float x1, float y1, float width, Color color)
+        {
+            float halfW = width / 2f;
+            int minPx = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(x0, x1) - halfW));
+            int maxPx = Mathf.Min(size - 1, Mathf.CeilToInt(Mathf.Max(x0, x1) + halfW));
+            int minPy = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(y0, y1) - halfW));
+            int maxPy = Mathf.Min(size - 1, Mathf.CeilToInt(Mathf.Max(y0, y1) + halfW));
+
+            float dx = x1 - x0;
+            float dy = y1 - y0;
+            float segLen = Mathf.Sqrt(dx * dx + dy * dy);
+            if (segLen < 0.001f) return;
+
+            for (int py = minPy; py <= maxPy; py++)
+            {
+                for (int px = minPx; px <= maxPx; px++)
                 {
-                    float fillY = waveY - row * pixelH; // going downward (lower y values)
-                    if (fillY < cy - r) break;
+                    // Circle clip
+                    float cdx = px - circleCx;
+                    float cdy = py - circleCy;
+                    if (cdx * cdx + cdy * cdy > circleR * circleR) continue;
 
-                    float opacity = Mathf.Max(0.08f, 0.38f - row * 0.045f);
-                    DrawPixelRect(pixels, size, cx, cy, r, ballColor,
-                        startX + col * pixelW + 0.5f,
-                        fillY + 0.5f,
-                        pixelW - 1, pixelH - 1,
-                        opacity);
+                    // Distance from point to line segment
+                    float t = Mathf.Clamp01(((px - x0) * dx + (py - y0) * dy) / (segLen * segLen));
+                    float closestX = x0 + t * dx;
+                    float closestY = y0 + t * dy;
+                    float dist = Mathf.Sqrt((px - closestX) * (px - closestX) + (py - closestY) * (py - closestY));
+
+                    if (dist < halfW)
+                    {
+                        float falloff = 1f - dist / halfW;
+                        Color c = new Color(color.r, color.g, color.b, color.a * falloff);
+                        pixels[py * size + px] = BlendOver(pixels[py * size + px], c);
+                    }
                 }
             }
         }
 
-        private static void DrawPixelRect(Color[] pixels, int size,
-            float circleCx, float circleCy, float circleR,
-            Color ballColor, float rx, float ry, int rw, int rh, float opacity)
-        {
-            int x0 = Mathf.RoundToInt(rx);
-            int y0 = Mathf.RoundToInt(ry);
-            Color c = new Color(ballColor.r, ballColor.g, ballColor.b, opacity);
-
-            for (int dy = 0; dy < rh; dy++)
-            {
-                for (int dx = 0; dx < rw; dx++)
-                {
-                    int px = x0 + dx;
-                    int py = y0 - dy; // go downward
-                    if (px < 0 || px >= size || py < 0 || py >= size) continue;
-
-                    // Clip to circle
-                    float ddx = px - circleCx;
-                    float ddy = py - circleCy;
-                    if (ddx * ddx + ddy * ddy > circleR * circleR) continue;
-
-                    pixels[py * size + px] = BlendOver(pixels[py * size + px], c);
-                }
-            }
-        }
+        // ===== Wave functions =====
 
         private static float GetWaveValue(int waveType, int freq, float t)
         {
             switch (waveType)
             {
-                case 0: // Sine
-                    return Mathf.Sin(freq * 2f * Mathf.PI * t);
-                case 1: // Sawtooth
-                    return 2f * ((freq * t) % 1f) - 1f;
-                case 2: // Triangle
-                    return 2f * Mathf.Abs(2f * ((freq * t + 0.25f) % 1f) - 1f) - 1f;
-                case 3: // Square
-                    return Mathf.Sin(freq * 2f * Mathf.PI * t) >= 0 ? 1f : -1f;
-                default:
-                    return Mathf.Sin(freq * 2f * Mathf.PI * t);
+                case 0: return Mathf.Sin(freq * 2f * Mathf.PI * t);
+                case 1: return 2f * ((freq * t) % 1f) - 1f;
+                case 2: return 2f * Mathf.Abs(2f * ((freq * t + 0.25f) % 1f) - 1f) - 1f;
+                case 3: return Mathf.Sin(freq * 2f * Mathf.PI * t) >= 0 ? 1f : -1f;
+                default: return Mathf.Sin(freq * 2f * Mathf.PI * t);
             }
         }
 
@@ -281,8 +261,7 @@ namespace MergeGame.Visual
         public static (int spriteSize, int ppu) GetSpriteDimensions(float radius)
         {
             int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * PixelsPerUnit));
-            int size = diameter + Padding * 2;
-            return (size, PixelsPerUnit);
+            return (diameter + Padding * 2, PixelsPerUnit);
         }
 
         public static Sprite GenerateSprite(int tier, Color neonColor, float phase = 0f)
@@ -307,19 +286,17 @@ namespace MergeGame.Visual
                 new Vector2(0.5f, 0.5f), PixelsPerUnit);
         }
 
-        // Waveform computation for external callers (WaveformAnimator)
         public static float[] ComputeWaveform(int tier, int width, float phase)
         {
             if (width <= 0) return new float[] { 0 };
             var wave = new float[width];
-            int waveType = 0;
-            int freq = 3;
+            int waveType = 0, freq = 3;
             if (tier >= 0 && tier < WaveConfig.Length)
             {
                 waveType = WaveConfig[tier].waveType;
                 freq = WaveConfig[tier].freq;
             }
-            float amp = width * 0.14f;
+            float amp = width * 0.11f;
             for (int i = 0; i < width; i++)
             {
                 float t = (float)i / width + phase;
@@ -334,10 +311,10 @@ namespace MergeGame.Visual
         {
             float a = fg.a + bg.a * (1f - fg.a);
             if (a < 0.001f) return Color.clear;
-            float r = (fg.r * fg.a + bg.r * bg.a * (1f - fg.a)) / a;
-            float g = (fg.g * fg.a + bg.g * bg.a * (1f - fg.a)) / a;
-            float b = (fg.b * fg.a + bg.b * bg.a * (1f - fg.a)) / a;
-            return new Color(r, g, b, a);
+            float rv = (fg.r * fg.a + bg.r * bg.a * (1f - fg.a)) / a;
+            float gv = (fg.g * fg.a + bg.g * bg.a * (1f - fg.a)) / a;
+            float bv = (fg.b * fg.a + bg.b * bg.a * (1f - fg.a)) / a;
+            return new Color(rv, gv, bv, a);
         }
 
         private static Color HexColor(string hex)

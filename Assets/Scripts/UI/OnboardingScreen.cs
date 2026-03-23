@@ -54,8 +54,8 @@ namespace MergeGame.UI
 
         // Spec ball sizes (from BALLS array in JSX)
         // tier 9 (index 8) = 22px, tier 8 (index 7) = 26px
-        private const float DemoBallSizeSmall = 30f;  // tier 9 (cyan, 22px scaled up for visibility)
-        private const float DemoBallSizeMedium = 36f; // tier 8 (rose, 26px scaled up)
+        private const float DemoBallSizeSmall = 32f;  // 2nd smallest (tier 1, amber)
+        private const float DemoBallSizeMedium = 46f; // 4th largest (tier 7, violet)
 
         private void OnEnable()
         {
@@ -169,7 +169,7 @@ namespace MergeGame.UI
             var taglineRT = taglineGO.GetComponent<RectTransform>();
             taglineRT.sizeDelta = new Vector2(300, 16);
             var tagline = taglineGO.AddComponent<TextMeshProUGUI>();
-            tagline.text = "A DAILY DROP";
+            tagline.text = "A DAILY MERGE GAME";
             tagline.font = OvertoneUI.DMMono;
             tagline.fontSize = 10;
             tagline.color = OC.muted;
@@ -223,22 +223,23 @@ namespace MergeGame.UI
             // Step 0: DROP — dropper at top, placed ball at bottom
             stepGroups[0] = OvertoneUI.CreateUIObject("Step0Group", arenaGO.transform);
             OvertoneUI.StretchFill(stepGroups[0].GetComponent<RectTransform>());
-            dropperBall = CreateDemoBall(stepGroups[0].transform, 8, new Vector2(0, 115), DemoBallSizeSmall);
-            placedBall = CreateDemoBall(stepGroups[0].transform, 8, new Vector2(0, -110), DemoBallSizeSmall);
+            dropperBall = CreateDemoBall(stepGroups[0].transform, 1, new Vector2(0, 115), DemoBallSizeSmall);
+            placedBall = CreateDemoBall(stepGroups[0].transform, 1, new Vector2(0, -110), DemoBallSizeSmall);
             dropLine = CreateDropLine(stepGroups[0].transform);
 
             // Step 1: MERGE — two balls close together
             stepGroups[1] = OvertoneUI.CreateUIObject("Step1Group", arenaGO.transform);
             OvertoneUI.StretchFill(stepGroups[1].GetComponent<RectTransform>());
-            ballA = CreateDemoBall(stepGroups[1].transform, 8, new Vector2(0, -80), DemoBallSizeSmall);
-            ballB = CreateDemoBall(stepGroups[1].transform, 8, new Vector2(0, -110), DemoBallSizeSmall);
+            ballA = CreateDemoBall(stepGroups[1].transform, 1, new Vector2(0, -80), DemoBallSizeSmall);
+            ballB = CreateDemoBall(stepGroups[1].transform, 1, new Vector2(0, -110), DemoBallSizeSmall);
             mergeRing = CreateMergeRing(stepGroups[1].transform, new Vector2(0, -95));
 
             // Step 2: SCORE — merged result ball + score pop
             stepGroups[2] = OvertoneUI.CreateUIObject("Step2Group", arenaGO.transform);
             OvertoneUI.StretchFill(stepGroups[2].GetComponent<RectTransform>());
-            newDropper = CreateDemoBall(stepGroups[2].transform, 7, new Vector2(0, 115), DemoBallSizeMedium);
-            mergedBall = CreateDemoBall(stepGroups[2].transform, 7, new Vector2(0, -95), DemoBallSizeMedium);
+            // Both balls in step 2 are the same tier (the merge result)
+            newDropper = CreateDemoBall(stepGroups[2].transform, 2, new Vector2(0, 115), DemoBallSizeMedium);
+            mergedBall = CreateDemoBall(stepGroups[2].transform, 2, new Vector2(0, -95), DemoBallSizeMedium);
             scorePop = CreateScorePop(stepGroups[2].transform, new Vector2(0, -60));
         }
 
@@ -310,7 +311,7 @@ namespace MergeGame.UI
             {
                 var dot = OvertoneUI.CreateUIObject($"Dot{i}", row.transform);
                 var dotImg = dot.AddComponent<Image>();
-                dotImg.sprite = pillSprite;
+                dotImg.sprite = OvertoneUI.SmoothRoundedRect;
                 dotImg.type = Image.Type.Sliced;
                 var dotRT = dot.GetComponent<RectTransform>();
                 // Inactive: small circle 8x8
@@ -407,32 +408,42 @@ namespace MergeGame.UI
             nextGO.GetComponent<Button>().onClick.AddListener(OnNextClicked);
             nextButton = nextGO;
 
-            // Skip button — transparent with border outline only
+            // Skip button — smooth border, transparent inside
             var skipGO = OvertoneUI.CreateUIObject("SkipButton", row.transform);
-            var skipImg = skipGO.AddComponent<Image>();
-            skipImg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
-            skipImg.type = Image.Type.Sliced;
-            skipImg.color = Color.clear; // no fill
-            var skipBtn = skipGO.AddComponent<Button>();
-            skipBtn.targetGraphic = skipImg;
             var skipLE = skipGO.AddComponent<LayoutElement>();
             skipLE.preferredHeight = 28;
             skipLE.flexibleWidth = 1;
-            // Border outline child
-            var skipOutline = OvertoneUI.CreateUIObject("Outline", skipGO.transform);
-            var skipOutlineImg = skipOutline.AddComponent<Image>();
-            skipOutlineImg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
-            skipOutlineImg.type = Image.Type.Sliced;
-            skipOutlineImg.color = OC.muted;
-            skipOutlineImg.raycastTarget = false;
-            OvertoneUI.StretchFill(skipOutline.GetComponent<RectTransform>());
-            // Label — lighter than border so it's readable on transparent bg
+            // Border (behind)
+            var skipBorderGO = OvertoneUI.CreateUIObject("Border", skipGO.transform);
+            OvertoneUI.StretchFill(skipBorderGO.GetComponent<RectTransform>());
+            var skipBdrImg = skipBorderGO.AddComponent<Image>();
+            skipBdrImg.sprite = OvertoneUI.SmoothRoundedRect;
+            skipBdrImg.type = Image.Type.Sliced;
+            skipBdrImg.color = OC.border;
+            skipBdrImg.raycastTarget = false;
+            // Fill (inset, matches bg)
+            var skipFillGO = OvertoneUI.CreateUIObject("Fill", skipGO.transform);
+            var sfRT = skipFillGO.GetComponent<RectTransform>();
+            sfRT.anchorMin = Vector2.zero; sfRT.anchorMax = Vector2.one;
+            sfRT.offsetMin = new Vector2(1, 1); sfRT.offsetMax = new Vector2(-1, -1);
+            var sfImg = skipFillGO.AddComponent<Image>();
+            sfImg.sprite = OvertoneUI.SmoothRoundedRect;
+            sfImg.type = Image.Type.Sliced;
+            sfImg.color = OC.bg;
+            sfImg.raycastTarget = false;
+            // Hit area
+            var skipImg = skipGO.AddComponent<Image>();
+            skipImg.color = Color.clear;
+            var skipBtn = skipGO.AddComponent<Button>();
+            skipBtn.targetGraphic = skipBdrImg;
+            // Label — same color as border
             var skipLabelGO = OvertoneUI.CreateUIObject("Label", skipGO.transform);
             var skipLabelTMP = skipLabelGO.AddComponent<TextMeshProUGUI>();
             skipLabelTMP.text = "SKIP";
             skipLabelTMP.font = OvertoneUI.PressStart2P;
             skipLabelTMP.fontSize = OFont.label;
             skipLabelTMP.color = OC.muted;
+            skipLabelTMP.characterSpacing = 1;
             skipLabelTMP.alignment = TextAlignmentOptions.Center;
             skipLabelTMP.raycastTarget = false;
             OvertoneUI.StretchFill(skipLabelGO.GetComponent<RectTransform>());
@@ -464,12 +475,20 @@ namespace MergeGame.UI
             if (ballB != null) ballB.SetActive(true);
             if (mergeRing != null) mergeRing.SetActive(false);
 
+            // Ensure merged ball is in step 2's group (it may have been reparented to step 1 during merge anim)
+            if (mergedBall != null && stepGroups[2] != null)
+            {
+                mergedBall.transform.SetParent(stepGroups[2].transform, false);
+                mergedBall.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -95);
+                mergedBall.GetComponent<RectTransform>().localScale = Vector3.one;
+            }
+
             // Indicators — active: wide cyan pill, inactive: small dark circle
             for (int i = 0; i < stepDots.Length; i++)
             {
                 bool active = i == stepIndex;
                 stepDots[i].color = active ? OC.cyan : new Color(0.22f, 0.24f, 0.30f); // darker than OC.border
-                stepDots[i].rectTransform.sizeDelta = active ? new Vector2(24, 8) : new Vector2(8, 8);
+                stepDots[i].rectTransform.sizeDelta = active ? new Vector2(18, 8) : new Vector2(8, 8);
             }
 
             // Labels
@@ -547,7 +566,21 @@ namespace MergeGame.UI
 
             SpawnMergeParticles(stepGroups[1].transform, new Vector2(0, -95f));
 
-            yield return new WaitForSeconds(0.15f);
+            yield return new WaitForSeconds(0.2f);
+
+            // Show merged ball in place (reuse mergedBall but parent it to step 1 group temporarily)
+            if (mergedBall != null)
+            {
+                mergedBall.transform.SetParent(stepGroups[1].transform, false);
+                var mbRT = mergedBall.GetComponent<RectTransform>();
+                mbRT.anchoredPosition = new Vector2(0, -95);
+                mergedBall.SetActive(true);
+                mbRT.localScale = Vector3.zero;
+                yield return ScaleObject(mergedBall, Vector3.zero, Vector3.one * 1.15f, 0.2f);
+                yield return ScaleObject(mergedBall, Vector3.one * 1.15f, Vector3.one, 0.1f);
+            }
+
+            // Wait for user to press NEXT — don't auto-advance
         }
 
         private IEnumerator AnimateStep2()
@@ -594,33 +627,17 @@ namespace MergeGame.UI
                 popRT.anchoredPosition = new Vector2(0, baseY);
             }
 
+            // Dropper bobbing — loops until user presses LET'S PLAY
             if (newDropper != null)
             {
                 var dropperRT = newDropper.GetComponent<RectTransform>();
                 float baseY = 115f;
-                float cycleTimer = 0f;
-                float cycleDuration = 2.5f;
 
                 while (stepIndex == 2)
                 {
                     float t = Mathf.PingPong(Time.time * 0.7f, 1f);
                     float eased = Mathf.Sin(t * Mathf.PI);
                     dropperRT.anchoredPosition = new Vector2(0, baseY + eased * 6f);
-
-                    cycleTimer += Time.deltaTime;
-                    if (cycleTimer >= cycleDuration)
-                    {
-                        demoCycleCount++;
-                        if (demoCycleCount >= 3)
-                        {
-                            FinishOnboarding();
-                            yield break;
-                        }
-                        cycleTimer = 0f;
-                        animCoroutine = StartCoroutine(AnimateStep2());
-                        yield break;
-                    }
-
                     yield return null;
                 }
             }
@@ -755,18 +772,19 @@ namespace MergeGame.UI
             rt.sizeDelta = new Vector2(forcedSize, forcedSize);
 
             var img = go.AddComponent<Image>();
-            Color color = OC.cyan;
-            if (tierConfig != null)
-            {
-                var data = tierConfig.GetTier(tierIndex);
-                if (data != null) color = data.color;
-            }
 
-            // Use pill sprite as a circle for demo balls — Simple mode keeps it round
-            img.sprite = CreatePillSprite();
+            // Generate a real ball sprite at UI-friendly size
+            float uiRadius = forcedSize / (2f * 48f); // 48 = PixelsPerUnit
+            var png = Visual.NeonBallRenderer.GenerateBallPNG(tierIndex, Color.white, uiRadius, 0f);
+            int expectedSize = Mathf.Max(8, Mathf.RoundToInt(uiRadius * 2f * 48f)) + 8;
+            var tex = new Texture2D(expectedSize, expectedSize, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.LoadImage(png);
+            img.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                new Vector2(0.5f, 0.5f), tex.width);
             img.type = Image.Type.Simple;
             img.preserveAspect = true;
-            img.color = color;
+            img.color = Color.white;
             return go;
         }
 
