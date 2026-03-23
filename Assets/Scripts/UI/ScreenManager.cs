@@ -205,41 +205,95 @@ namespace MergeGame.UI
 
         private IEnumerator TransitionCoroutine(Screen target)
         {
-            CanvasGroup current = GetScreenGroup(CurrentScreen);
             CanvasGroup next = GetScreenGroup(target);
+            bool needsCurtain = (target == Screen.Game || CurrentScreen == Screen.Game);
 
-            if (next != null)
+            if (needsCurtain)
             {
-                next.gameObject.SetActive(true);
-                next.alpha = 0f;
-                next.transform.SetAsLastSibling();
+                // Fade to black, switch, fade from black — covers world-space content
+                yield return FadeCurtain(0f, 1f, transitionDuration * 0.6f);
+                HideAllBaseScreens();
+                SetGroupActive(next, true);
+                CurrentScreen = target;
+                BaseScreen = target;
+                yield return FadeCurtain(1f, 0f, transitionDuration * 0.6f);
             }
-
-            float elapsed = 0f;
-            while (elapsed < transitionDuration)
+            else
             {
-                elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / transitionDuration);
-                float eased = 1f - (1f - t) * (1f - t);
-
+                // Standard crossfade for UI-only screens
                 if (next != null)
                 {
-                    next.alpha = eased;
-                    RectTransform rt = next.GetComponent<RectTransform>();
-                    if (rt != null)
-                        rt.localScale = Vector3.Lerp(Vector3.one * scaleFrom, Vector3.one, eased);
+                    next.gameObject.SetActive(true);
+                    next.alpha = 0f;
+                    next.transform.SetAsLastSibling();
                 }
+
+                float elapsed = 0f;
+                while (elapsed < transitionDuration)
+                {
+                    elapsed += Time.unscaledDeltaTime;
+                    float t = Mathf.Clamp01(elapsed / transitionDuration);
+                    float eased = 1f - (1f - t) * (1f - t);
+
+                    if (next != null)
+                    {
+                        next.alpha = eased;
+                        RectTransform rt = next.GetComponent<RectTransform>();
+                        if (rt != null)
+                            rt.localScale = Vector3.Lerp(Vector3.one * scaleFrom, Vector3.one, eased);
+                    }
+                    yield return null;
+                }
+
+                HideAllBaseScreens();
+                SetGroupActive(next, true);
+                CurrentScreen = target;
+                BaseScreen = target;
+            }
+
+            activeTransition = null;
+        }
+
+        // Full-screen black curtain for transitions involving world-space content
+        private GameObject curtainGO;
+        private Image curtainImage;
+
+        private IEnumerator FadeCurtain(float fromAlpha, float toAlpha, float duration)
+        {
+            if (curtainGO == null)
+            {
+                curtainGO = new GameObject("TransitionCurtain");
+                curtainGO.transform.SetParent(transform, false);
+                var cRT = curtainGO.AddComponent<RectTransform>();
+                cRT.anchorMin = Vector2.zero;
+                cRT.anchorMax = Vector2.one;
+                cRT.offsetMin = Vector2.zero;
+                cRT.offsetMax = Vector2.zero;
+                curtainImage = curtainGO.AddComponent<Image>();
+                curtainImage.color = new Color(0.059f, 0.067f, 0.090f, 0f); // OC.bg
+                curtainImage.raycastTarget = true; // block input during transition
+            }
+
+            curtainGO.SetActive(true);
+            curtainGO.transform.SetAsLastSibling();
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float eased = t * t; // ease in
+                curtainImage.color = new Color(
+                    curtainImage.color.r, curtainImage.color.g, curtainImage.color.b,
+                    Mathf.Lerp(fromAlpha, toAlpha, eased));
                 yield return null;
             }
 
-            // Hide ALL base screens, then show only the target.
-            // This ensures stale legacy panels don't linger.
-            HideAllBaseScreens();
-            SetGroupActive(next, true);
+            curtainImage.color = new Color(
+                curtainImage.color.r, curtainImage.color.g, curtainImage.color.b, toAlpha);
 
-            CurrentScreen = target;
-            BaseScreen = target;
-            activeTransition = null;
+            if (toAlpha <= 0f)
+                curtainGO.SetActive(false);
         }
 
         // ───── Screen lookup ─────

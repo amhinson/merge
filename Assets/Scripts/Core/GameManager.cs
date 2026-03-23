@@ -92,13 +92,23 @@ namespace MergeGame.Core
 
         private void NavigateToInitialScreen()
         {
-            if (GameSession.IsFirstLaunch && ScreenManager.Instance != null)
-            {
-                ScreenManager.Instance.ShowImmediate(UI.Screen.Onboarding);
-                return;
-            }
+            // Delay slightly so loading screen feels intentional, then fade out
+            StartCoroutine(DelayedNavigate());
+        }
 
-            SetState(GameState.Menu);
+        private System.Collections.IEnumerator DelayedNavigate()
+        {
+            // Minimum loading time — let the logo + ball breathe
+            yield return new WaitForSeconds(1.5f);
+
+            if (GameSession.IsFirstLaunch && ScreenManager.Instance != null)
+                ScreenManager.Instance.ShowImmediate(UI.Screen.Onboarding);
+            else
+                SetState(GameState.Menu);
+
+            // Fade out loading screen
+            if (UI.LoadingScreen.Instance != null)
+                UI.LoadingScreen.Instance.Dismiss();
         }
 
         private void Update()

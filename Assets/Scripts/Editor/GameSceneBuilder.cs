@@ -245,6 +245,11 @@ namespace MergeGame.Editor
             newSettingsPanel.SetActive(false);
             newLeaderboardPanel.SetActive(false);
 
+            // Loading screen — shows immediately on app start, covers everything
+            var loadingPanel = CreateFullPanel(safeArea.transform, "LoadingScreen");
+            loadingPanel.AddComponent<LoadingScreen>();
+            loadingPanel.transform.SetAsLastSibling(); // render on top
+
             // ScreenManager — wire both legacy and new fields
             var screenManager = canvasObj.AddComponent<ScreenManager>();
             var smSO = new SerializedObject(screenManager);

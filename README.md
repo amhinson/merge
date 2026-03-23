@@ -1,4 +1,3 @@
-Transitions showing grid UI in between.
 Marge count should be for the lower balls that were merged, not what it was merged into. I.e. two tier 1 balls merge into tier 2 - tier 1 should have 1 merge count in the summary.
 
 Don't like the way the merge re-centers. Should handle combos betters.
