@@ -5,7 +5,9 @@
       "Bash(ls -la /Users/alex/projects/personal/merge/*.md)",
       "Bash(curl -L \"https://fonts.google.com/download?family=DM+Mono\" -o /tmp/DM_Mono.zip)",
       "Bash(unzip -o /tmp/DM_Mono.zip -d /tmp/DM_Mono)",
-      "Bash(cp /tmp/DM_Mono/DMMono-Medium.ttf /Users/alex/projects/personal/merge/Assets/Fonts/DMMono-Medium.ttf)"
+      "Bash(cp /tmp/DM_Mono/DMMono-Medium.ttf /Users/alex/projects/personal/merge/Assets/Fonts/DMMono-Medium.ttf)",
+      "Bash(grep -r \"new PixelButton\\\\|PixelButton\\\\.\" /Users/alex/projects/personal/merge/Assets/Scripts --include=*.cs)",
+      "Bash(grep -r titleScreen. /Users/alex/projects/personal/merge/Assets/Scripts --include=*.cs)"
     ]
   }
 }

@@ -26,17 +26,17 @@ namespace MergeGame.Editor
 
         private static readonly Color[] TierColors = new[]
         {
-            HexColor("00FFE0"), // Tier 1:  Electric cyan
-            HexColor("4D9FFF"), // Tier 2:  Soft blue
-            HexColor("8B5CF6"), // Tier 3:  Violet
-            HexColor("FF2D95"), // Tier 4:  Hot magenta
-            HexColor("FF6BC2"), // Tier 5:  Neon pink
-            HexColor("FF4545"), // Tier 6:  Warm red
-            HexColor("FF8A2D"), // Tier 7:  Neon orange
-            HexColor("FFBB33"), // Tier 8:  Warm amber
-            HexColor("39FF6B"), // Tier 9:  Neon green
-            HexColor("E8F0FF"), // Tier 10: White-hot
-            HexColor("FFD700"), // Tier 11: Gold
+            HexColor("4DD9C0"), // Tier 1:  Cyan
+            HexColor("E8587A"), // Tier 2:  Pink
+            HexColor("F0B429"), // Tier 3:  Amber
+            HexColor("A78BFA"), // Tier 4:  Violet
+            HexColor("A3E635"), // Tier 5:  Lime
+            HexColor("38BDF8"), // Tier 6:  Sky
+            HexColor("FB923C"), // Tier 7:  Orange
+            HexColor("FB7185"), // Tier 8:  Rose
+            HexColor("4DD9C0"), // Tier 9:  Cyan (same as 1)
+            HexColor("F0B429"), // Tier 10: Amber (same as 3)
+            HexColor("E8587A"), // Tier 11: Pink (same as 2)
         };
 
         // Cached sprites
@@ -71,7 +71,9 @@ namespace MergeGame.Editor
             // Scene objects
             CreateContainer(physicsConfig);
             CreateDeathLine(physicsConfig);
-            var guideLine = CreateGuideLine();
+            CreateArenaGrid(physicsConfig);
+            // Guide line removed — clean drop without visual guide
+            LineRenderer guideLine = null;
 
             // Managers
             var managers = new GameObject("Managers");
@@ -89,9 +91,7 @@ namespace MergeGame.Editor
             managers.AddComponent<LeaderboardService>();
             managers.AddComponent<MergeParticles>();
 
-            // Debug overlay
-            var debugOverlay = managers.AddComponent<DebugOverlay>();
-            SetProperty(debugOverlay, "physicsConfig", physicsConfig);
+            // Debug overlay removed from production builds
 
             // Wire DailySeedManager
             SetProperty(dailySeedManager, "tierConfig", tierConfig);
@@ -112,7 +112,8 @@ namespace MergeGame.Editor
             dcSO.FindProperty("tierConfig").objectReferenceValue = tierConfig;
             dcSO.FindProperty("physicsConfig").objectReferenceValue = physicsConfig;
             dcSO.FindProperty("ballPrefab").objectReferenceValue = ballPrefab;
-            dcSO.FindProperty("guideLine").objectReferenceValue = guideLine;
+            // guideLine removed — no vertical drop guide
+            // dcSO.FindProperty("guideLine").objectReferenceValue = null;
             dcSO.FindProperty("dropY").floatValue = physicsConfig.dropHeight;
             dcSO.FindProperty("leftWallX").floatValue = -physicsConfig.containerWidth / 2f;
             dcSO.FindProperty("rightWallX").floatValue = physicsConfig.containerWidth / 2f;
@@ -213,9 +214,9 @@ namespace MergeGame.Editor
             var newLeaderboardPanel = CreateNewScreenPanel(safeArea.transform, "NewLeaderboardScreen", tierConfig);
             newLeaderboardPanel.AddComponent<NewLeaderboardScreen>();
 
-            // Add GameScreenHUD to gameplay panel
-            var gameHUD = gameplayPanel.AddComponent<GameScreenHUD>();
-            SetProperty(gameHUD, "tierConfig", tierConfig);
+            // GameScreenHUD not added here — the legacy gameplay panel
+            // already has its own HUD (score, shake, next ball preview).
+            // TODO: replace legacy HUD with GameScreenHUD when ready.
 
             // CanvasGroups for new screens
             var onboardingCG = onboardingPanel.GetComponent<CanvasGroup>();
@@ -226,7 +227,8 @@ namespace MergeGame.Editor
             var newSettingsCG = newSettingsPanel.GetComponent<CanvasGroup>();
             var newLeaderboardCG = newLeaderboardPanel.GetComponent<CanvasGroup>();
 
-            // Hide all except title
+            // Hide everything — startup flow in GameManager decides what to show
+            titlePanel.SetActive(false);
             gameplayPanel.SetActive(false);
             resultsPanel.SetActive(false);
             lbPanel.SetActive(false);
@@ -350,86 +352,289 @@ namespace MergeGame.Editor
             CreateGameplayPanel(Transform parent)
         {
             var panel = CreateFullPanel(parent, "GameplayScreen");
-            // No background — gameplay shows through
+            // No background — gameplay world shows through
 
-            // Score (top center, large)
-            var scoreText = CreateText(panel.transform, "Score", "0", 72, TextColor);
-            SetAnchors(scoreText.rectTransform, 0.15f, 0.88f, 0.85f, 0.96f);
+            // ===== HEADER BAR (top) =====
+            // Back button (top-left)
+            var backBtn = new GameObject("BackButton");
+            backBtn.transform.SetParent(panel.transform, false);
+            var backBtnRT = backBtn.AddComponent<RectTransform>();
+            SetAnchors(backBtnRT, 0, 1, 0, 1); // top-left anchor
+            backBtnRT.anchoredPosition = new Vector2(16, -12);
+            backBtnRT.sizeDelta = new Vector2(32, 28);
+            backBtnRT.pivot = new Vector2(0, 1);
+            var backBtnImg = backBtn.AddComponent<Image>();
+            backBtnImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            backBtnImg.type = Image.Type.Sliced;
+            backBtnImg.color = HexColor("232838"); // visible dark button
+            var backBtnComp = backBtn.AddComponent<Button>();
+            backBtnComp.targetGraphic = backBtnImg;
+            // Back button outline
+            var backOutline = new GameObject("Outline");
+            backOutline.transform.SetParent(backBtn.transform, false);
+            var backOutlineRT = backOutline.AddComponent<RectTransform>();
+            backOutlineRT.anchorMin = Vector2.zero; backOutlineRT.anchorMax = Vector2.one;
+            backOutlineRT.offsetMin = Vector2.zero; backOutlineRT.offsetMax = Vector2.zero;
+            var backOutlineImg = backOutline.AddComponent<Image>();
+            backOutlineImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            backOutlineImg.type = Image.Type.Sliced;
+            backOutlineImg.color = HexColor("232838");
+            backOutlineImg.raycastTarget = false;
+            // Back arrow — use pixel-art icon instead of glyph
+            var backIconGO = new GameObject("BackIcon");
+            backIconGO.transform.SetParent(backBtn.transform, false);
+            var backIconImg = backIconGO.AddComponent<Image>();
+            backIconImg.sprite = PixelUIGenerator.CreateBackIcon(12, new Color(1, 1, 1, 0.4f));
+            backIconImg.preserveAspect = true;
+            backIconImg.raycastTarget = false;
+            var backIconRT = backIconGO.GetComponent<RectTransform>();
+            backIconRT.anchorMin = new Vector2(0.5f, 0.5f); backIconRT.anchorMax = new Vector2(0.5f, 0.5f);
+            backIconRT.pivot = new Vector2(0.5f, 0.5f);
+            backIconRT.anchoredPosition = Vector2.zero;
+            backIconRT.sizeDelta = new Vector2(14, 14);
+
+            // Score block (next to back button) — disable raycast on text so they don't block the button
+            var scoreLabelTMP = CreateText(panel.transform, "ScoreLabel", "SCORE", 7, new Color(1, 1, 1, 0.22f));
+            SetAnchors(scoreLabelTMP.rectTransform, 0, 1, 0, 1);
+            scoreLabelTMP.rectTransform.anchoredPosition = new Vector2(56, -10);
+            scoreLabelTMP.rectTransform.sizeDelta = new Vector2(80, 12);
+            scoreLabelTMP.rectTransform.pivot = new Vector2(0, 1);
+            scoreLabelTMP.alignment = TextAlignmentOptions.Left;
+            scoreLabelTMP.raycastTarget = false;
+
+            var scoreText = CreateText(panel.transform, "Score", "0", 28, HexColor("4DD9C0"));
+            SetAnchors(scoreText.rectTransform, 0, 1, 0, 1);
+            scoreText.rectTransform.anchoredPosition = new Vector2(56, -22);
+            scoreText.rectTransform.sizeDelta = new Vector2(150, 34);
+            scoreText.rectTransform.pivot = new Vector2(0, 1);
+            scoreText.alignment = TextAlignmentOptions.Left;
+            scoreText.raycastTarget = false;
+
+            // Try to use DMMono for score number
+            var dmMono = Resources.Load<TMP_FontAsset>("Fonts/DMMono-Medium SDF");
+            if (dmMono != null) scoreText.font = dmMono;
 
             // ScoreTickUp
             var scoreTickUp = scoreText.gameObject.AddComponent<ScoreTickUp>();
             SetProperty(scoreTickUp, "scoreText", scoreText);
 
-            // "Next" label + anchor point for the real ball object
-            var nextLabel = CreateText(panel.transform, "NextLabel", "Next", 18, MutedText);
-            SetAnchors(nextLabel.rectTransform, 0.82f, 0.94f, 0.98f, 0.98f);
+            // Next ball card (top-right) — large enough to contain any ball
+            var nextCard = new GameObject("NextBallCard");
+            nextCard.transform.SetParent(panel.transform, false);
+            var nextCardRT = nextCard.AddComponent<RectTransform>();
+            SetAnchors(nextCardRT, 1, 1, 1, 1); // top-right
+            nextCardRT.anchoredPosition = new Vector2(-16, -8);
+            nextCardRT.sizeDelta = new Vector2(60, 60);
+            nextCardRT.pivot = new Vector2(1, 1);
+            var nextCardBg = nextCard.AddComponent<Image>();
+            nextCardBg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            nextCardBg.type = Image.Type.Sliced;
+            nextCardBg.color = HexColor("161B24");
+            nextCardBg.raycastTarget = false;
+            // Border outline
+            var nextOutline = new GameObject("Outline");
+            nextOutline.transform.SetParent(nextCard.transform, false);
+            var nextOutlineRT = nextOutline.AddComponent<RectTransform>();
+            nextOutlineRT.anchorMin = Vector2.zero; nextOutlineRT.anchorMax = Vector2.one;
+            nextOutlineRT.offsetMin = Vector2.zero; nextOutlineRT.offsetMax = Vector2.zero;
+            var nextOutlineImg = nextOutline.AddComponent<Image>();
+            nextOutlineImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            nextOutlineImg.type = Image.Type.Sliced;
+            nextOutlineImg.color = HexColor("232838");
+            nextOutlineImg.raycastTarget = false;
+            // "NEXT" label
+            var nextLabelTMP = CreateText(nextCard.transform, "NextLabel", "NEXT", 6, new Color(1, 1, 1, 0.22f));
+            var nextLabelRT = nextLabelTMP.rectTransform;
+            nextLabelRT.anchorMin = new Vector2(0, 1); nextLabelRT.anchorMax = new Vector2(1, 1);
+            nextLabelRT.pivot = new Vector2(0.5f, 1);
+            nextLabelRT.anchoredPosition = new Vector2(0, -4);
+            nextLabelRT.sizeDelta = new Vector2(0, 10);
+            nextLabelTMP.alignment = TextAlignmentOptions.Center;
+            nextLabelTMP.raycastTarget = false;
+            // Next ball UI Image — renders inside the card as a UI element (not world-space)
+            var nextBallImgObj = new GameObject("NextBallImage");
+            nextBallImgObj.transform.SetParent(nextCard.transform, false);
+            var nextBallImgRT = nextBallImgObj.AddComponent<RectTransform>();
+            nextBallImgRT.anchorMin = new Vector2(0.1f, 0.05f);
+            nextBallImgRT.anchorMax = new Vector2(0.9f, 0.72f);
+            nextBallImgRT.offsetMin = Vector2.zero;
+            nextBallImgRT.offsetMax = Vector2.zero;
+            var nextImg = nextBallImgObj.AddComponent<Image>();
+            nextImg.preserveAspect = true;
+            nextImg.raycastTarget = false;
+            nextImg.color = Color.white;
 
-            // Anchor point — DropController converts this UI position to world space
+            // Anchor for DropController (still needed for world-space drop positioning)
             var nextAnchor = new GameObject("NextBallAnchor");
             nextAnchor.transform.SetParent(panel.transform, false);
             var anchorRT = nextAnchor.AddComponent<RectTransform>();
-            SetAnchors(anchorRT, 0.88f, 0.92f, 0.92f, 0.96f);
+            SetAnchors(anchorRT, 0.5f, 0.95f, 0.5f, 0.95f); // top-center of screen for drop position
 
-            Image nextImg = null;
             NextBallPreviewUI nextBallUI = null;
 
-            // Mini leaderboard (top left)
+            // Mini leaderboard (hidden — not shown in new design during gameplay)
             var mlbObj = new GameObject("MiniLeaderboard");
             mlbObj.transform.SetParent(panel.transform, false);
             var mlbRT = mlbObj.AddComponent<RectTransform>();
-            SetAnchors(mlbRT, 0.02f, 0.82f, 0.42f, 0.97f);
-
-            var topPlayerText = CreateText(mlbObj.transform, "TopPlayer", "", 18, MutedText);
-            topPlayerText.alignment = TextAlignmentOptions.TopLeft;
-            topPlayerText.overflowMode = TextOverflowModes.Truncate;
-            SetAnchors(topPlayerText.rectTransform, 0, 0.45f, 1, 1);
-
-            var playerRow = CreateText(mlbObj.transform, "PlayerRow", "", 18, new Color(1f, 0.85f, 0.3f));
-            playerRow.alignment = TextAlignmentOptions.TopLeft;
-            playerRow.overflowMode = TextOverflowModes.Truncate;
-            SetAnchors(playerRow.rectTransform, 0, 0, 1, 0.45f);
-
+            SetAnchors(mlbRT, 0, 0.92f, 0.01f, 0.93f); // tiny, hidden
+            mlbObj.SetActive(false);
+            var topPlayerText = CreateText(mlbObj.transform, "TopPlayer", "", 7, MutedText);
+            var playerRow = CreateText(mlbObj.transform, "PlayerRow", "", 7, MutedText);
             var miniLB = mlbObj.AddComponent<MiniLeaderboardUI>();
             var mlbSO = new SerializedObject(miniLB);
             mlbSO.FindProperty("topPlayerText").objectReferenceValue = topPlayerText;
             mlbSO.FindProperty("playerRow").objectReferenceValue = playerRow;
             mlbSO.ApplyModifiedPropertiesWithoutUndo();
 
-            // Shake button (bottom left, inline count)
-            var shakeBtn = CreateStyledButton(panel.transform, "ShakeButton", "SHAKE x3", 24, 0.03f, 0.01f, 0.30f, 0.06f);
-            var shakeTMP = shakeBtn.GetComponentInChildren<TextMeshProUGUI>();
+            // Arena grid is created as a world-space object (not UI) in BuildGameScene
+            // so it renders BEHIND balls. See CreateArenaGrid().
 
-            // Exit button (bottom right)
-            var exitBtn = CreateIconButton(panel.transform, "ExitBtn", 0.88f, 0.01f, 0.98f, 0.06f);
-            var exitIcon = exitBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (exitIcon != null) { exitIcon.text = "X"; exitIcon.fontSize = 20; }
+            // ===== SHAKE BUTTON (bottom-left, safely below grid) =====
+            var shakeArea = new GameObject("ShakeArea");
+            shakeArea.transform.SetParent(panel.transform, false);
+            var shakeAreaRT = shakeArea.AddComponent<RectTransform>();
+            // Anchor at bottom-left, position above safe area
+            SetAnchors(shakeAreaRT, 0, 0, 0, 0);
+            shakeAreaRT.anchoredPosition = new Vector2(16, 10);
+            shakeAreaRT.sizeDelta = new Vector2(120, 44);
+            shakeAreaRT.pivot = new Vector2(0, 0);
 
-            // Confirmation dialog (hidden by default)
+            // Shake button
+            var shakeBtn = new GameObject("ShakeButton");
+            shakeBtn.transform.SetParent(shakeArea.transform, false);
+            var shakeBtnRT = shakeBtn.AddComponent<RectTransform>();
+            shakeBtnRT.anchorMin = new Vector2(0, 0.32f); shakeBtnRT.anchorMax = new Vector2(1, 1);
+            shakeBtnRT.offsetMin = Vector2.zero; shakeBtnRT.offsetMax = Vector2.zero;
+            var shakeBtnImg = shakeBtn.AddComponent<Image>();
+            shakeBtnImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            shakeBtnImg.type = Image.Type.Sliced;
+            shakeBtnImg.color = HexColor("161B24");
+            shakeBtn.AddComponent<Button>().targetGraphic = shakeBtnImg;
+            // Shake outline
+            var shakeOutline = new GameObject("Outline");
+            shakeOutline.transform.SetParent(shakeBtn.transform, false);
+            var shakeOutlineRT = shakeOutline.AddComponent<RectTransform>();
+            shakeOutlineRT.anchorMin = Vector2.zero; shakeOutlineRT.anchorMax = Vector2.one;
+            shakeOutlineRT.offsetMin = Vector2.zero; shakeOutlineRT.offsetMax = Vector2.zero;
+            var shakeOutlineImg = shakeOutline.AddComponent<Image>();
+            shakeOutlineImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            shakeOutlineImg.type = Image.Type.Sliced;
+            shakeOutlineImg.color = HexColor("232838");
+            shakeOutlineImg.raycastTarget = false;
+            // Shake label — "SHAKE" with small square icon
+            var shakeTMP = CreateText(shakeBtn.transform, "ShakeLabel", "Shake", 8, new Color(1, 1, 1, 0.35f));
+            shakeTMP.alignment = TextAlignmentOptions.Center;
+            var shakeTMPRT = shakeTMP.rectTransform;
+            shakeTMPRT.anchorMin = Vector2.zero; shakeTMPRT.anchorMax = Vector2.one;
+            shakeTMPRT.offsetMin = Vector2.zero; shakeTMPRT.offsetMax = Vector2.zero;
+
+            // Count below shake button
+            var shakeCountTMP = CreateText(shakeArea.transform, "ShakeCount", "3 left", 7, new Color(1, 1, 1, 0.22f));
+            shakeCountTMP.alignment = TextAlignmentOptions.Left;
+            var shakeCountRT = shakeCountTMP.rectTransform;
+            shakeCountRT.anchorMin = new Vector2(0, 0); shakeCountRT.anchorMax = new Vector2(1, 0.35f);
+            shakeCountRT.offsetMin = new Vector2(2, 0); shakeCountRT.offsetMax = Vector2.zero;
+
+            // ===== EXIT CONFIRM MODAL =====
             var confirmPanel = new GameObject("ExitConfirm");
             confirmPanel.transform.SetParent(panel.transform, false);
             var cpRT = confirmPanel.AddComponent<RectTransform>();
             SetAnchors(cpRT, 0, 0, 1, 1);
+            // Dark scrim
             var cpBg = confirmPanel.AddComponent<Image>();
-            cpBg.color = new Color(0.05f, 0.05f, 0.08f, 0.85f);
+            cpBg.color = new Color(0.031f, 0.031f, 0.055f, 0.88f); // OC.overlayDark
 
-            var confirmText = CreateText(confirmPanel.transform, "ConfirmText", "Quit game?", 32, TextColor);
-            SetAnchors(confirmText.rectTransform, 0.1f, 0.55f, 0.9f, 0.65f);
+            // Modal card (centered)
+            var modalCard = new GameObject("ModalCard");
+            modalCard.transform.SetParent(confirmPanel.transform, false);
+            var mcRT = modalCard.AddComponent<RectTransform>();
+            mcRT.anchorMin = new Vector2(0.5f, 0.5f);
+            mcRT.anchorMax = new Vector2(0.5f, 0.5f);
+            mcRT.pivot = new Vector2(0.5f, 0.5f);
+            mcRT.sizeDelta = new Vector2(260, 140);
+            var mcBg = modalCard.AddComponent<Image>();
+            mcBg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            mcBg.type = Image.Type.Sliced;
+            mcBg.color = HexColor("161B24");
+            // Card border
+            var mcOutline = new GameObject("Outline");
+            mcOutline.transform.SetParent(modalCard.transform, false);
+            var mcOutRT = mcOutline.AddComponent<RectTransform>();
+            mcOutRT.anchorMin = Vector2.zero; mcOutRT.anchorMax = Vector2.one;
+            mcOutRT.offsetMin = Vector2.zero; mcOutRT.offsetMax = Vector2.zero;
+            var mcOutImg = mcOutline.AddComponent<Image>();
+            mcOutImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            mcOutImg.type = Image.Type.Sliced;
+            mcOutImg.color = HexColor("232838");
+            mcOutImg.raycastTarget = false;
 
-            var yesBtn = CreateStyledButton(confirmPanel.transform, "YesBtn", "QUIT", 28, 0.15f, 0.38f, 0.48f, 0.50f);
-            var noBtn = CreateStyledButton(confirmPanel.transform, "NoBtn", "CANCEL", 28, 0.52f, 0.38f, 0.85f, 0.50f);
+            // "Quit game?" text
+            var confirmText = CreateText(modalCard.transform, "ConfirmText", "Quit game?", 12, TextColor);
+            var ctRT = confirmText.rectTransform;
+            ctRT.anchorMin = new Vector2(0, 0.55f); ctRT.anchorMax = new Vector2(1, 0.9f);
+            ctRT.offsetMin = new Vector2(16, 0); ctRT.offsetMax = new Vector2(-16, 0);
+            confirmText.alignment = TextAlignmentOptions.Center;
+
+            // Button row
+            var btnRow = new GameObject("ButtonRow");
+            btnRow.transform.SetParent(modalCard.transform, false);
+            var brRT = btnRow.AddComponent<RectTransform>();
+            brRT.anchorMin = new Vector2(0, 0.08f); brRT.anchorMax = new Vector2(1, 0.48f);
+            brRT.offsetMin = new Vector2(16, 0); brRT.offsetMax = new Vector2(-16, 0);
+            var brHLG = btnRow.AddComponent<HorizontalLayoutGroup>();
+            brHLG.spacing = 8;
+            brHLG.childAlignment = TextAnchor.MiddleCenter;
+            brHLG.childControlWidth = true;
+            brHLG.childControlHeight = true;
+            brHLG.childForceExpandWidth = true;
+
+            // QUIT button (primary/cyan)
+            var quitBtnGO = new GameObject("YesBtn");
+            quitBtnGO.transform.SetParent(btnRow.transform, false);
+            var quitBtnImg = quitBtnGO.AddComponent<Image>();
+            quitBtnImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            quitBtnImg.type = Image.Type.Sliced;
+            quitBtnImg.color = HexColor("E8587A"); // pink/danger for quit
+            var yesBtn = quitBtnGO.AddComponent<Button>();
+            yesBtn.targetGraphic = quitBtnImg;
+            var quitLabel = CreateText(quitBtnGO.transform, "Label", "QUIT", 9, HexColor("0F1117"));
+            quitLabel.alignment = TextAlignmentOptions.Center;
+            var qlRT = quitLabel.rectTransform;
+            qlRT.anchorMin = Vector2.zero; qlRT.anchorMax = Vector2.one;
+            qlRT.offsetMin = Vector2.zero; qlRT.offsetMax = Vector2.zero;
+
+            // CANCEL button (ghost/outline)
+            var cancelBtnGO = new GameObject("NoBtn");
+            cancelBtnGO.transform.SetParent(btnRow.transform, false);
+            var cancelBtnImg = cancelBtnGO.AddComponent<Image>();
+            cancelBtnImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            cancelBtnImg.type = Image.Type.Sliced;
+            cancelBtnImg.color = HexColor("161B24");
+            var noBtn = cancelBtnGO.AddComponent<Button>();
+            noBtn.targetGraphic = cancelBtnImg;
+            // Cancel border
+            var cbOutline = new GameObject("Outline");
+            cbOutline.transform.SetParent(cancelBtnGO.transform, false);
+            var cbOutRT = cbOutline.AddComponent<RectTransform>();
+            cbOutRT.anchorMin = Vector2.zero; cbOutRT.anchorMax = Vector2.one;
+            cbOutRT.offsetMin = Vector2.zero; cbOutRT.offsetMax = Vector2.zero;
+            var cbOutImg = cbOutline.AddComponent<Image>();
+            cbOutImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            cbOutImg.type = Image.Type.Sliced;
+            cbOutImg.color = HexColor("232838");
+            cbOutImg.raycastTarget = false;
+            var cancelLabel = CreateText(cancelBtnGO.transform, "Label", "CANCEL", 9, new Color(1, 1, 1, 0.22f));
+            cancelLabel.alignment = TextAlignmentOptions.Center;
+            var clRT = cancelLabel.rectTransform;
+            clRT.anchorMin = Vector2.zero; clRT.anchorMax = Vector2.one;
+            clRT.offsetMin = Vector2.zero; clRT.offsetMax = Vector2.zero;
 
             confirmPanel.SetActive(false);
 
-            // Wire exit confirmation logic via a helper component
-            var exitHelper = panel.AddComponent<ExitConfirmUI>();
-            var ehSO = new SerializedObject(exitHelper);
-            ehSO.FindProperty("exitButton").objectReferenceValue = exitBtn.GetComponent<Button>();
-            ehSO.FindProperty("confirmPanel").objectReferenceValue = confirmPanel;
-            ehSO.FindProperty("yesButton").objectReferenceValue = yesBtn.GetComponent<Button>();
-            ehSO.FindProperty("noButton").objectReferenceValue = noBtn.GetComponent<Button>();
-            ehSO.ApplyModifiedPropertiesWithoutUndo();
+            // Exit confirmation — finds its own children by name at runtime
+            panel.AddComponent<SimpleExitConfirm>();
 
-            return (panel, scoreText, shakeBtn.GetComponent<Button>(), shakeTMP,
+            return (panel, scoreText, shakeBtn.GetComponent<Button>(), shakeCountTMP,
                 nextImg, miniLB, scoreTickUp, nextBallUI, anchorRT);
         }
 
@@ -803,8 +1008,12 @@ namespace MergeGame.Editor
                 config = ScriptableObject.CreateInstance<PhysicsConfig>();
                 AssetDatabase.CreateAsset(config, path);
             }
-            // Ensure container fits on screen
-            config.containerWidth = 4.5f;
+            // Container fills screen width with small margin, height from below header to above shake
+            config.containerWidth = 5.1f;
+            config.containerHeight = 9.5f;
+            config.containerBottomY = -3.5f;
+            config.dropHeight = 6.5f;   // just above container top (6.0), ball overlaps slightly
+            config.deathLineY = 5.2f;   // just below container top (6.0)
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
             return config;
@@ -865,7 +1074,7 @@ namespace MergeGame.Editor
                 {
                     imp.textureType = TextureImporterType.Sprite;
                     imp.spritePixelsPerUnit = 48;
-                    imp.filterMode = FilterMode.Point;
+                    imp.filterMode = FilterMode.Bilinear;
                     imp.textureCompression = TextureImporterCompression.Uncompressed;
                     imp.SaveAndReimport();
                 }
@@ -966,6 +1175,100 @@ namespace MergeGame.Editor
             SetProperty(setup, "physicsConfig", config);
         }
 
+        /// <summary>
+        /// Creates the arena grid + border as world-space SpriteRenderers.
+        /// Renders at sortingOrder -2, behind balls (0+) and container walls (-1).
+        /// </summary>
+        private static void CreateArenaGrid(PhysicsConfig config)
+        {
+            float w = config.containerWidth;
+            float h = config.containerHeight;
+            float botY = config.containerBottomY;
+            float cx = 0f;
+            float cy = botY + h / 2f;
+
+            // Grid matches the physics container EXACTLY — they are the same thing
+            float left = -w / 2f;
+            float right = w / 2f;
+            float bottom = botY;
+            float top = botY + h;
+            float gridW = w;
+            float gridH = h;
+
+            var gridRoot = new GameObject("ArenaGrid");
+            gridRoot.transform.position = Vector3.zero;
+
+            Color lineColor = new Color(0.2f, 0.25f, 0.35f, 0.35f);
+            float lineWidth = 0.02f;
+
+            // Background fill
+            var bgObj = new GameObject("ArenaBG");
+            bgObj.transform.SetParent(gridRoot.transform);
+            bgObj.transform.localPosition = new Vector3(cx, cy, 0.1f);
+            var bgSR = bgObj.AddComponent<SpriteRenderer>();
+            bgSR.sprite = CreatePixelSprite();
+            bgSR.color = HexColor("161B24");
+            bgSR.sortingOrder = -3;
+            bgObj.transform.localScale = new Vector3(gridW, gridH, 1f);
+
+            // Border (4 straight edges)
+            CreateWorldLine(gridRoot.transform, "BorderTop", left, top, right, top, lineWidth, lineColor, -2);
+            CreateWorldLine(gridRoot.transform, "BorderBot", left, bottom, right, bottom, lineWidth, lineColor, -2);
+            CreateWorldLine(gridRoot.transform, "BorderLeft", left, bottom, left, top, lineWidth, lineColor, -2);
+            CreateWorldLine(gridRoot.transform, "BorderRight", right, bottom, right, top, lineWidth, lineColor, -2);
+
+            // Vertical grid lines
+            int vLines = 4;
+            for (int i = 1; i <= vLines; i++)
+            {
+                float x = left + (gridW * i / (vLines + 1));
+                CreateWorldLine(gridRoot.transform, $"VGrid{i}", x, bottom, x, top, lineWidth, lineColor, -2);
+            }
+
+            // Horizontal grid lines
+            int hLines = 9;
+            for (int i = 1; i <= hLines; i++)
+            {
+                float y = bottom + (gridH * i / (hLines + 1));
+                CreateWorldLine(gridRoot.transform, $"HGrid{i}", left, y, right, y, lineWidth, lineColor, -2);
+            }
+
+            // Danger line (near top, pink)
+            float dangerY = config.deathLineY;
+            CreateWorldLine(gridRoot.transform, "DangerLine", left, dangerY, right, dangerY,
+                0.025f, new Color(0.91f, 0.345f, 0.478f, 0.35f), -2);
+        }
+
+        private static void CreateWorldLine(Transform parent, string name,
+            float x1, float y1, float x2, float y2, float width, Color color, int sortOrder)
+        {
+            var obj = new GameObject(name);
+            obj.transform.SetParent(parent);
+
+            var lr = obj.AddComponent<LineRenderer>();
+            lr.positionCount = 2;
+            lr.SetPosition(0, new Vector3(x1, y1, 0));
+            lr.SetPosition(1, new Vector3(x2, y2, 0));
+            lr.startWidth = width;
+            lr.endWidth = width;
+            lr.startColor = color;
+            lr.endColor = color;
+            lr.sortingOrder = sortOrder;
+            lr.useWorldSpace = true;
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+        }
+
+        private static Sprite CreatePixelSprite()
+        {
+            var tex = new Texture2D(4, 4);
+            tex.filterMode = FilterMode.Point;
+            Color[] c = new Color[16];
+            for (int i = 0; i < 16; i++) c[i] = Color.white;
+            tex.SetPixels(c);
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4f);
+        }
+
         private static void CreateDeathLine(PhysicsConfig config)
         {
             float deathY = config.deathLineY;
@@ -978,79 +1281,7 @@ namespace MergeGame.Editor
             col.offset = new Vector2(0f, 2.5f);
 
             obj.AddComponent<DeathLine>();
-            obj.AddComponent<DeathLinePulse>();
-
-            // Dashed line — multiple short segments
-            var lineVis = new GameObject("DeathLineVisual");
-            lineVis.transform.SetParent(obj.transform);
-            lineVis.transform.localPosition = Vector3.zero;
-
-            float lineLeft = -2.6f;
-            float lineRight = 2.6f;
-            float dashLen = 0.2f;
-            float gapLen = 0.15f;
-
-            var lr = lineVis.AddComponent<LineRenderer>();
-            var positions = new System.Collections.Generic.List<Vector3>();
-            float x = lineLeft;
-            while (x < lineRight)
-            {
-                float dashEnd = Mathf.Min(x + dashLen, lineRight);
-                positions.Add(new Vector3(x, deathY, 0f));
-                positions.Add(new Vector3(dashEnd, deathY, 0f));
-                // Add a zero-width break for the gap
-                float gapEnd = dashEnd + gapLen;
-                if (gapEnd < lineRight)
-                {
-                    positions.Add(new Vector3(dashEnd, deathY, 0f));
-                    positions.Add(new Vector3(gapEnd, deathY, 0f));
-                }
-                x = gapEnd;
-            }
-
-            // Use individual line segments for true dashes
-            // Simpler approach: use a single LineRenderer with alternating visible/invisible points
-            // But LineRenderer doesn't support gaps — use multiple child LineRenderers instead
-            Object.DestroyImmediate(lr);
-
-            float cx = lineLeft;
-            int dashIdx = 0;
-            while (cx < lineRight)
-            {
-                float dashEnd = Mathf.Min(cx + dashLen, lineRight);
-                var dashObj = new GameObject($"Dash{dashIdx}");
-                dashObj.transform.SetParent(lineVis.transform);
-                var dashLR = dashObj.AddComponent<LineRenderer>();
-                dashLR.positionCount = 2;
-                dashLR.SetPosition(0, new Vector3(cx, deathY, 0f));
-                dashLR.SetPosition(1, new Vector3(dashEnd, deathY, 0f));
-                dashLR.startWidth = 0.03f;
-                dashLR.endWidth = 0.03f;
-                dashLR.material = new Material(Shader.Find("Sprites/Default"));
-                dashLR.startColor = new Color(1f, 0.6f, 0.3f, 0f);
-                dashLR.endColor = new Color(1f, 0.6f, 0.3f, 0f);
-                dashLR.sortingOrder = 5;
-                dashLR.useWorldSpace = true;
-                cx = dashEnd + gapLen;
-                dashIdx++;
-            }
-        }
-
-        private static LineRenderer CreateGuideLine()
-        {
-            var obj = new GameObject("GuideLine");
-            var lr = obj.AddComponent<LineRenderer>();
-            lr.positionCount = 2;
-            lr.startWidth = 0.02f;
-            lr.endWidth = 0.02f;
-            lr.material = new Material(Shader.Find("Sprites/Default"));
-            lr.startColor = new Color(1f, 1f, 1f, 0.15f);
-            lr.endColor = new Color(1f, 1f, 1f, 0.03f);
-            lr.sortingOrder = 5;
-            lr.useWorldSpace = true;
-            lr.enabled = false;
-            lr.textureMode = LineTextureMode.Tile;
-            return lr;
+            // Visual danger line is drawn by CreateArenaGrid
         }
 
         private static Color HexColor(string hex)

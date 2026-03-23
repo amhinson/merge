@@ -16,7 +16,7 @@ namespace MergeGame.Core
         [SerializeField] private PhysicsConfig physicsConfig;
 
         [Header("Visual")]
-        [SerializeField] private Color wallColor = new Color(0.22f, 0.20f, 0.25f, 1f);
+        [SerializeField] private Color wallColor = new Color(0, 0, 0, 0); // invisible — UI overlay provides visual border
 
         public float LeftX => -width / 2f;
         public float RightX => width / 2f;

@@ -14,10 +14,25 @@ namespace MergeGame.UI
         [SerializeField] private Button yesButton;
         [SerializeField] private Button noButton;
 
+        private bool wired;
+
+        private void OnEnable()
+        {
+            WireButtons();
+        }
+
         private void Start()
         {
-            if (exitButton != null)
-                exitButton.onClick.AddListener(ShowConfirm);
+            WireButtons();
+        }
+
+        private void WireButtons()
+        {
+            if (wired) return;
+            if (exitButton == null) return; // not wired yet
+            wired = true;
+
+            exitButton.onClick.AddListener(ShowConfirm);
             if (yesButton != null)
                 yesButton.onClick.AddListener(OnConfirmQuit);
             if (noButton != null)

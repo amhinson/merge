@@ -216,9 +216,8 @@ namespace MergeGame.Core
                 // Track merge
                 RecordMerge(currentTier);
 
-                // Particles + shake on every merge
+                // Particles (no shake on merge)
                 SpawnMergeParticles(midpoint, ballData.color, currentTier);
-                TriggerMergeShake();
 
                 Destroy(other.gameObject);
                 Destroy(gameObject);
@@ -242,11 +241,8 @@ namespace MergeGame.Core
             // Track merge
             RecordMerge(nextTier.tierIndex);
 
-            // Particles
+            // Particles (no shake on merge)
             SpawnMergeParticles(midpoint, nextTier.color, nextTier.tierIndex);
-
-            // Screen shake on every merge — same intensity
-            TriggerMergeShake();
 
             SpawnMergedBall(nextTier, midpoint);
 

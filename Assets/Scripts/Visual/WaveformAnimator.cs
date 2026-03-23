@@ -4,45 +4,44 @@ using MergeGame.Data;
 namespace MergeGame.Visual
 {
     /// <summary>
-    /// Animates the waveform inside a neon ball by regenerating the sprite
-    /// with a shifting phase offset. Computationally cheap — just shifts phase.
-    /// Each instance gets a random offset so adjacent balls aren't in sync.
+    /// Animates the waveform inside a ball by regenerating the sprite with a shifting phase.
+    /// Uses per-tier scroll speeds from the spec.
     /// </summary>
     public class WaveformAnimator : MonoBehaviour
     {
-        [SerializeField] private float cycleTime = 2.5f; // Full cycle in seconds
-
         private SpriteRenderer spriteRenderer;
         private BallData ballData;
-        private float phase;
-        private float phaseOffset;
-        private float lastPhaseSnap; // Only regenerate every few frames
+        private float scrollOffset;
+        private float scrollSpeed;
+        private float lastPhaseSnap;
         private int tier;
         private float radius;
         private Color neonColor;
 
         // Pre-baked sprites per phase step (shared across all balls of same tier)
         private static readonly int PhaseSteps = 16;
-        private static Sprite[][] spriteCache; // [tier][phaseStep]
+        private static Sprite[][] spriteCache;
 
         public void Initialize(BallData data, Color color)
         {
             ballData = data;
             tier = data != null ? data.tierIndex : 0;
             radius = data != null ? data.radius : 0.5f;
-            neonColor = color;
+            neonColor = NeonBallRenderer.GetBallColor(tier);
             spriteRenderer = GetComponent<SpriteRenderer>();
-            phaseOffset = Random.Range(0f, Mathf.PI * 2f);
-            phase = phaseOffset;
+            scrollOffset = Random.Range(0f, 1f); // random start phase
 
-            // Initialize or reset cache
+            // Per-tier scroll speed
+            scrollSpeed = tier >= 0 && tier < NeonBallRenderer.ScrollSpeeds.Length
+                ? NeonBallRenderer.ScrollSpeeds[tier]
+                : 2.0f;
+
+            // Initialize cache
             if (spriteCache == null)
                 spriteCache = new Sprite[11][];
-            // Clear this tier's cached sprites so new visuals take effect
             if (spriteCache[tier] != null)
-                spriteCache[tier] = null;
+                spriteCache[tier] = null; // clear for new visuals
 
-            // Generate initial sprite
             UpdateSprite();
         }
 
@@ -50,11 +49,12 @@ namespace MergeGame.Visual
         {
             if (spriteRenderer == null || ballData == null) return;
 
-            phase += (Time.deltaTime / cycleTime) * Mathf.PI * 2f;
+            // Scroll the waveform
+            scrollOffset += Time.deltaTime / scrollSpeed;
+            scrollOffset %= 1.0f;
 
-            // Only update sprite every few frames for performance
-            float phaseStep = (phase % (Mathf.PI * 2f)) / (Mathf.PI * 2f) * PhaseSteps;
-            int currentStep = (int)phaseStep % PhaseSteps;
+            // Snap to phase steps for performance (shared cache)
+            int currentStep = Mathf.FloorToInt(scrollOffset * PhaseSteps) % PhaseSteps;
 
             if (currentStep != (int)lastPhaseSnap)
             {
@@ -68,11 +68,11 @@ namespace MergeGame.Visual
             if (spriteCache[tier] == null)
                 spriteCache[tier] = new Sprite[PhaseSteps];
 
-            int step = (int)((phase % (Mathf.PI * 2f)) / (Mathf.PI * 2f) * PhaseSteps) % PhaseSteps;
+            int step = Mathf.FloorToInt(scrollOffset * PhaseSteps) % PhaseSteps;
 
             if (spriteCache[tier][step] == null)
             {
-                float stepPhase = (step / (float)PhaseSteps) * Mathf.PI * 2f;
+                float stepPhase = (float)step / PhaseSteps;
                 spriteCache[tier][step] = NeonBallRenderer.GenerateSpriteForRadius(tier, neonColor, radius, stepPhase);
             }
 

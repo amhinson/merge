@@ -232,17 +232,10 @@ namespace MergeGame.UI
                 yield return null;
             }
 
-            if (current != null)
-            {
-                current.alpha = 0f;
-                current.gameObject.SetActive(false);
-            }
-            if (next != null)
-            {
-                next.alpha = 1f;
-                RectTransform rt = next.GetComponent<RectTransform>();
-                if (rt != null) rt.localScale = Vector3.one;
-            }
+            // Hide ALL base screens, then show only the target.
+            // This ensures stale legacy panels don't linger.
+            HideAllBaseScreens();
+            SetGroupActive(next, true);
 
             CurrentScreen = target;
             BaseScreen = target;

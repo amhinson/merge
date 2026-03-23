@@ -126,7 +126,7 @@ namespace MergeGame.UI
 
         public void ShowMenu()
         {
-            if (titleScreen != null) titleScreen.Refresh();
+            // Don't refresh old TitleScreen — new Home screens handle their own refresh
 
             if (ScreenManager.Instance != null)
             {
@@ -144,8 +144,6 @@ namespace MergeGame.UI
 
         public void ShowPlaying()
         {
-            // Clean up title screen decorations
-            if (titleScreen != null) titleScreen.CleanupCluster();
 
             if (ScreenManager.Instance != null)
             {
@@ -233,21 +231,35 @@ namespace MergeGame.UI
 
         private void UpdateNextBallPreview(BallData nextBall)
         {
-            // Legacy preview
+            // Generate a UI-friendly sprite at a fixed pixel size
             if (nextBallPreview != null && nextBall != null)
             {
-                nextBallPreview.color = nextBall.color;
-                if (nextBall.sprite != null)
-                    nextBallPreview.sprite = nextBall.sprite;
-
-                float scale = nextBall.radius / 0.85f;
-                float size = previewBaseSize * scale;
-                nextBallPreview.rectTransform.sizeDelta = new Vector2(size, size);
+                int previewSize = 64;
+                var previewSprite = GenerateUIBallSprite(nextBall.tierIndex, previewSize);
+                if (previewSprite != null)
+                {
+                    nextBallPreview.sprite = previewSprite;
+                    nextBallPreview.color = Color.white;
+                }
             }
 
-            // New preview UI
             if (nextBallPreviewUI != null && nextBall != null)
                 nextBallPreviewUI.TransitionToNext(nextBall);
+        }
+
+        /// <summary>
+        /// Generate a ball sprite sized for UI (fixed pixel size, PPU=pixelSize so it maps 1:1).
+        /// </summary>
+        private Sprite GenerateUIBallSprite(int tier, int pixelSize)
+        {
+            float uiRadius = pixelSize / (2f * 48f); // 48 = NeonBallRenderer.PixelsPerUnit
+            var png = Visual.NeonBallRenderer.GenerateBallPNG(tier, Color.white, uiRadius, 0f);
+            int expectedSize = pixelSize + 8; // padding
+            var tex = new Texture2D(expectedSize, expectedSize, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.LoadImage(png);
+            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                new Vector2(0.5f, 0.5f), tex.width); // PPU = width so sprite is 1 unit
         }
 
         // ===== Shake =====
@@ -255,16 +267,13 @@ namespace MergeGame.UI
         private void UpdateShakeCount(int remaining)
         {
             if (shakeCountText != null)
-                shakeCountText.text = remaining > 0 ? $"SHAKE x{remaining}" : "SHAKE";
+                shakeCountText.text = remaining > 0 ? $"{remaining} left" : "0 left";
             if (shakeButton != null)
             {
                 shakeButton.interactable = remaining > 0;
-                // Dim the button visually when disabled
                 var img = shakeButton.GetComponent<Image>();
                 if (img != null)
-                    img.color = remaining > 0 ? PanelColor : new Color(0.12f, 0.12f, 0.15f);
-                if (shakeCountText != null)
-                    shakeCountText.color = remaining > 0 ? TextColor : new Color(0.3f, 0.3f, 0.35f);
+                    img.color = remaining > 0 ? new Color(0.086f, 0.106f, 0.141f) : new Color(0.06f, 0.06f, 0.08f);
             }
         }
 

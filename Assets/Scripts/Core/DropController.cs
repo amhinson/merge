@@ -138,10 +138,8 @@ namespace MergeGame.Core
             Vector3 worldPos;
             if (nextBallAnchor != null)
             {
-                // Convert the UI anchor's screen position to world space
+                // Convert the UI anchor's center position to world space — no offset
                 Vector3 screenPos = RectTransformUtility.WorldToScreenPoint(null, nextBallAnchor.position);
-                // Offset slightly below the anchor
-                screenPos.y -= 60f;
                 worldPos = mainCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 10f));
                 worldPos.z = 0f;
             }
@@ -185,6 +183,11 @@ namespace MergeGame.Core
                 controller.Initialize(currentBallData, tierConfig, physicsConfig);
 
             previewBall.transform.position = new Vector3(0f, dropY, 0f);
+            previewBall.transform.localScale = Vector3.one; // ensure full size
+
+            // Re-enable renderer (was hidden during preview)
+            var sr = previewBall.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.enabled = true;
 
             var rb = previewBall.GetComponent<Rigidbody2D>();
             if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
@@ -207,8 +210,8 @@ namespace MergeGame.Core
             if (controller != null)
                 controller.Initialize(nextBallData, tierConfig, physicsConfig);
 
-            // Scale down for preview (sprite is at native size, so scale < 1 makes it smaller)
-            nextBallObj.transform.localScale = Vector3.one * previewScale;
+            // Hide the world-space preview — UI Image in the NEXT card shows the ball instead
+            nextBallObj.transform.localScale = Vector3.one; // keep at actual size for when it drops
 
             var rb = nextBallObj.GetComponent<Rigidbody2D>();
             if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
@@ -216,8 +219,12 @@ namespace MergeGame.Core
             var col = nextBallObj.GetComponent<CircleCollider2D>();
             if (col != null) col.enabled = false;
 
-            // Position immediately
-            UpdateNextBallPosition();
+            // Hide renderer — ball becomes visible when promoted to active dropper
+            var sr = nextBallObj.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.enabled = false;
+
+            // Position off-screen
+            nextBallObj.transform.position = new Vector3(100f, 100f, 0f);
         }
 
         private void DropBall(float x)

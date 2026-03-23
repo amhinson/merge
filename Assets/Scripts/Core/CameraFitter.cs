@@ -50,7 +50,7 @@ namespace MergeGame.Core
             // Also check vertical: we need to show container + top padding for HUD/drop zone
             float containerTop = containerBottomY + containerHeight;
             float requiredTop = containerTop + topPadding;
-            float requiredBottom = containerBottomY - 0.3f; // Small bottom padding
+            float requiredBottom = containerBottomY - 1.2f; // Room for shake button below grid
             float requiredHeight = requiredTop - requiredBottom;
             float orthoSizeForHeight = requiredHeight / 2f;
 

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
   tierIndex: 10
   radius: 1.4
-  color: {r: 1, g: 0.84313726, b: 0, a: 1}
+  color: {r: 0.9098039, g: 0.34509805, b: 0.47843137, a: 1}
   sprite: {fileID: 4332986882525994325, guid: bba712116644a4f9eb49aa8311a242a2, type: 3}
   pointValue: 50
   displayName: Watermelon

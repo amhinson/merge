@@ -26,8 +26,7 @@ namespace MergeGame.UI
                 if (_pressStart2P != null) return _pressStart2P;
                 _pressStart2P = Resources.Load<TMP_FontAsset>(PressStart2PAsset);
                 if (_pressStart2P == null)
-                    Debug.LogWarning("OvertoneUI: PressStart2P SDF not found in Resources/Fonts/. " +
-                        "Place PressStart2P SDF.asset in Assets/Resources/Fonts/");
+                    Debug.LogWarning("OvertoneUI: PressStart2P SDF not found in Resources/Fonts/");
                 return _pressStart2P;
             }
         }
@@ -43,8 +42,7 @@ namespace MergeGame.UI
                 _dmMono = Resources.Load<TMP_FontAsset>(DMMonoAsset);
                 if (_dmMono == null)
                 {
-                    Debug.LogWarning("OvertoneUI: DMMono-Medium SDF not found at Resources/" + DMMonoAsset +
-                        ". Falling back to default font.");
+                    Debug.LogWarning("OvertoneUI: DMMono-Medium SDF not found, falling back to default font");
                     _dmMono = TMP_Settings.defaultFontAsset;
                 }
                 return _dmMono;

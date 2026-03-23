@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Data.BallData
   tierIndex: 2
   radius: 0.4
-  color: {r: 0.54509807, g: 0.36078432, b: 0.9647059, a: 1}
+  color: {r: 0.9411765, g: 0.7058824, b: 0.16078432, a: 1}
   sprite: {fileID: -4910434047214956799, guid: 935754858ca7648ea8ed2be1156a1000, type: 3}
   pointValue: 3
   displayName: Grape

@@ -344,17 +344,18 @@ namespace MergeGame.UI
             wrapperVLG.childForceExpandWidth = true;
             // No minHeight — let content determine size
 
-            // Card
+            // Card — fits its content, no extra expansion
             var card = OvertoneUI.CreateCard(wrapper.transform, "LeaderboardCard");
             var cardVLG = card.AddComponent<VerticalLayoutGroup>();
             cardVLG.childControlWidth = true;
-            cardVLG.childControlHeight = false;
+            cardVLG.childControlHeight = true;
             cardVLG.childForceExpandWidth = true;
+            cardVLG.childForceExpandHeight = false;
             cardVLG.spacing = 0;
 
-            var cardLE = card.GetComponent<LayoutElement>();
-            if (cardLE == null) cardLE = card.AddComponent<LayoutElement>();
-            cardLE.flexibleWidth = 1;
+            // Fit card height to its content
+            var cardCSF = card.AddComponent<ContentSizeFitter>();
+            cardCSF.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // Header row
             var header = OvertoneUI.CreateUIObject("CardHeader", card.transform);
@@ -439,7 +440,9 @@ namespace MergeGame.UI
             }
             else
             {
+                // No backend — show empty state immediately
                 if (loadingIndicator != null) loadingIndicator.SetActive(false);
+                PopulateLeaderboardRows(null);
             }
         }
 
