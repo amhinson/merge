@@ -1,40 +1,32 @@
-Before building for TestFlight, you need:
+Why is it asking to find devices on network?
 
-Apple Developer Account ($99/year)
+- Test to see if it happens with prod build
 
-1. Enroll at https://developer.apple.com if you haven't already
-2. A paid account is required for TestFlight/App Store — the free account won't work
+Can I remove "Made with Unity"?
 
-App Store Connect Setup
+- Not without a Pro license, but it can be customized in settings.
 
-1. Log into https://appstoreconnect.apple.com
-2. Create a new app: Apps → + → New App
+Gamecenter coming soon? basic funny achievement
 
+Shake and Exit overlap with container.
+Next, Score, & Scoreboard overlap with ball being dropped at certain screen sizes.
+Need to ensure the balls and container are ALWAYS the same, no matter the device size.
+Container is off-center on my phone.
+Force portrait mode.
+Merge shake is too much. Maybe take it out completely.
+Graphics are a little slow? When dropping.
+Merge size recap clips larger balls.
+Share button doesn't do anything yet. Remove it for now.
+Remove debug menu in builds.
+Title screen ball squished, and shows grey box briefly before starting game.
 
-    - Platform: iOS
-    - Name: Daily Drop
-    - Bundle ID: register a new one (e.g. com.yourname.dailydrop)
-    - SKU: dailydrop
+Don't like the way the merge re-centers. Should handle combos betters.
+Emphasize everyone gets the same drop in a day somehow.
+Make sure app title or subtitle has "daily merge game" in App Store.
+Music & SFX.
+Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
 
-Unity Project Settings
-
-1. In Unity: Edit → Project Settings → Player → iOS tab
-
-
-    - Bundle Identifier: must match what you registered above
-    - Version: 0.1.0
-    - Build: 1
-    - Signing Team ID: your Apple Developer Team ID (found in developer.apple.com → Membership)
-    - Automatically Sign: checked
-
-Xcode
-
-1. Make sure Xcode is installed and up to date
-2. Open Xcode at least once and accept the license
-3. Sign in with your Apple ID: Xcode → Settings → Accounts
-
-Update the build script Unity path — verify this matches your install:
-ls /Applications/Unity/Hub/Editor/
-Update UNITY_PATH in build-ios.sh if the version folder is different.
-
-Once all that's done, run ./build-ios.sh prod.
+Cycle through colors in Title.
+Need more refined app icon.
+Wavelength react somehow to nearby?
+Note best finish.

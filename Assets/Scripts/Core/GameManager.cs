@@ -216,7 +216,7 @@ namespace MergeGame.Core
             OnShakesChanged?.Invoke(ShakesRemaining);
 
             if (HapticManager.Instance != null)
-                HapticManager.Instance.PlayHeavy();
+                HapticManager.Instance.PlayGameOver(); // Medium haptic for shake
 
             StartCoroutine(ShakeCoroutine());
         }

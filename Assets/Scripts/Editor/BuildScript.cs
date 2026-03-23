@@ -57,6 +57,7 @@ namespace MergeGame.Editor
             if (report.summary.result == BuildResult.Succeeded)
             {
                 Debug.Log($"Build succeeded: {report.summary.totalSize} bytes");
+                PatchXcodeProject(buildPath);
             }
             else
             {
@@ -65,6 +66,25 @@ namespace MergeGame.Editor
                 if (Application.isBatchMode)
                     EditorApplication.Exit(1);
             }
+        }
+        private static void PatchXcodeProject(string buildPath)
+        {
+#if UNITY_IOS
+            string projPath = System.IO.Path.Combine(buildPath, "Unity-iPhone.xcodeproj/project.pbxproj");
+            if (!System.IO.File.Exists(projPath)) return;
+
+            string content = System.IO.File.ReadAllText(projPath);
+
+            // Add CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES to all build configs
+            if (!content.Contains("CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION"))
+            {
+                content = content.Replace(
+                    "CODE_SIGN_IDENTITY",
+                    "CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;\n\t\t\t\tCODE_SIGN_IDENTITY");
+                System.IO.File.WriteAllText(projPath, content);
+                Debug.Log("Xcode project patched: CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES");
+            }
+#endif
         }
     }
 }

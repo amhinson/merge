@@ -54,6 +54,10 @@ namespace MergeGame.Editor
             cam.transform.position = new Vector3(0f, 0.5f, -10f);
             cam.backgroundColor = BgColor;
 
+            // Camera fitter — ensures container fills screen consistently across devices
+            var cameraFitter = cam.gameObject.AddComponent<CameraFitter>();
+            SetProperty(cameraFitter, "physicsConfig", CreatePhysicsConfig());
+
             // Generate button sprites
             buttonSprite = PixelUIGenerator.CreateRoundedRect(64, 24, 3, PanelColor, PanelBorder, PanelHighlight, PanelShadow);
             buttonSmallSprite = PixelUIGenerator.CreateRoundedRect(32, 32, 3, PanelColor, PanelBorder, PanelHighlight, PanelShadow);
@@ -145,7 +149,10 @@ namespace MergeGame.Editor
             es.AddComponent<UnityEngine.EventSystems.EventSystem>();
             es.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 
-            // Safe area root
+            // Note: no full-screen BG here — each screen that needs it has its own.
+            // Gameplay screen has NO background so the container/balls are visible.
+
+            // Safe area root (content sits inside safe area)
             GameObject safeArea = new GameObject("SafeArea");
             safeArea.transform.SetParent(canvasObj.transform, false);
             var safeRT = safeArea.AddComponent<RectTransform>();

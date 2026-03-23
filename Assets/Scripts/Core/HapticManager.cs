@@ -1,7 +1,12 @@
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 namespace MergeGame.Core
 {
+    /// <summary>
+    /// Haptic feedback using iOS UIImpactFeedbackGenerator for fine-grained control.
+    /// Light = barely there, Medium = noticeable, Heavy = strong.
+    /// </summary>
     public class HapticManager : MonoBehaviour
     {
         public static HapticManager Instance { get; private set; }
@@ -9,6 +14,16 @@ namespace MergeGame.Core
         private const string HapticsEnabledKey = "haptics_enabled";
 
         public bool IsEnabled { get; private set; }
+
+        private float lastHapticTime;
+        private const float HapticCooldown = 0.12f;
+
+#if UNITY_IOS && !UNITY_EDITOR
+        [DllImport("__Internal")] private static extern void _HapticLight();
+        [DllImport("__Internal")] private static extern void _HapticMedium();
+        [DllImport("__Internal")] private static extern void _HapticHeavy();
+        [DllImport("__Internal")] private static extern void _HapticSelection();
+#endif
 
         private void Awake()
         {
@@ -18,7 +33,6 @@ namespace MergeGame.Core
                 return;
             }
             Instance = this;
-
             IsEnabled = PlayerPrefs.GetInt(HapticsEnabledKey, 1) == 1;
         }
 
@@ -29,117 +43,71 @@ namespace MergeGame.Core
             PlayerPrefs.Save();
         }
 
-        public void PlayLight()
-        {
-            if (!IsEnabled || !IsMobilePlatform()) return;
-#if UNITY_IOS || UNITY_ANDROID
-            Vibrate(10);
-#endif
-        }
+        /// <summary>No haptic on drop.</summary>
+        public void PlayDrop() { }
 
-        public void PlayMedium()
-        {
-            if (!IsEnabled || !IsMobilePlatform()) return;
-#if UNITY_IOS || UNITY_ANDROID
-            Vibrate(25);
-#endif
-        }
-
-        public void PlayHeavy()
-        {
-            if (!IsEnabled || !IsMobilePlatform()) return;
-#if UNITY_IOS || UNITY_ANDROID
-            Vibrate(50);
-#endif
-        }
-
-        public void PlayDrop()
-        {
-            PlayLight();
-        }
-
+        /// <summary>Soft tap on landing — light for small balls, medium for large.</summary>
         public void PlayLanding(int tier)
         {
-            if (!IsEnabled || !IsMobilePlatform()) return;
-            // Scale with ball size
-            int duration = Mathf.Clamp(8 + tier * 3, 8, 40);
-#if UNITY_IOS || UNITY_ANDROID
-            Vibrate(duration);
-#endif
+            if (tier < 3) return; // Skip tiny balls
+            if (tier >= 7)
+                DoMedium();
+            else
+                DoLight();
         }
 
+        /// <summary>Light tap on merge, medium for high tiers.</summary>
         public void PlayMerge(int tier, int chainIndex)
         {
-            if (!IsEnabled || !IsMobilePlatform()) return;
-
-            if (tier >= 10)
-            {
-                // Tier 11 creation — strongest haptic
-                PlayHeavy();
-                return;
-            }
-
-            if (tier >= 7)
-            {
-                // High-tier merge (8+)
-                PlayHeavy();
-                return;
-            }
-
-            // Scale haptic intensity with chain
-#if UNITY_IOS || UNITY_ANDROID
-            int duration = 15 + Mathf.Min(chainIndex * 5, 25);
-            Vibrate(duration);
-#endif
+            if (tier < 2) return;
+            if (tier >= 8)
+                DoMedium();
+            else
+                DoLight();
         }
 
+        /// <summary>Medium haptic on game over.</summary>
         public void PlayGameOver()
         {
-            if (!IsEnabled || !IsMobilePlatform()) return;
-            // Slow descending buzz
-#if UNITY_IOS || UNITY_ANDROID
-            Vibrate(100);
+            DoMedium();
+        }
+
+        /// <summary>No haptic on UI taps.</summary>
+        public void PlayUITap() { }
+
+        private void DoLight()
+        {
+            if (!CanFire()) return;
+#if UNITY_IOS && !UNITY_EDITOR
+            _HapticLight();
 #endif
         }
 
-        public void PlayUITap()
+        private void DoMedium()
         {
-            PlayLight();
+            if (!CanFire()) return;
+#if UNITY_IOS && !UNITY_EDITOR
+            _HapticMedium();
+#endif
         }
 
-        private static bool IsMobilePlatform()
+        private void DoHeavy()
         {
-#if UNITY_WEBGL
+            if (!CanFire()) return;
+#if UNITY_IOS && !UNITY_EDITOR
+            _HapticHeavy();
+#endif
+        }
+
+        private bool CanFire()
+        {
+            if (!IsEnabled) return false;
+#if !(UNITY_IOS || UNITY_ANDROID)
             return false;
-#elif UNITY_IOS || UNITY_ANDROID
+#endif
+            if (Time.unscaledTime - lastHapticTime < HapticCooldown) return false;
+            lastHapticTime = Time.unscaledTime;
             return true;
-#else
-            return false;
-#endif
-        }
-
-        private static void Vibrate(int milliseconds)
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                using (var currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
-                using (var vibrator = currentActivity.Call<AndroidJavaObject>("getSystemService", "vibrator"))
-                {
-                    if (vibrator != null)
-                    {
-                        vibrator.Call("vibrate", (long)milliseconds);
-                    }
-                }
-            }
-            catch (System.Exception) { }
-#elif UNITY_IOS && !UNITY_EDITOR
-            // iOS: Use Handheld.Vibrate as baseline. For finer control, a native plugin
-            // would call UIImpactFeedbackGenerator with style based on the duration parameter.
-            // TODO: Replace with Core Haptics native plugin for production.
-            Handheld.Vibrate();
-#endif
         }
     }
 }
