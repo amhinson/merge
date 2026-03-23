@@ -78,6 +78,10 @@ namespace MergeGame.Core
                             GameSession.CurrentPlayer.display_name = profile.display_name;
                             GameSession.CurrentPlayer.current_streak = profile.current_streak;
                             GameSession.CurrentPlayer.longest_streak = profile.longest_streak;
+
+                            // Load persisted merge counts from database
+                            if (profile.merge_counts != null && profile.merge_counts.Length > 0)
+                                GameSession.MergeCounts = profile.merge_counts;
                         }
 
                         NavigateToInitialScreen();
@@ -170,6 +174,7 @@ namespace MergeGame.Core
                 MergeTracker.Instance.ResetForNewRound();
 
             if (scoreManager != null) scoreManager.ResetScore();
+            GameSession.MergeCounts = new int[11]; // reset merge counts for new game
             if (dropController != null) dropController.SetActive(true);
             if (uiManager != null) uiManager.ShowPlaying();
 
@@ -209,8 +214,9 @@ namespace MergeGame.Core
                 if (StreakManager.Instance != null)
                     StreakManager.Instance.RecordScoredAttempt();
 
-                // Store score in session
+                // Store score and merge counts in session BEFORE submitting
                 GameSession.TodayScore = finalScore;
+                GameSession.CaptureMergeCounts();
 
                 if (LeaderboardService.Instance != null && MergeTracker.Instance != null)
                 {
@@ -218,7 +224,7 @@ namespace MergeGame.Core
                         finalScore,
                         daily.GameDate,
                         daily.DayNumber,
-                        MergeTracker.Instance.GetTopMergeTiers(),
+                        GameSession.MergeCounts,
                         (success) =>
                         {
                             Debug.Log($"GameManager: Score submit result: {success}");

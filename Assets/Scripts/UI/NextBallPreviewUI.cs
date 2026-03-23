@@ -13,7 +13,9 @@ namespace MergeGame.UI
         [SerializeField] private Image ballImage;
         [SerializeField] private float idleFloatSpeed = 1.5f;
         [SerializeField] private float idleFloatAmount = 3f; // pixels
-        [SerializeField] private float previewScale = 0.65f; // 65% of actual size
+#pragma warning disable CS0414
+        [SerializeField] private float previewScale = 0.65f;
+#pragma warning restore CS0414
 
         private Vector2 basePosition;
         private float floatPhase;

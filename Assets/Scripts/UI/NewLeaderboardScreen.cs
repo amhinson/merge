@@ -342,14 +342,14 @@ namespace MergeGame.UI
                 // Rank
                 var rankTMP = OvertoneUI.CreateLabel(row.transform, $"#{entry.rank}",
                     OvertoneUI.PressStart2P, 7, rankColor, "Rank");
-                rankTMP.enableWordWrapping = false;
+                rankTMP.textWrappingMode = TextWrappingModes.NoWrap;
                 rankTMP.alignment = TextAlignmentOptions.Left;
                 rankTMP.gameObject.AddComponent<LayoutElement>().preferredWidth = 32;
 
                 // Name
                 var nameTMP = OvertoneUI.CreateLabel(row.transform, entry.display_name ?? "???",
                     OvertoneUI.DMMono, 13, nameColor, "Name");
-                nameTMP.enableWordWrapping = false;
+                nameTMP.textWrappingMode = TextWrappingModes.NoWrap;
                 nameTMP.overflowMode = TextOverflowModes.Ellipsis;
                 nameTMP.alignment = TextAlignmentOptions.Left;
                 nameTMP.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
@@ -357,7 +357,7 @@ namespace MergeGame.UI
                 // Score
                 var scoreTMP = OvertoneUI.CreateLabel(row.transform, entry.score.ToString("N0"),
                     OvertoneUI.DMMono, 13, scoreColor, "Score");
-                scoreTMP.enableWordWrapping = false;
+                scoreTMP.textWrappingMode = TextWrappingModes.NoWrap;
                 scoreTMP.alignment = TextAlignmentOptions.Right;
                 scoreTMP.gameObject.AddComponent<LayoutElement>().preferredWidth = 80;
             }

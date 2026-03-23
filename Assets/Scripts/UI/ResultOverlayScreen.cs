@@ -282,7 +282,7 @@ namespace MergeGame.UI
                 OvertoneUI.PressStart2P, 8, OC.muted, "FinalScoreLabel");
             finalScoreLabel.characterSpacing = 3;
             finalScoreLabel.alignment = TextAlignmentOptions.Center;
-            finalScoreLabel.enableWordWrapping = false;
+            finalScoreLabel.textWrappingMode = TextWrappingModes.NoWrap;
             finalScoreLabel.overflowMode = TextOverflowModes.Ellipsis;
             var flLE = finalScoreLabel.gameObject.AddComponent<LayoutElement>();
             flLE.preferredHeight = 14; flLE.minHeight = 14;
@@ -293,7 +293,7 @@ namespace MergeGame.UI
             scoreValue = OvertoneUI.CreateLabel(panel.transform, "0",
                 OvertoneUI.DMMono, 48, OC.cyan, "ScoreValue");
             scoreValue.alignment = TextAlignmentOptions.Center;
-            scoreValue.enableWordWrapping = false;
+            scoreValue.textWrappingMode = TextWrappingModes.NoWrap;
             scoreValue.overflowMode = TextOverflowModes.Overflow;
             scoreValue.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 56);
             var svLE = scoreValue.gameObject.AddComponent<LayoutElement>();
@@ -363,7 +363,7 @@ namespace MergeGame.UI
             rankLabel = OvertoneUI.CreateLabel(pill.transform, "#—",
                 OvertoneUI.PressStart2P, 8, OC.cyan, "RankLabel");
             rankLabel.characterSpacing = 1;
-            rankLabel.enableWordWrapping = false;
+            rankLabel.textWrappingMode = TextWrappingModes.NoWrap;
             rankLabel.overflowMode = TextOverflowModes.Ellipsis;
             rankLabel.alignment = TextAlignmentOptions.Right;
             rankLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
@@ -374,7 +374,7 @@ namespace MergeGame.UI
             // Sub label (right)
             rankSubLabel = OvertoneUI.CreateLabel(pill.transform, "ranking...",
                 OvertoneUI.DMMono, 12, OC.muted, "RankSub");
-            rankSubLabel.enableWordWrapping = false;
+            rankSubLabel.textWrappingMode = TextWrappingModes.NoWrap;
             rankSubLabel.overflowMode = TextOverflowModes.Ellipsis;
             rankSubLabel.alignment = TextAlignmentOptions.Left;
             rankSubLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
@@ -431,7 +431,7 @@ namespace MergeGame.UI
             practiceLabel.richText = true;
             practiceLabel.alignment = TextAlignmentOptions.Center;
             practiceLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
-            practiceLabel.enableWordWrapping = false;
+            practiceLabel.textWrappingMode = TextWrappingModes.NoWrap;
             OvertoneUI.StretchFill(practiceLabel.GetComponent<RectTransform>());
 
             // TODAY score box
@@ -469,7 +469,7 @@ namespace MergeGame.UI
             todayScoreLabel.alignment = TextAlignmentOptions.Center;
             todayScoreLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
             todayScoreLabel.richText = true;
-            todayScoreLabel.enableWordWrapping = false;
+            todayScoreLabel.textWrappingMode = TextWrappingModes.NoWrap;
             todayScoreLabel.raycastTarget = false;
 
             practiceInfoWrapper.SetActive(false); // hidden by default
@@ -503,7 +503,7 @@ namespace MergeGame.UI
             var mergesLabel = OvertoneUI.CreateLabel(card.transform, "MERGES",
                 OvertoneUI.PressStart2P, 7, OC.dim, "MergesLabel");
             mergesLabel.characterSpacing = 1;
-            mergesLabel.enableWordWrapping = false;
+            mergesLabel.textWrappingMode = TextWrappingModes.NoWrap;
             mergesLabel.overflowMode = TextOverflowModes.Ellipsis;
             var mlRT = mergesLabel.GetComponent<RectTransform>();
             mlRT.anchorMin = new Vector2(0, 1); mlRT.anchorMax = new Vector2(1, 1);
@@ -634,7 +634,7 @@ namespace MergeGame.UI
             doneTMP.color = OC.muted;
             doneTMP.characterSpacing = 1;
             doneTMP.alignment = TextAlignmentOptions.Center;
-            doneTMP.enableWordWrapping = false;
+            doneTMP.textWrappingMode = TextWrappingModes.NoWrap;
             doneTMP.overflowMode = TextOverflowModes.Ellipsis;
             doneTMP.raycastTarget = false;
 
@@ -678,7 +678,7 @@ namespace MergeGame.UI
             paLabelTMP.color = OC.bg;
             paLabelTMP.characterSpacing = 2;
             paLabelTMP.alignment = TextAlignmentOptions.Center;
-            paLabelTMP.enableWordWrapping = false;
+            paLabelTMP.textWrappingMode = TextWrappingModes.NoWrap;
             paLabelTMP.raycastTarget = false;
             playAgainBtn = paGO;
             playAgainBtn.SetActive(false); // hidden by default
@@ -692,8 +692,8 @@ namespace MergeGame.UI
 
         private void OnShareClicked()
         {
-            if (ScreenManager.Instance != null)
-                ScreenManager.Instance.NavigateTo(Screen.ShareSheet);
+            if (ShareManager.Instance != null)
+                ShareManager.Instance.ShareResult();
         }
 
         private void OnPlayAgainClicked()

@@ -17,7 +17,9 @@ serve(async (req) => {
     );
 
     const url = new URL(req.url);
-    const device_uuid = url.searchParams.get("device_uuid");
+    // Support both GET (query params) and POST (body)
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const device_uuid = url.searchParams.get("device_uuid") || body.device_uuid;
 
     if (!device_uuid) {
       return new Response(
@@ -40,21 +42,36 @@ serve(async (req) => {
       );
     }
 
-    // Get recent scores (last 10)
-    const { data: recentScores } = await supabase
-      .from("daily_scores")
-      .select("game_date, score, day_number, largest_merges")
-      .eq("device_uuid", device_uuid)
-      .order("game_date", { ascending: false })
-      .limit(10);
+    // Get today's score if a game_date was provided (body already parsed above)
+    const game_date = body.game_date || url.searchParams.get("game_date");
+
+    let today_score = 0;
+    let day_number = 0;
+    let merge_counts: number[] = [];
+
+    if (game_date) {
+      const { data: todayData } = await supabase
+        .from("daily_scores")
+        .select("score, day_number, merge_counts")
+        .eq("device_uuid", device_uuid)
+        .eq("game_date", game_date)
+        .single();
+
+      if (todayData) {
+        today_score = todayData.score || 0;
+        day_number = todayData.day_number || 0;
+        merge_counts = todayData.merge_counts || [];
+      }
+    }
 
     return new Response(
       JSON.stringify({
         display_name: player.display_name,
-        current_streak: player.current_streak,
-        longest_streak: player.longest_streak,
-        created_at: player.created_at,
-        recent_scores: recentScores || [],
+        current_streak: player.current_streak || 0,
+        longest_streak: player.longest_streak || 0,
+        today_score,
+        day_number,
+        merge_counts,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

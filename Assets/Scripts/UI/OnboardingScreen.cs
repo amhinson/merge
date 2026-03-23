@@ -50,7 +50,6 @@ namespace MergeGame.UI
         };
 
         private Coroutine animCoroutine;
-        private int demoCycleCount;
 
         // Spec ball sizes (from BALLS array in JSX)
         // tier 9 (index 8) = 22px, tier 8 (index 7) = 26px
@@ -61,7 +60,6 @@ namespace MergeGame.UI
         {
             if (stepGroups == null)
                 BuildUI();
-            demoCycleCount = 0;
             SetStep(0);
         }
 
@@ -159,7 +157,7 @@ namespace MergeGame.UI
             titleTMP.color = OC.white;
             titleTMP.characterSpacing = 3;
             titleTMP.alignment = TextAlignmentOptions.Center;
-            titleTMP.enableWordWrapping = false;
+            titleTMP.textWrappingMode = TextWrappingModes.NoWrap;
             titleTMP.overflowMode = TextOverflowModes.Overflow;
             titleTMP.richText = true;
             titleTMP.raycastTarget = false;
@@ -175,7 +173,7 @@ namespace MergeGame.UI
             tagline.color = OC.muted;
             tagline.characterSpacing = 5;
             tagline.alignment = TextAlignmentOptions.Center;
-            tagline.enableWordWrapping = false;
+            tagline.textWrappingMode = TextWrappingModes.NoWrap;
             tagline.raycastTarget = false;
         }
 

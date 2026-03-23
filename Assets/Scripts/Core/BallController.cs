@@ -240,8 +240,8 @@ namespace MergeGame.Core
             if (AudioManager.Instance != null)
                 AudioManager.Instance.PlayMerge(nextTier.tierIndex);
 
-            // Track merge
-            RecordMerge(nextTier.tierIndex);
+            // Track merge — count the consumed tier, not the created one
+            RecordMerge(currentTier);
 
             // Particles (no shake on merge)
             SpawnMergeParticles(spawnPos, nextTier.color, nextTier.tierIndex);

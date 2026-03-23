@@ -15,6 +15,6 @@ MonoBehaviour:
   tierIndex: 0
   radius: 0.22
   color: {r: 0.9098039, g: 0.34509805, b: 0.47843137, a: 1}
-  sprite: {fileID: -3381212802278948306, guid: 4494868a512af486c92a3ce7610ee316, type: 3}
+  sprite: {fileID: 21300000, guid: 4494868a512af486c92a3ce7610ee316, type: 3}
   pointValue: 1
   displayName: Cherry

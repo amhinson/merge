@@ -198,7 +198,7 @@ namespace MergeGame.UI
             overTMP.fontSize = OFont.title;
             overTMP.color = OC.white;
             overTMP.characterSpacing = 2;
-            overTMP.enableWordWrapping = false;
+            overTMP.textWrappingMode = TextWrappingModes.NoWrap;
             overTMP.overflowMode = TextOverflowModes.Overflow;
             overTMP.raycastTarget = false;
 
@@ -211,7 +211,7 @@ namespace MergeGame.UI
             toneTMP.fontSize = OFont.title;
             toneTMP.color = OC.cyan;
             toneTMP.characterSpacing = 2;
-            toneTMP.enableWordWrapping = false;
+            toneTMP.textWrappingMode = TextWrappingModes.NoWrap;
             toneTMP.overflowMode = TextOverflowModes.Overflow;
             toneTMP.raycastTarget = false;
 
@@ -224,7 +224,7 @@ namespace MergeGame.UI
             tagTMP.fontSize = 10;
             tagTMP.color = OC.muted;
             tagTMP.characterSpacing = 5;
-            tagTMP.enableWordWrapping = false;
+            tagTMP.textWrappingMode = TextWrappingModes.NoWrap;
             tagTMP.raycastTarget = false;
         }
 
@@ -297,7 +297,7 @@ namespace MergeGame.UI
             dayNumberLabel.color = OC.cyan;
             dayNumberLabel.characterSpacing = 1;
             dayNumberLabel.alignment = TextAlignmentOptions.Left;
-            dayNumberLabel.enableWordWrapping = false;
+            dayNumberLabel.textWrappingMode = TextWrappingModes.NoWrap;
             dayNumberLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
             dayNumberLabel.raycastTarget = false;
 
@@ -315,7 +315,7 @@ namespace MergeGame.UI
             dateLabel.color = OC.muted;
             dateLabel.characterSpacing = 1;
             dateLabel.alignment = TextAlignmentOptions.Right;
-            dateLabel.enableWordWrapping = false;
+            dateLabel.textWrappingMode = TextWrappingModes.NoWrap;
             dateLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
             dateLabel.raycastTarget = false;
 
@@ -385,7 +385,7 @@ namespace MergeGame.UI
             headerLabel.color = OC.muted;
             headerLabel.alignment = TextAlignmentOptions.Left;
             headerLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
-            headerLabel.enableWordWrapping = false;
+            headerLabel.textWrappingMode = TextWrappingModes.NoWrap;
             headerLabel.raycastTarget = false;
 
             var allBtnGO = OvertoneUI.CreateUIObject("AllButton", card.transform);
@@ -395,11 +395,11 @@ namespace MergeGame.UI
             abRT.anchoredPosition = new Vector2(-10, 0);
             abRT.sizeDelta = new Vector2(0, 24);
             var allTMP = allBtnGO.AddComponent<TextMeshProUGUI>();
-            allTMP.text = "ALL \u2192";
+            allTMP.text = "ALL >";
             allTMP.font = OvertoneUI.PressStart2P;
             allTMP.fontSize = OFont.labelXs;
             allTMP.color = OC.cyan;
-            allTMP.enableWordWrapping = false;
+            allTMP.textWrappingMode = TextWrappingModes.NoWrap;
             allTMP.alignment = TextAlignmentOptions.Right;
             allTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
             var allBtn = allBtnGO.AddComponent<Button>();
@@ -506,6 +506,8 @@ namespace MergeGame.UI
 
             int rowCount = 0;
 
+            bool playerInTop3 = false;
+
             if (entries == null || entries.Count == 0)
             {
                 // Empty state
@@ -543,6 +545,7 @@ namespace MergeGame.UI
 
                     bool isMe = !string.IsNullOrEmpty(entry.device_uuid) &&
                                 entry.device_uuid == GameSession.DeviceUUID;
+                    if (isMe) playerInTop3 = true;
 
                     // Use rank from API (handles ties correctly)
                     string rankText = $"#{entry.rank}";
@@ -565,10 +568,10 @@ namespace MergeGame.UI
                 rowCount = count;
             }
 
-            // "Your rank" row — show if player has completed a scored attempt today
+            // "Your rank" row — only if played today AND not already in top 3
             bool hasPlayed = GameSession.HasPlayedToday ||
                 (DailySeedManager.Instance != null && DailySeedManager.Instance.HasCompletedScoredAttempt());
-            if (hasPlayed)
+            if (hasPlayed && !playerInTop3)
             {
                 // Divider above your rank
                 var yourDiv = OvertoneUI.CreateUIObject("YourDiv", leaderboardRowContainer);
@@ -639,7 +642,7 @@ namespace MergeGame.UI
             rankTMP.color = rankColor ?? (usePixelFontForRank ? nameColor : OC.dim);
             rankTMP.alignment = TextAlignmentOptions.Left;
             rankTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
-            rankTMP.enableWordWrapping = false;
+            rankTMP.textWrappingMode = TextWrappingModes.NoWrap;
             rankTMP.raycastTarget = false;
 
             // Name (center, flex)
@@ -654,7 +657,7 @@ namespace MergeGame.UI
             nameTMP.color = nameColor;
             nameTMP.alignment = TextAlignmentOptions.Left;
             nameTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
-            nameTMP.enableWordWrapping = false;
+            nameTMP.textWrappingMode = TextWrappingModes.NoWrap;
             nameTMP.overflowMode = TextOverflowModes.Ellipsis;
             nameTMP.raycastTarget = false;
 
@@ -672,7 +675,7 @@ namespace MergeGame.UI
             scoreTMP.color = scoreColor;
             scoreTMP.alignment = TextAlignmentOptions.Right;
             scoreTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
-            scoreTMP.enableWordWrapping = false;
+            scoreTMP.textWrappingMode = TextWrappingModes.NoWrap;
             scoreTMP.raycastTarget = false;
 
             return row;

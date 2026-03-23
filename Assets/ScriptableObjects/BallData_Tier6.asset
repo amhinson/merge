@@ -15,6 +15,6 @@ MonoBehaviour:
   tierIndex: 5
   radius: 0.7
   color: {r: 0.21960784, g: 0.7411765, b: 0.972549, a: 1}
-  sprite: {fileID: 1985276213634587681, guid: 7fafb507198f24ed5805f3451a85ab0b, type: 3}
+  sprite: {fileID: 21300000, guid: 7fafb507198f24ed5805f3451a85ab0b, type: 3}
   pointValue: 10
   displayName: Apple

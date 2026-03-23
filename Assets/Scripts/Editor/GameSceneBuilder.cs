@@ -74,7 +74,6 @@ namespace MergeGame.Editor
             CreateDeathLine(physicsConfig);
             CreateArenaGrid(physicsConfig);
             // Guide line removed — clean drop without visual guide
-            LineRenderer guideLine = null;
 
             // Managers
             var managers = new GameObject("Managers");
@@ -90,6 +89,7 @@ namespace MergeGame.Editor
             managers.AddComponent<AchievementManager>();
             managers.AddComponent<SupabaseClient>();
             managers.AddComponent<LeaderboardService>();
+            managers.AddComponent<ShareManager>();
             managers.AddComponent<MergeParticles>();
 
             // Debug overlay removed from production builds
@@ -178,7 +178,6 @@ namespace MergeGame.Editor
             // Old leaderboard panel replaced by NewLeaderboardScreen
             var lbPanel = CreateFullPanel(safeArea.transform, "LeaderboardScreen_Legacy");
             lbPanel.SetActive(false);
-            Button lbBackBtn = null;
 
             // ===== SETTINGS SCREEN =====
             var (settingsPanel, settingsScreen) = CreateSettingsPanel(safeArea.transform);
@@ -1089,6 +1088,9 @@ namespace MergeGame.Editor
                     imp.spritePixelsPerUnit = 48;
                     imp.filterMode = FilterMode.Bilinear;
                     imp.textureCompression = TextureImporterCompression.Uncompressed;
+                    imp.spriteImportMode = SpriteImportMode.Single;
+                    // Ensure sprite rect matches actual texture dimensions
+                    imp.spriteBorder = Vector4.zero;
                     imp.SaveAndReimport();
                 }
                 Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);

@@ -38,7 +38,9 @@ namespace MergeGame.Editor
 
             // Set bundle ID based on environment
             string bundleId = development ? "com.overtone.game.dev" : "com.overtone.game";
+#pragma warning disable CS0618
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, bundleId);
+#pragma warning restore CS0618
 
             var options = new BuildPlayerOptions
             {

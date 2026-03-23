@@ -35,7 +35,6 @@ serve(async (req) => {
         `
         device_uuid,
         score,
-        largest_merges,
         players!inner(display_name)
       `
       )
@@ -62,7 +61,6 @@ serve(async (req) => {
         device_uuid: row.device_uuid,
         display_name: row.players?.display_name || "Player",
         score: row.score,
-        largest_merges: row.largest_merges || [],
         rank: currentRank,
         is_current_player: row.device_uuid === device_uuid,
       };

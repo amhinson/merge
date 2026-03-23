@@ -15,6 +15,6 @@ MonoBehaviour:
   tierIndex: 1
   radius: 0.3
   color: {r: 0.9411765, g: 0.7058824, b: 0.16078432, a: 1}
-  sprite: {fileID: 6749149697053947927, guid: 7fa83be88e1a4403c81dbed348c93517, type: 3}
+  sprite: {fileID: 21300000, guid: 7fa83be88e1a4403c81dbed348c93517, type: 3}
   pointValue: 2
   displayName: Strawberry

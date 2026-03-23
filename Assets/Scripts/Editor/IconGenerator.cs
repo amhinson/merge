@@ -167,11 +167,11 @@ namespace MergeGame.Editor
                 return;
             }
 
+#pragma warning disable CS0618
             // Set iOS icons
             var iosIcons = PlayerSettings.GetIconsForTargetGroup(BuildTargetGroup.iOS);
             if (iosIcons == null || iosIcons.Length == 0)
             {
-                // Get the icon sizes Unity expects
                 var sizes = PlayerSettings.GetIconSizesForTargetGroup(BuildTargetGroup.iOS);
                 iosIcons = new Texture2D[sizes.Length];
             }
@@ -186,6 +186,7 @@ namespace MergeGame.Editor
             for (int i = 0; i < defaultIcons.Length; i++)
                 defaultIcons[i] = iconTex;
             PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Unknown, defaultIcons);
+#pragma warning restore CS0618
 
             Debug.Log("Player Settings icons configured.");
         }

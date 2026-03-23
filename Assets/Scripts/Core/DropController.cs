@@ -22,7 +22,9 @@ namespace MergeGame.Core
 
         [Header("Next Ball Anchor (UI RectTransform to position the next ball under)")]
         [SerializeField] private RectTransform nextBallAnchor;
+#pragma warning disable CS0414
         [SerializeField] private float previewScale = 0.6f;
+#pragma warning restore CS0414
 
         [Header("Guide Line")]
         [SerializeField] private LineRenderer guideLine;

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS daily_scores (
     game_date DATE NOT NULL,
     score INTEGER NOT NULL,
     day_number INTEGER NOT NULL DEFAULT 1,
-    largest_merges INTEGER[] DEFAULT '{}',
+    merge_counts INTEGER[] DEFAULT '{}',
     submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (device_uuid, game_date)
 );

@@ -28,7 +28,9 @@ namespace MergeGame.UI
         [SerializeField] private TextMeshProUGUI highScoreText;
         [SerializeField] private Image nextBallPreview;
         [SerializeField] private TextMeshProUGUI nextBallLabel;
+#pragma warning disable CS0414
         [SerializeField] private float previewBaseSize = 120f;
+#pragma warning restore CS0414
         [SerializeField] private NextBallPreviewUI nextBallPreviewUI;
         [SerializeField] private MiniLeaderboardUI miniLeaderboard;
         [SerializeField] private ScoreTickUp scoreTickUp;
@@ -193,13 +195,13 @@ namespace MergeGame.UI
                 int dayNumber = daily != null ? daily.DayNumber : 0;
                 bool isScored = daily != null && daily.CurrentAttemptType == AttemptType.Scored;
                 int streak = StreakManager.Instance != null ? StreakManager.Instance.CurrentStreak : 0;
-                int[] topMerges = MergeTracker.Instance != null ? MergeTracker.Instance.GetTopMergeTiers() : null;
+                // topMerges removed — merge counts now stored in GameSession.MergeCounts
 
                 // Get rank
                 int rank = GameManager.Instance != null ? GameManager.Instance.GetLiveRank() : -1;
                 string percentile = rank > 0 ? $"#{rank}" : "";
 
-                resultsScreen.Populate(dayNumber, finalScore, streak, topMerges, isScored, rank, percentile);
+                resultsScreen.Populate(dayNumber, finalScore, streak, null, isScored, rank, percentile);
             }
         }
 

@@ -25,7 +25,6 @@ namespace MergeGame.Core
         public string game_date;
         public int    score;
         public int    day_number;
-        public int[]  largest_merges;
         public string submitted_at;
     }
 
@@ -82,8 +81,10 @@ namespace MergeGame.Core
 
             // Reset per-session state
             TodayScore = 0;
-            MergeCounts = new int[11];
             IsPractice = false;
+
+            // MergeCounts loaded from profile API response (see GameManager.FetchProfileAndShowHome)
+            MergeCounts = new int[11];
             ResultRank = 0;
             ResultTotalPlayers = 0;
         }
@@ -102,7 +103,7 @@ namespace MergeGame.Core
         }
 
         /// <summary>
-        /// Snapshot merge counts from MergeTracker at end of game.
+        /// Snapshot merge counts from MergeTracker at end of game and persist locally.
         /// </summary>
         public static void CaptureMergeCounts()
         {
@@ -110,6 +111,38 @@ namespace MergeGame.Core
             if (MergeTracker.Instance == null) return;
             for (int i = 0; i < 11; i++)
                 MergeCounts[i] = MergeTracker.Instance.GetTierCreationCount(i);
+
+            // Persist to PlayerPrefs for sharing in subsequent sessions
+            SaveMergeCounts();
+        }
+
+        /// <summary>Save merge counts to PlayerPrefs keyed by today's date.</summary>
+        public static void SaveMergeCounts()
+        {
+            if (MergeCounts == null) return;
+            string key = $"merge_counts_{TodayDateStr}";
+            string json = string.Join(",", MergeCounts);
+            PlayerPrefs.SetString(key, json);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>Load merge counts from PlayerPrefs for today.</summary>
+        public static void LoadMergeCounts()
+        {
+            string key = $"merge_counts_{TodayDateStr}";
+            string json = PlayerPrefs.GetString(key, "");
+            if (string.IsNullOrEmpty(json))
+            {
+                MergeCounts = new int[11];
+                return;
+            }
+            string[] parts = json.Split(',');
+            MergeCounts = new int[11];
+            for (int i = 0; i < Mathf.Min(parts.Length, 11); i++)
+            {
+                if (int.TryParse(parts[i], out int val))
+                    MergeCounts[i] = val;
+            }
         }
 
         /// <summary>

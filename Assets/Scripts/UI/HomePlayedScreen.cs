@@ -324,8 +324,8 @@ namespace MergeGame.UI
 
         private void OnShareClicked()
         {
-            if (ScreenManager.Instance != null)
-                ScreenManager.Instance.NavigateTo(Screen.ShareSheet);
+            if (ShareManager.Instance != null)
+                ShareManager.Instance.ShareResult();
         }
 
         private void OnPlayAgainClicked()

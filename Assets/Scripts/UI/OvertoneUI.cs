@@ -366,7 +366,7 @@ namespace MergeGame.UI
             rankTMP.color = OC.dim;
             rankTMP.alignment = TextAlignmentOptions.Left;
             rankTMP.raycastTarget = false;
-            rankTMP.enableWordWrapping = false;
+            rankTMP.textWrappingMode = TextWrappingModes.NoWrap;
             var rankLE = rankGO.AddComponent<LayoutElement>();
             rankLE.preferredWidth = 24;
 

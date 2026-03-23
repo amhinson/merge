@@ -10,7 +10,6 @@ namespace MergeGame.Backend
         public string device_uuid;
         public string display_name;
         public int score;
-        public int[] largest_merges;
         public int rank;
     }
 
@@ -36,6 +35,7 @@ namespace MergeGame.Backend
         public int day_number;
         public int current_streak;
         public int longest_streak;
+        public int[] merge_counts; // 11-element array, persisted with the score
     }
 
     [Serializable]
@@ -46,7 +46,7 @@ namespace MergeGame.Backend
         public int score;
         public string game_date;
         public int day_number;
-        public int[] largest_merges;
+        public int[] merge_counts; // 11-element array, index 0=tier0 to 10=tier10
     }
 
     public class LeaderboardService : MonoBehaviour
@@ -71,7 +71,7 @@ namespace MergeGame.Backend
             Instance = this;
         }
 
-        public void SubmitScore(int score, string gameDate, int dayNumber, int[] largestMerges, Action<bool> callback = null)
+        public void SubmitScore(int score, string gameDate, int dayNumber, int[] mergeCounts, Action<bool> callback = null)
         {
             if (SupabaseClient.Instance == null)
             {
@@ -93,7 +93,7 @@ namespace MergeGame.Backend
                 score = score,
                 game_date = gameDate,
                 day_number = dayNumber,
-                largest_merges = largestMerges
+                merge_counts = mergeCounts ?? new int[11]
             };
 
             string json = JsonUtility.ToJson(request);
