@@ -212,11 +212,19 @@ namespace MergeGame.Core
                         (success) =>
                         {
                             Debug.Log($"GameManager: Score submit result: {success}");
-                            // Fetch rank for result overlay
                             if (success)
                             {
-                                GameSession.ResultRank = GetLiveRank();
-                                // total_players comes from rank fetch
+                                // Now that score is saved, fetch rank
+                                LeaderboardService.Instance.FetchPlayerRankFull(
+                                    daily.GameDate, (rank, total) =>
+                                    {
+                                        Debug.Log($"GameManager: Rank after submit: rank={rank}, total={total}");
+                                        GameSession.ResultRank = rank;
+                                        GameSession.ResultTotalPlayers = total;
+                                        // Update the result overlay if it's showing
+                                        var overlay = FindAnyObjectByType<UI.ResultOverlayScreen>();
+                                        if (overlay != null) overlay.Populate();
+                                    });
                             }
                         }
                     );
