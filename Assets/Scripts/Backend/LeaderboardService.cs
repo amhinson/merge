@@ -111,6 +111,13 @@ namespace MergeGame.Backend
                 return;
             }
 
+            // Return cached data immediately if fresh (< 10 seconds old)
+            if (cachedLeaderboard.Count > 0 && Time.time - lastLeaderboardFetch < 10f)
+            {
+                callback?.Invoke(cachedLeaderboard);
+                return;
+            }
+
             SupabaseClient.Instance.CallFunctionGet("get-leaderboard", $"game_date={gameDate}", (success, response) =>
             {
                 Debug.Log($"Leaderboard fetch success={success}, response={response}");

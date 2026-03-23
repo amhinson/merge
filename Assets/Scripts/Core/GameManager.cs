@@ -55,12 +55,36 @@ namespace MergeGame.Core
             // Initialize session state
             GameSession.Init();
 
-            // Fetch player profile to determine home screen state
-            FetchProfileAndShowHome();
+            // Pre-load everything during loading screen
+            StartCoroutine(PreloadAndNavigate());
         }
 
-        private void FetchProfileAndShowHome()
+        /// <summary>
+        /// Pre-loads all data during the loading screen so home screen appears instantly.
+        /// Runs fetches in parallel, waits for all to complete (or timeout), then navigates.
+        /// </summary>
+        private System.Collections.IEnumerator PreloadAndNavigate()
         {
+            float startTime = Time.realtimeSinceStartup;
+            float minLoadTime = 1.5f;  // minimum loading screen duration
+            float maxWaitTime = 5.0f;  // timeout — don't wait forever
+
+            // === Synchronous pre-loads (fast, ~1-5ms each) ===
+            float t0 = Time.realtimeSinceStartup;
+
+            // Force-load fonts
+            var _ = OvertoneUI.PressStart2P;
+            var __ = OvertoneUI.DMMono;
+
+            Debug.Log($"[Preload] Fonts: {(Time.realtimeSinceStartup - t0) * 1000:F1}ms");
+
+            // === Async pre-loads (network, ~100-500ms each) ===
+            bool profileDone = false;
+            bool leaderboardDone = false;
+            bool rankDone = false;
+
+            // 1. Player profile (~200-400ms)
+            float profileStart = Time.realtimeSinceStartup;
             if (LeaderboardService.Instance != null && PlayerIdentity.Instance != null)
             {
                 LeaderboardService.Instance.FetchPlayerProfile(
@@ -68,6 +92,7 @@ namespace MergeGame.Core
                     GameSession.TodayDateStr,
                     (profile) =>
                     {
+                        Debug.Log($"[Preload] Profile: {(Time.realtimeSinceStartup - profileStart) * 1000:F0}ms");
                         if (profile != null)
                         {
                             GameSession.TodayScore = profile.today_score;
@@ -79,38 +104,87 @@ namespace MergeGame.Core
                             GameSession.CurrentPlayer.current_streak = profile.current_streak;
                             GameSession.CurrentPlayer.longest_streak = profile.longest_streak;
 
-                            // Load persisted merge counts from database
                             if (profile.merge_counts != null && profile.merge_counts.Length > 0)
                                 GameSession.MergeCounts = profile.merge_counts;
                         }
-
-                        NavigateToInitialScreen();
+                        profileDone = true;
                     });
             }
             else
             {
-                // No backend — go straight to home
-                NavigateToInitialScreen();
+                profileDone = true;
             }
-        }
 
-        private void NavigateToInitialScreen()
-        {
-            // Delay slightly so loading screen feels intentional, then fade out
-            StartCoroutine(DelayedNavigate());
-        }
+            // 2. Leaderboard for today (~200-400ms)
+            float lbStart = Time.realtimeSinceStartup;
+            if (LeaderboardService.Instance != null)
+            {
+                LeaderboardService.Instance.FetchLeaderboard(GameSession.TodayDateStr, (entries) =>
+                {
+                    Debug.Log($"[Preload] Leaderboard: {(Time.realtimeSinceStartup - lbStart) * 1000:F0}ms, {entries?.Count ?? 0} entries");
+                    // Cached in LeaderboardService — home screen will read from cache
+                    leaderboardDone = true;
+                });
+            }
+            else
+            {
+                leaderboardDone = true;
+            }
 
-        private System.Collections.IEnumerator DelayedNavigate()
-        {
-            // Minimum loading time — let the logo + ball breathe
-            yield return new WaitForSeconds(1.5f);
+            // 3. Player rank (~150-300ms) — only if scored today
+            float rankStart = Time.realtimeSinceStartup;
+            bool hasPlayed = DailySeedManager.Instance != null && DailySeedManager.Instance.HasCompletedScoredAttempt();
+            if (hasPlayed && LeaderboardService.Instance != null)
+            {
+                LeaderboardService.Instance.FetchPlayerRankFull(GameSession.TodayDateStr, (rank, total) =>
+                {
+                    Debug.Log($"[Preload] Rank: {(Time.realtimeSinceStartup - rankStart) * 1000:F0}ms, rank={rank}, total={total}");
+                    GameSession.ResultRank = rank;
+                    GameSession.ResultTotalPlayers = total;
+                    rankDone = true;
+                });
+            }
+            else
+            {
+                rankDone = true;
+            }
 
+            // === Wait for all fetches (or timeout) ===
+            while (!profileDone || !leaderboardDone || !rankDone)
+            {
+                if (Time.realtimeSinceStartup - startTime > maxWaitTime)
+                {
+                    Debug.LogWarning($"[Preload] Timeout after {maxWaitTime}s — proceeding with partial data");
+                    break;
+                }
+                yield return null;
+            }
+
+            // === Pre-bake ball sprite frames (~50-200ms per tier, runs during remaining wait time) ===
+            float bakeStart = Time.realtimeSinceStartup;
+            // Pre-bake the most common small ball tiers (0-4) that appear in every game
+            for (int tier = 0; tier < 5; tier++)
+            {
+                float radius = tier < 11 ? new float[] { 0.22f, 0.30f, 0.40f, 0.50f, 0.60f, 0.70f, 0.80f, 0.90f, 1.10f, 1.20f, 1.40f }[tier] : 0.5f;
+                var color = Visual.NeonBallRenderer.GetBallColor(tier);
+                Visual.NeonBallRenderer.GenerateBallPixels(tier, color, radius, 0f, out int _s);
+                yield return null; // spread across frames to avoid hitch
+            }
+            Debug.Log($"[Preload] Ball sprites: {(Time.realtimeSinceStartup - bakeStart) * 1000:F0}ms (5 tiers)");
+
+            // === Enforce minimum loading time ===
+            float elapsed = Time.realtimeSinceStartup - startTime;
+            if (elapsed < minLoadTime)
+                yield return new WaitForSeconds(minLoadTime - elapsed);
+
+            Debug.Log($"[Preload] Total: {(Time.realtimeSinceStartup - startTime) * 1000:F0}ms");
+
+            // === Navigate ===
             if (GameSession.IsFirstLaunch && ScreenManager.Instance != null)
                 ScreenManager.Instance.ShowImmediate(UI.Screen.Onboarding);
             else
                 SetState(GameState.Menu);
 
-            // Fade out loading screen
             if (UI.LoadingScreen.Instance != null)
                 UI.LoadingScreen.Instance.Dismiss();
         }

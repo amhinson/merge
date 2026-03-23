@@ -460,24 +460,10 @@ namespace MergeGame.UI
             isFetching = true;
             if (loadingIndicator != null) loadingIndicator.SetActive(true);
 
-            // Also fetch player rank if they've played today
-            bool hasPlayed = GameSession.HasPlayedToday ||
-                (DailySeedManager.Instance != null && DailySeedManager.Instance.HasCompletedScoredAttempt());
-            if (hasPlayed && LeaderboardService.Instance != null)
-            {
-                LeaderboardService.Instance.FetchPlayerRankFull(GameSession.TodayDateStr, (rank, total) =>
-                {
-                    if (this == null || !gameObject.activeInHierarchy) return;
-                    GameSession.ResultRank = rank;
-                    GameSession.ResultTotalPlayers = total;
-                    // Re-populate rows now that we have the rank
-                    if (cachedEntries != null)
-                        PopulateLeaderboardRows(cachedEntries);
-                });
-            }
-
             if (LeaderboardService.Instance != null)
             {
+                // FetchLeaderboard uses internal cache — if pre-loaded during startup,
+                // the callback fires immediately with cached data
                 LeaderboardService.Instance.FetchLeaderboard(GameSession.TodayDateStr, (entries) =>
                 {
                     isFetching = false;
