@@ -21,7 +21,7 @@ MonoBehaviour:
   frictionPerTier: 0.02
   linearDrag: 0.1
   angularDrag: 0.05
-  dropHeight: 6.5
+  dropHeight: 5.5
   cooldownDuration: 0.5
   postMergePopForce: 1.5
   chainReactionDelay: 0.05
@@ -54,7 +54,7 @@ MonoBehaviour:
   wallBounciness: 0.1
   wallFriction: 0.5
   containerBottomY: -3.5
-  deathLineY: 5.2
+  deathLineY: 4.5
   deathLineWarningDuration: 5
   deathLineProximityThreshold: 1.5
   shakeIntensity: 0.06

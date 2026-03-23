@@ -1017,8 +1017,8 @@ namespace MergeGame.Editor
             config.containerWidth = 5.1f;
             config.containerHeight = 9.5f;
             config.containerBottomY = -3.5f;
-            config.dropHeight = 6.5f;   // just above container top (6.0), ball overlaps slightly
-            config.deathLineY = 5.2f;   // just below container top (6.0)
+            config.dropHeight = 5.5f;   // inside container top (6.0), below header UI
+            config.deathLineY = 4.5f;   // below drop point (5.5), gives room for drop + settle
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
             return config;
