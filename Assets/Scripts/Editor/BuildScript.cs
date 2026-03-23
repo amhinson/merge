@@ -42,6 +42,14 @@ namespace MergeGame.Editor
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, bundleId);
 #pragma warning restore CS0618
 
+            // App metadata
+            PlayerSettings.productName = "Overtone";
+            PlayerSettings.companyName = "Overtone";
+            PlayerSettings.bundleVersion = "0.1.0";              // display version (CFBundleShortVersionString)
+            PlayerSettings.iOS.buildNumber = "1";                 // build number (CFBundleVersion)
+            PlayerSettings.iOS.applicationDisplayName = "Overtone";
+            PlayerSettings.iOS.appInBackgroundBehavior = iOSAppInBackgroundBehavior.Suspend;
+
             var options = new BuildPlayerOptions
             {
                 scenes = new[] { "Assets/Scenes/GameScene.unity" },
@@ -85,6 +93,28 @@ namespace MergeGame.Editor
                     "CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;\n\t\t\t\tCODE_SIGN_IDENTITY");
                 System.IO.File.WriteAllText(projPath, content);
                 Debug.Log("Xcode project patched: CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES");
+            }
+
+            // Patch Info.plist — add app category
+            string plistPath = System.IO.Path.Combine(buildPath, "Info.plist");
+            if (System.IO.File.Exists(plistPath))
+            {
+                string plist = System.IO.File.ReadAllText(plistPath);
+                if (!plist.Contains("LSApplicationCategoryType"))
+                {
+                    plist = plist.Replace(
+                        "</dict>\n</plist>",
+                        "\t<key>LSApplicationCategoryType</key>\n\t<string>public.app-category.games</string>\n</dict>\n</plist>");
+                    Debug.Log("Info.plist patched: LSApplicationCategoryType = Games");
+                }
+                if (!plist.Contains("ITSAppUsesNonExemptEncryption"))
+                {
+                    plist = plist.Replace(
+                        "</dict>\n</plist>",
+                        "\t<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>\n</dict>\n</plist>");
+                    Debug.Log("Info.plist patched: ITSAppUsesNonExemptEncryption = NO");
+                }
+                System.IO.File.WriteAllText(plistPath, plist);
             }
 #endif
         }

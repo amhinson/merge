@@ -40,6 +40,9 @@ crashlytics-build.properties
 *.opendb
 *.VC.db
 
+# Recovery
+Assets/_Recovery/
+
 # OS
 .DS_Store
 .DS_Store?

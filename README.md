@@ -1,4 +1,5 @@
 When loading ranking on results, it shows stray #.
+Safearea wrong color again. Also, some white text in the very bottom right corner of the safearea?
 
 Cooler username generator.
 
