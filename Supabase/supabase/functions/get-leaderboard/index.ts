@@ -47,14 +47,22 @@ serve(async (req) => {
       );
     }
 
-    // Flatten the joined data
-    const entries = (data || []).map((row: any, index: number) => ({
-      device_uuid: row.device_uuid,
-      display_name: row.players?.display_name || "Player",
-      score: row.score,
-      largest_merges: row.largest_merges || [],
-      rank: index + 1,
-    }));
+    // Flatten with dense ranking — tied scores get the same rank
+    let currentRank = 1;
+    let previousScore = -1;
+    const entries = (data || []).map((row: any, index: number) => {
+      if (row.score !== previousScore) {
+        currentRank = index + 1;
+        previousScore = row.score;
+      }
+      return {
+        device_uuid: row.device_uuid,
+        display_name: row.players?.display_name || "Player",
+        score: row.score,
+        largest_merges: row.largest_merges || [],
+        rank: currentRank,
+      };
+    });
 
     return new Response(JSON.stringify(entries), {
       status: 200,

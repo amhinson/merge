@@ -8,6 +8,8 @@
 
 set -e
 
+cd "$(dirname "$0")"
+
 # Project refs — set these
 DEV_REF="qbgrghcpvmsnoyzmglgv"
 PROD_REF="negfbluxywxsadggnwwd"

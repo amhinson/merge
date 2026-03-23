@@ -245,15 +245,19 @@ namespace MergeGame.UI
 
         private void RefreshStats()
         {
+            // TodayScore might be 0 if profile fetch didn't return it — use ScoreManager as fallback
+            int todayScore = GameSession.TodayScore;
+            if (todayScore <= 0 && ScoreManager.Instance != null)
+                todayScore = ScoreManager.Instance.HighScore;
+
             if (todayValue != null)
-                todayValue.text = GameSession.TodayScore.ToString("N0");
+                todayValue.text = todayScore.ToString("N0");
 
             // Update scored badge
             if (scoredTMP != null)
             {
                 string cyanHex = ColorUtility.ToHtmlStringRGB(OC.cyan);
-                string scoreStr = GameSession.TodayScore.ToString("N0");
-                scoredTMP.text = $"SCORED  <color=#{cyanHex}>{scoreStr}</color>";
+                scoredTMP.text = $"SCORED  <color=#{cyanHex}>{todayScore.ToString("N0")}</color>";
             }
 
             // Best score

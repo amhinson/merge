@@ -460,6 +460,22 @@ namespace MergeGame.UI
             isFetching = true;
             if (loadingIndicator != null) loadingIndicator.SetActive(true);
 
+            // Also fetch player rank if they've played today
+            bool hasPlayed = GameSession.HasPlayedToday ||
+                (DailySeedManager.Instance != null && DailySeedManager.Instance.HasCompletedScoredAttempt());
+            if (hasPlayed && LeaderboardService.Instance != null)
+            {
+                LeaderboardService.Instance.FetchPlayerRankFull(GameSession.TodayDateStr, (rank, total) =>
+                {
+                    if (this == null || !gameObject.activeInHierarchy) return;
+                    GameSession.ResultRank = rank;
+                    GameSession.ResultTotalPlayers = total;
+                    // Re-populate rows now that we have the rank
+                    if (cachedEntries != null)
+                        PopulateLeaderboardRows(cachedEntries);
+                });
+            }
+
             if (LeaderboardService.Instance != null)
             {
                 LeaderboardService.Instance.FetchLeaderboard(GameSession.TodayDateStr, (entries) =>
@@ -508,9 +524,6 @@ namespace MergeGame.UI
             }
             else
             {
-                // Rank indicators — colored circles with number, since TMP can't render emoji
-                string[] rankLabels = { "#1", "#2", "#3" };
-                Color[] rankColors = { OC.amber, OC.A(Color.white, 0.5f), OC.A(OC.orange, 0.7f) };
                 int count = Mathf.Min(entries.Count, 3);
 
                 for (int i = 0; i < count; i++)
@@ -531,17 +544,23 @@ namespace MergeGame.UI
                     bool isMe = !string.IsNullOrEmpty(entry.device_uuid) &&
                                 entry.device_uuid == GameSession.DeviceUUID;
 
+                    // Use rank from API (handles ties correctly)
+                    string rankText = $"#{entry.rank}";
+                    Color rankColor = entry.rank == 1 ? OC.amber
+                        : entry.rank == 2 ? OC.A(Color.white, 0.5f)
+                        : OC.A(OC.orange, 0.7f);
+
                     var rowGO = BuildScoreRow(
                         leaderboardRowContainer,
-                        rankLabels[i], 8,                            // rank text, fontSize 8
+                        rankText, 8,
                         entry.display_name ?? "???",
                         entry.score.ToString("N0"),
-                        isMe ? OC.cyan : OC.muted,                  // name color
-                        isMe ? OC.cyan : OC.A(Color.white, 0.35f),  // score color
-                        isMe ? OC.A(OC.cyan, 0.06f) : Color.clear,  // bg tint
+                        isMe ? OC.cyan : OC.muted,
+                        isMe ? OC.cyan : OC.A(Color.white, 0.35f),
+                        isMe ? OC.A(OC.cyan, 0.06f) : Color.clear,
                         $"Row{i}",
-                        true,                                        // use pixel font for rank
-                        rankColors[i]);
+                        true,
+                        isMe ? OC.cyan : rankColor);
                 }
                 rowCount = count;
             }
@@ -562,11 +581,16 @@ namespace MergeGame.UI
                 string rankText = GameSession.ResultRank > 0 ? $"#{GameSession.ResultRank}" : "#—";
                 string playerName = GameSession.CurrentPlayer?.display_name ?? "YOU";
 
+                // Use fallback for score if TodayScore is 0
+                int yourScore = GameSession.TodayScore;
+                if (yourScore <= 0 && ScoreManager.Instance != null)
+                    yourScore = ScoreManager.Instance.HighScore;
+
                 BuildScoreRow(
                     leaderboardRowContainer,
                     rankText, 7,                    // rank text, PressStart2P size 7
                     playerName,
-                    GameSession.TodayScore.ToString("N0"),
+                    yourScore.ToString("N0"),
                     OC.cyan, OC.cyan,               // all cyan
                     OC.A(OC.cyan, 0.04f),           // very subtle bg tint
                     "YourRank",
