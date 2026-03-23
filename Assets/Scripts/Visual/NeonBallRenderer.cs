@@ -59,17 +59,33 @@ namespace MergeGame.Visual
 
         // ===== Main generation =====
 
+        /// <summary>Generate ball pixels directly — no PNG encode/decode overhead.</summary>
+        public static Color[] GenerateBallPixels(int tier, Color ballColor, float radius, float phase, out int texSize)
+        {
+            int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * PixelsPerUnit));
+            texSize = diameter + Padding * 2;
+            return GenerateBallPixelsInternal(tier, ballColor, radius, phase, texSize, diameter);
+        }
+
         public static byte[] GenerateBallPNG(int tier, Color ignored, float radius, float phase = 0f)
         {
             Color ballColor = GetBallColor(tier);
             int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * PixelsPerUnit));
             int size = diameter + Padding * 2;
-            float r = diameter / 2f;
-            float cx = size / 2f;
-            float cy = size / 2f;
+            var pixels = GenerateBallPixelsInternal(tier, ballColor, radius, phase, size, diameter);
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
+            tex.SetPixels(pixels);
+            tex.Apply();
+            return tex.EncodeToPNG();
+        }
+
+        private static Color[] GenerateBallPixelsInternal(int tier, Color ballColor, float radius, float phase, int size, int diameter)
+        {
+            float r = diameter / 2f;
+            float cx = size / 2f;
+            float cy = size / 2f;
 
             var pixels = new Color[size * size];
             for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
@@ -152,9 +168,7 @@ namespace MergeGame.Visual
                     wc.freq, wc.waveType, amp, phase, haloW, lineW, wc.lineOpacity);
             }
 
-            tex.SetPixels(pixels);
-            tex.Apply();
-            return tex.EncodeToPNG();
+            return pixels;
         }
 
         // ===== Thread wave (all balls use this) =====
@@ -273,14 +287,13 @@ namespace MergeGame.Visual
 
         public static Sprite GenerateSpriteForRadius(int tier, Color neonColor, float radius, float phase = 0f)
         {
-            int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * PixelsPerUnit));
-            int size = diameter + Padding * 2;
+            Color ballColor = GetBallColor(tier);
+            var pixels = GenerateBallPixels(tier, ballColor, radius, phase, out int size);
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
-            byte[] png = GenerateBallPNG(tier, neonColor, radius, phase);
-            tex.LoadImage(png);
-            tex.filterMode = FilterMode.Bilinear;
+            tex.SetPixels(pixels);
+            tex.Apply();
 
             return Sprite.Create(tex, new Rect(0, 0, size, size),
                 new Vector2(0.5f, 0.5f), PixelsPerUnit);

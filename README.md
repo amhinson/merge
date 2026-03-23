@@ -1,6 +1,3 @@
-Need to restructure gameplay. HUD concept seems wrong? Should just be a part of the flow of the screen so that the Shake button and
-Next don't overlap with the grid.
-
 Graphics are a little slow? When dropping.
 
 Don't like the way the merge re-centers. Should handle combos betters.

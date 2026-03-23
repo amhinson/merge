@@ -5,15 +5,20 @@ namespace MergeGame.Visual
 {
     /// <summary>
     /// Animates a waveform ball rendered as a UI Image.
-    /// Regenerates the sprite every frame with a scrolling phase offset.
+    /// Uses pre-baked frames shared per tier for performance.
     /// </summary>
     public class UIBallAnimator : MonoBehaviour
     {
         private Image image;
         private int tier;
-        private float uiRadius;
         private float scrollOffset;
         private float scrollSpeed;
+        private int lastFrame = -1;
+
+        private const int FrameCount = 48;
+        private static Sprite[][] uiFrameCache;
+        private static bool[] uiCacheBuilt;
+        private float uiRadius;
 
         public void Initialize(int ballTier, float radius)
         {
@@ -24,6 +29,9 @@ namespace MergeGame.Visual
             scrollSpeed = tier >= 0 && tier < NeonBallRenderer.ScrollSpeeds.Length
                 ? NeonBallRenderer.ScrollSpeeds[tier]
                 : 12f;
+
+            EnsureCache();
+            UpdateFrame();
         }
 
         private void Update()
@@ -33,29 +41,56 @@ namespace MergeGame.Visual
             scrollOffset += Time.deltaTime / scrollSpeed;
             scrollOffset %= 1.0f;
 
-            var png = NeonBallRenderer.GenerateBallPNG(tier, Color.white, uiRadius, scrollOffset);
-            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Bilinear;
-            tex.LoadImage(png);
-
-            // Destroy old sprite texture to avoid memory leak
-            if (image.sprite != null && image.sprite.texture != null)
-                Destroy(image.sprite.texture);
-            if (image.sprite != null)
-                Destroy(image.sprite);
-
-            image.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
-                new Vector2(0.5f, 0.5f), tex.width);
+            UpdateFrame();
         }
 
-        private void OnDestroy()
+        private void UpdateFrame()
         {
-            // Clean up final sprite
-            if (image != null && image.sprite != null)
+            int frame = Mathf.FloorToInt(scrollOffset * FrameCount) % FrameCount;
+            if (frame == lastFrame) return;
+            lastFrame = frame;
+
+            EnsureCache();
+
+            if (uiFrameCache[tier] == null)
+                BuildCache(tier, uiRadius);
+
+            if (uiFrameCache[tier] != null && uiFrameCache[tier][frame] != null)
             {
-                if (image.sprite.texture != null)
-                    Destroy(image.sprite.texture);
-                Destroy(image.sprite);
+                image.sprite = uiFrameCache[tier][frame];
+                image.color = Color.white;
+            }
+        }
+
+        private static void EnsureCache()
+        {
+            if (uiFrameCache == null)
+            {
+                uiFrameCache = new Sprite[11][];
+                uiCacheBuilt = new bool[11];
+            }
+        }
+
+        private static void BuildCache(int tier, float radius)
+        {
+            if (uiCacheBuilt[tier]) return;
+            uiCacheBuilt[tier] = true;
+            uiFrameCache[tier] = new Sprite[FrameCount];
+
+            var color = NeonBallRenderer.GetBallColor(tier);
+
+            for (int i = 0; i < FrameCount; i++)
+            {
+                float phase = (float)i / FrameCount;
+                var pixels = NeonBallRenderer.GenerateBallPixels(tier, color, radius, phase, out int texSize);
+                var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
+                tex.filterMode = FilterMode.Bilinear;
+                tex.SetPixels(pixels);
+                tex.Apply(false, true); // makeNoLongerReadable saves memory
+
+                // PPU = texSize so sprite renders as 1 unit, Image scales it
+                uiFrameCache[tier][i] = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
+                    new Vector2(0.5f, 0.5f), texSize);
             }
         }
     }

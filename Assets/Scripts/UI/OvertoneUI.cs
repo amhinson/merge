@@ -136,7 +136,7 @@ namespace MergeGame.UI
         /// Scanline texture — tall enough to cover any button, with 1px lines every 3px.
         /// Used as Image.Type.Simple stretched to fill.
         /// </summary>
-        private static Sprite GetScanlineSprite()
+        public static Sprite GetScanlineSprite()
         {
             if (cachedScanlineSprite != null) return cachedScanlineSprite;
 

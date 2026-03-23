@@ -15,7 +15,7 @@ namespace MergeGame.Editor
     public static class GameSceneBuilder
     {
         // Color palette
-        private static readonly Color BgColor = HexColor("121218");
+        private static readonly Color BgColor = HexColor("0F1117"); // matches OC.bg
         private static readonly Color PanelColor = HexColor("1E1E26");
         private static readonly Color PanelBorder = HexColor("3A3A45");
         private static readonly Color PanelHighlight = HexColor("4A4A55");
@@ -360,48 +360,51 @@ namespace MergeGame.Editor
             // No background — gameplay world shows through
 
             // ===== HEADER BAR (top) =====
-            // Back button (top-left)
+            // Back/close button (top-left) — smooth border, transparent bg, matching home screen style
             var backBtn = new GameObject("BackButton");
             backBtn.transform.SetParent(panel.transform, false);
             var backBtnRT = backBtn.AddComponent<RectTransform>();
-            SetAnchors(backBtnRT, 0, 1, 0, 1); // top-left anchor
-            backBtnRT.anchoredPosition = new Vector2(16, -12);
-            backBtnRT.sizeDelta = new Vector2(32, 28);
+            SetAnchors(backBtnRT, 0, 1, 0, 1);
+            backBtnRT.anchoredPosition = new Vector2(16, -14);
+            backBtnRT.sizeDelta = new Vector2(34, 34);
             backBtnRT.pivot = new Vector2(0, 1);
+            // Border only — no fill, camera bg shows through perfectly
+            var backBorderGO = new GameObject("Border");
+            backBorderGO.transform.SetParent(backBtn.transform, false);
+            var bbRT = backBorderGO.AddComponent<RectTransform>();
+            bbRT.anchorMin = Vector2.zero; bbRT.anchorMax = Vector2.one;
+            bbRT.offsetMin = Vector2.zero; bbRT.offsetMax = Vector2.zero;
+            var bbImg = backBorderGO.AddComponent<Image>();
+            bbImg.sprite = CreateOutlineSprite();
+            bbImg.type = Image.Type.Simple;
+            bbImg.color = HexColor("232838");
+            bbImg.raycastTarget = false;
+            // X label (on top of everything)
+            var backLabelGO = new GameObject("XLabel");
+            backLabelGO.transform.SetParent(backBtn.transform, false);
+            var blRT = backLabelGO.AddComponent<RectTransform>();
+            blRT.anchorMin = Vector2.zero; blRT.anchorMax = Vector2.one;
+            blRT.offsetMin = Vector2.zero; blRT.offsetMax = Vector2.zero;
+            var backTMP = backLabelGO.AddComponent<TextMeshProUGUI>();
+            var dmMonoFont = Resources.Load<TMP_FontAsset>("Fonts/DMMono-Medium SDF");
+            backTMP.text = "x";
+            backTMP.font = dmMonoFont;
+            backTMP.fontSize = 14;
+            backTMP.color = new Color(1, 1, 1, 0.3f); // visible muted white
+            backTMP.alignment = TextAlignmentOptions.Center;
+            backTMP.raycastTarget = false;
+            // Hit area (invisible, must be last for proper layering)
             var backBtnImg = backBtn.AddComponent<Image>();
-            backBtnImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
-            backBtnImg.type = Image.Type.Sliced;
-            backBtnImg.color = HexColor("232838"); // visible dark button
+            backBtnImg.color = Color.clear;
             var backBtnComp = backBtn.AddComponent<Button>();
-            backBtnComp.targetGraphic = backBtnImg;
-            // Back button outline
-            var backOutline = new GameObject("Outline");
-            backOutline.transform.SetParent(backBtn.transform, false);
-            var backOutlineRT = backOutline.AddComponent<RectTransform>();
-            backOutlineRT.anchorMin = Vector2.zero; backOutlineRT.anchorMax = Vector2.one;
-            backOutlineRT.offsetMin = Vector2.zero; backOutlineRT.offsetMax = Vector2.zero;
-            var backOutlineImg = backOutline.AddComponent<Image>();
-            backOutlineImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
-            backOutlineImg.type = Image.Type.Sliced;
-            backOutlineImg.color = HexColor("232838");
-            backOutlineImg.raycastTarget = false;
-            // Back arrow — use pixel-art icon instead of glyph
-            var backIconGO = new GameObject("BackIcon");
-            backIconGO.transform.SetParent(backBtn.transform, false);
-            var backIconImg = backIconGO.AddComponent<Image>();
-            backIconImg.sprite = PixelUIGenerator.CreateBackIcon(12, new Color(1, 1, 1, 0.4f));
-            backIconImg.preserveAspect = true;
-            backIconImg.raycastTarget = false;
-            var backIconRT = backIconGO.GetComponent<RectTransform>();
-            backIconRT.anchorMin = new Vector2(0.5f, 0.5f); backIconRT.anchorMax = new Vector2(0.5f, 0.5f);
-            backIconRT.pivot = new Vector2(0.5f, 0.5f);
-            backIconRT.anchoredPosition = Vector2.zero;
-            backIconRT.sizeDelta = new Vector2(14, 14);
+            backBtnComp.targetGraphic = bbImg;
+            backTMP.alignment = TextAlignmentOptions.Center;
+            backTMP.raycastTarget = false;
 
             // Score block (next to back button) — disable raycast on text so they don't block the button
             var scoreLabelTMP = CreateText(panel.transform, "ScoreLabel", "SCORE", 7, new Color(1, 1, 1, 0.22f));
             SetAnchors(scoreLabelTMP.rectTransform, 0, 1, 0, 1);
-            scoreLabelTMP.rectTransform.anchoredPosition = new Vector2(56, -10);
+            scoreLabelTMP.rectTransform.anchoredPosition = new Vector2(60, -14);
             scoreLabelTMP.rectTransform.sizeDelta = new Vector2(80, 12);
             scoreLabelTMP.rectTransform.pivot = new Vector2(0, 1);
             scoreLabelTMP.alignment = TextAlignmentOptions.Left;
@@ -409,7 +412,7 @@ namespace MergeGame.Editor
 
             var scoreText = CreateText(panel.transform, "Score", "0", 28, HexColor("4DD9C0"));
             SetAnchors(scoreText.rectTransform, 0, 1, 0, 1);
-            scoreText.rectTransform.anchoredPosition = new Vector2(56, -22);
+            scoreText.rectTransform.anchoredPosition = new Vector2(60, -26);
             scoreText.rectTransform.sizeDelta = new Vector2(150, 34);
             scoreText.rectTransform.pivot = new Vector2(0, 1);
             scoreText.alignment = TextAlignmentOptions.Left;
@@ -593,41 +596,41 @@ namespace MergeGame.Editor
             brHLG.childControlHeight = true;
             brHLG.childForceExpandWidth = true;
 
-            // QUIT button (primary/cyan)
+            // QUIT button (primary pink with scanlines)
             var quitBtnGO = new GameObject("YesBtn");
             quitBtnGO.transform.SetParent(btnRow.transform, false);
             var quitBtnImg = quitBtnGO.AddComponent<Image>();
-            quitBtnImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            quitBtnImg.sprite = OvertoneUI.SmoothRoundedRect;
             quitBtnImg.type = Image.Type.Sliced;
-            quitBtnImg.color = HexColor("E8587A"); // pink/danger for quit
+            quitBtnImg.color = HexColor("E8587A"); // pink/danger
             var yesBtn = quitBtnGO.AddComponent<Button>();
             yesBtn.targetGraphic = quitBtnImg;
+            // Scanlines
+            var quitScanGO = new GameObject("Scanlines");
+            quitScanGO.transform.SetParent(quitBtnGO.transform, false);
+            var qsRT = quitScanGO.AddComponent<RectTransform>();
+            qsRT.anchorMin = Vector2.zero; qsRT.anchorMax = Vector2.one;
+            qsRT.offsetMin = Vector2.zero; qsRT.offsetMax = Vector2.zero;
+            var qsImg = quitScanGO.AddComponent<Image>();
+            qsImg.sprite = OvertoneUI.GetScanlineSprite();
+            qsImg.type = Image.Type.Simple;
+            qsImg.color = new Color(0, 0, 0, 0.22f);
+            qsImg.raycastTarget = false;
+            quitBtnGO.AddComponent<RectMask2D>(); // clip scanlines to rounded shape
+            // Label
             var quitLabel = CreateText(quitBtnGO.transform, "Label", "QUIT", 9, HexColor("0F1117"));
             quitLabel.alignment = TextAlignmentOptions.Center;
             var qlRT = quitLabel.rectTransform;
             qlRT.anchorMin = Vector2.zero; qlRT.anchorMax = Vector2.one;
             qlRT.offsetMin = Vector2.zero; qlRT.offsetMax = Vector2.zero;
 
-            // CANCEL button (ghost/outline)
+            // CANCEL button — no border, no background, just text
             var cancelBtnGO = new GameObject("NoBtn");
             cancelBtnGO.transform.SetParent(btnRow.transform, false);
             var cancelBtnImg = cancelBtnGO.AddComponent<Image>();
-            cancelBtnImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
-            cancelBtnImg.type = Image.Type.Sliced;
-            cancelBtnImg.color = HexColor("161B24");
+            cancelBtnImg.color = Color.clear;
             var noBtn = cancelBtnGO.AddComponent<Button>();
             noBtn.targetGraphic = cancelBtnImg;
-            // Cancel border
-            var cbOutline = new GameObject("Outline");
-            cbOutline.transform.SetParent(cancelBtnGO.transform, false);
-            var cbOutRT = cbOutline.AddComponent<RectTransform>();
-            cbOutRT.anchorMin = Vector2.zero; cbOutRT.anchorMax = Vector2.one;
-            cbOutRT.offsetMin = Vector2.zero; cbOutRT.offsetMax = Vector2.zero;
-            var cbOutImg = cbOutline.AddComponent<Image>();
-            cbOutImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
-            cbOutImg.type = Image.Type.Sliced;
-            cbOutImg.color = HexColor("232838");
-            cbOutImg.raycastTarget = false;
             var cancelLabel = CreateText(cancelBtnGO.transform, "Label", "CANCEL", 9, new Color(1, 1, 1, 0.22f));
             cancelLabel.alignment = TextAlignmentOptions.Center;
             var clRT = cancelLabel.rectTransform;
@@ -1261,6 +1264,49 @@ namespace MergeGame.Editor
             lr.sortingOrder = sortOrder;
             lr.useWorldSpace = true;
             lr.material = new Material(Shader.Find("Sprites/Default"));
+        }
+
+        /// <summary>Outline-only rounded rect — transparent interior, border ring only.</summary>
+        private static Sprite _outlineSprite;
+        private static Sprite CreateOutlineSprite()
+        {
+            if (_outlineSprite != null) return _outlineSprite;
+            int size = 64;
+            int radius = 10;
+            float border = 1.5f;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            Color[] px = new Color[size * size];
+            for (int i = 0; i < px.Length; i++) px[i] = Color.clear;
+            float c = size / 2f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = Mathf.Max(0, Mathf.Abs(x - c + 0.5f) - (c - radius));
+                    float dy = Mathf.Max(0, Mathf.Abs(y - c + 0.5f) - (c - radius));
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (dist <= radius)
+                    {
+                        float inner = radius - dist;
+                        if (inner <= border)
+                        {
+                            float a = Mathf.Clamp01(inner / border);
+                            float outerAA = Mathf.Clamp01(radius - dist + 0.5f);
+                            px[y * size + x] = new Color(1, 1, 1, a * outerAA);
+                        }
+                    }
+                    else if (dist <= radius + 1f)
+                    {
+                        px[y * size + x] = new Color(1, 1, 1, Mathf.Clamp01(radius + 1f - dist));
+                    }
+                }
+            }
+            tex.SetPixels(px);
+            tex.Apply();
+            _outlineSprite = Sprite.Create(tex, new Rect(0, 0, size, size),
+                new Vector2(0.5f, 0.5f), size);
+            return _outlineSprite;
         }
 
         private static Sprite CreatePixelSprite()
