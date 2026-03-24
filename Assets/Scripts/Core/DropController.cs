@@ -40,6 +40,24 @@ namespace MergeGame.Core
         private bool inCooldown;
         private Camera mainCamera;
 
+        /// <summary>
+        /// When true, all drops are blocked (e.g. exit confirm modal is open).
+        /// Set by UI code to prevent accidental drops while interacting with menus.
+        /// </summary>
+        public bool DropBlocked
+        {
+            get => dropBlocked || dropBlockedCooldown > 0;
+            set
+            {
+                dropBlocked = value;
+                // When unblocking, add a short cooldown so the same touch that
+                // closed the modal doesn't immediately drop a ball.
+                if (!value) dropBlockedCooldown = 0.15f;
+            }
+        }
+        private bool dropBlocked;
+        private float dropBlockedCooldown;
+
         public event System.Action<BallData> OnNextBallChanged;
 
         private void Awake()
@@ -94,6 +112,9 @@ namespace MergeGame.Core
 
         private void Update()
         {
+            if (dropBlockedCooldown > 0)
+                dropBlockedCooldown -= Time.deltaTime;
+
             if (!isActive) return;
 
 #if UNITY_EDITOR
@@ -117,6 +138,9 @@ namespace MergeGame.Core
 
             if (previewBall == null || mainCamera == null || currentBallData == null) return;
 
+            // Don't move or drop the ball while UI modal is open
+            if (DropBlocked) return;
+
             Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             float clampedX = Mathf.Clamp(
                 mouseWorld.x,
@@ -127,10 +151,33 @@ namespace MergeGame.Core
             previewBall.transform.position = new Vector3(clampedX, dropY, 0f);
             UpdateGuideLine(clampedX);
 
-            if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
+            if (Input.GetMouseButtonUp(0) && !IsPointerOverUI())
             {
                 DropBall(clampedX);
             }
+        }
+
+        /// <summary>
+        /// Check if the pointer/touch is over any UI element.
+        /// Handles both mouse (editor) and touch (mobile) correctly.
+        /// </summary>
+        private bool IsPointerOverUI()
+        {
+            if (EventSystem.current == null) return false;
+
+            // Touch input — check each active touch
+            if (Input.touchCount > 0)
+            {
+                for (int i = 0; i < Input.touchCount; i++)
+                {
+                    if (EventSystem.current.IsPointerOverGameObject(Input.GetTouch(i).fingerId))
+                        return true;
+                }
+                return false;
+            }
+
+            // Mouse fallback (editor)
+            return EventSystem.current.IsPointerOverGameObject();
         }
 
         private Vector3 cachedNextBallWorldPos;

@@ -8,6 +8,7 @@ namespace MergeGame.UI
     /// <summary>
     /// Handles exit confirmation. Uses Update() to detect clicks on the back button area
     /// since Button.onClick doesn't fire (likely blocked by DropController input handling).
+    /// Blocks ball drops while the confirm modal is open or when the back button is tapped.
     /// </summary>
     public class SimpleExitConfirm : MonoBehaviour
     {
@@ -40,7 +41,7 @@ namespace MergeGame.UI
             if (parentCanvas != null && parentCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
                 canvasCamera = parentCanvas.worldCamera;
 
-            // Wire modal buttons normally — they work fine since no DropController interference
+            // Wire modal buttons
             var yesBtnTransform = confirmPanelTransform.Find("ModalCard/ButtonRow/YesBtn");
             var noBtnTransform = confirmPanelTransform.Find("ModalCard/ButtonRow/NoBtn");
 
@@ -51,7 +52,7 @@ namespace MergeGame.UI
             {
                 yesButton.onClick.AddListener(() =>
                 {
-                    confirmPanel.SetActive(false);
+                    HideConfirm();
                     if (GameManager.Instance != null)
                         GameManager.Instance.SetState(GameState.Menu);
                 });
@@ -59,11 +60,24 @@ namespace MergeGame.UI
 
             if (noButton != null)
             {
-                noButton.onClick.AddListener(() =>
-                {
-                    confirmPanel.SetActive(false);
-                });
+                noButton.onClick.AddListener(HideConfirm);
             }
+        }
+
+        private void ShowConfirm()
+        {
+            if (confirmPanel != null)
+                confirmPanel.SetActive(true);
+            if (DropController.Instance != null)
+                DropController.Instance.DropBlocked = true;
+        }
+
+        private void HideConfirm()
+        {
+            if (confirmPanel != null)
+                confirmPanel.SetActive(false);
+            if (DropController.Instance != null)
+                DropController.Instance.DropBlocked = false;
         }
 
         private void Update()
@@ -80,10 +94,17 @@ namespace MergeGame.UI
                 {
                     if (backBtnRT.rect.Contains(localPoint))
                     {
-                        confirmPanel.SetActive(true);
+                        ShowConfirm();
                     }
                 }
             }
+        }
+
+        private void OnDisable()
+        {
+            // Ensure drops are unblocked if the gameplay screen is deactivated
+            if (DropController.Instance != null)
+                DropController.Instance.DropBlocked = false;
         }
     }
 }

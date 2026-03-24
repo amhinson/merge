@@ -1,9 +1,8 @@
 Scroll not working on leaderboard.
 Can't see score on leaderboard. Only rank all& username.
-Exit tap shouldn't drop ball.
-Shake button still overlapping bottom of grid some on iPhone 16.
 Username validation and error handling?
 Sometimes day number doesn't load?
+Fix onboarding animation.
 
 Cooler username generator.
 Username profanity filter.
