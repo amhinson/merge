@@ -14,7 +14,8 @@ namespace MergeGame.UI
     {
         protected override void BuildCTABlock(Transform parent)
         {
-            var (playGO, playLabel) = OvertoneUI.CreatePrimaryButton(parent, "PLAY", 32, "PlayButton");
+            var (playGO, playLabel) = OvertoneUI.CreatePrimaryButton(parent, "PLAY", 44, "PlayButton");
+            playGO.GetComponent<LayoutElement>().flexibleHeight = 0;
             playGO.GetComponent<Button>().onClick.AddListener(OnPlayClicked);
 
             var hint = OvertoneUI.CreateLabel(parent, "1 scored play per day",

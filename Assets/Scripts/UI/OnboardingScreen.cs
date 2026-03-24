@@ -396,12 +396,14 @@ namespace MergeGame.UI
             hlg.padding = new RectOffset(24, 24, 0, 0);
             hlg.childControlWidth = true;
             hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
             var btnRowLE = row.AddComponent<LayoutElement>();
-            btnRowLE.preferredHeight = 28;
-            btnRowLE.minHeight = 28;
+            btnRowLE.preferredHeight = 44;
+            btnRowLE.minHeight = 44;
+            btnRowLE.flexibleHeight = 0;
 
             // Next button
-            var (nextGO, nextLabelTMP) = OvertoneUI.CreatePrimaryButton(row.transform, "NEXT  \u2192", 28, "NextButton");
+            var (nextGO, nextLabelTMP) = OvertoneUI.CreatePrimaryButton(row.transform, "NEXT  \u2192", 44, "NextButton");
             nextGO.GetComponent<LayoutElement>().flexibleWidth = 3;
             nextGO.GetComponent<Button>().onClick.AddListener(OnNextClicked);
             nextButton = nextGO;
@@ -409,7 +411,7 @@ namespace MergeGame.UI
             // Skip button — smooth border, transparent inside
             var skipGO = OvertoneUI.CreateUIObject("SkipButton", row.transform);
             var skipLE = skipGO.AddComponent<LayoutElement>();
-            skipLE.preferredHeight = 28;
+            skipLE.preferredHeight = 44;
             skipLE.flexibleWidth = 1;
             // Border (behind)
             var skipBorderGO = OvertoneUI.CreateUIObject("Border", skipGO.transform);

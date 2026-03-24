@@ -17,7 +17,6 @@ namespace MergeGame.UI
         private TextMeshProUGUI todayValue;
         private TextMeshProUGUI bestValue;
         private TextMeshProUGUI scoredValue;
-        private TextMeshProUGUI scoredTMP;
 
         protected override void BuildMiddleSection(Transform parent)
         {
@@ -115,63 +114,6 @@ namespace MergeGame.UI
 
         protected override void BuildCTABlock(Transform parent)
         {
-            // Scored badge — smooth border, transparent inside
-            var badge = OvertoneUI.CreateUIObject("ScoredBadge", parent);
-            var badgeLE = badge.AddComponent<LayoutElement>();
-            badgeLE.preferredHeight = 30;
-            badgeLE.minHeight = 30;
-
-            // Border (slightly larger, behind)
-            var badgeBorderGO = OvertoneUI.CreateUIObject("Border", badge.transform);
-            var bdrRT = badgeBorderGO.GetComponent<RectTransform>();
-            bdrRT.anchorMin = Vector2.zero; bdrRT.anchorMax = Vector2.one;
-            bdrRT.offsetMin = Vector2.zero; bdrRT.offsetMax = Vector2.zero;
-            var bdrImg = badgeBorderGO.AddComponent<Image>();
-            bdrImg.sprite = GetSmootherRoundedRect();
-            bdrImg.type = Image.Type.Sliced;
-            bdrImg.color = OC.border;
-            bdrImg.raycastTarget = false;
-            // Fill (inset 1px, matches screen bg = transparent look)
-            var badgeFillGO = OvertoneUI.CreateUIObject("Fill", badge.transform);
-            var fillRT = badgeFillGO.GetComponent<RectTransform>();
-            fillRT.anchorMin = Vector2.zero; fillRT.anchorMax = Vector2.one;
-            fillRT.offsetMin = new Vector2(1, 1); fillRT.offsetMax = new Vector2(-1, -1);
-            var fillImg = badgeFillGO.AddComponent<Image>();
-            fillImg.sprite = GetSmootherRoundedRect();
-            fillImg.type = Image.Type.Sliced;
-            fillImg.color = OC.bg; // matches screen background
-            fillImg.raycastTarget = false;
-
-            // Lock icon sprite (left of text)
-            var lockGO = OvertoneUI.CreateUIObject("LockIcon", badge.transform);
-            var lockRT = lockGO.GetComponent<RectTransform>();
-            lockRT.anchorMin = new Vector2(0.5f, 0.5f);
-            lockRT.anchorMax = new Vector2(0.5f, 0.5f);
-            lockRT.pivot = new Vector2(0.5f, 0.5f);
-            lockRT.anchoredPosition = new Vector2(-62, 0);
-            lockRT.sizeDelta = new Vector2(10, 12);
-            var lockImg = lockGO.AddComponent<Image>();
-            lockImg.sprite = CreateLockSprite();
-            lockImg.preserveAspect = true;
-            lockImg.color = OC.muted;
-            lockImg.raycastTarget = false;
-
-            // SCORED + score text
-            var contentGO = OvertoneUI.CreateUIObject("Content", badge.transform);
-            OvertoneUI.StretchFill(contentGO.GetComponent<RectTransform>());
-            var contentTMP = contentGO.AddComponent<TextMeshProUGUI>();
-            string cyanHex = ColorUtility.ToHtmlStringRGB(OC.cyan);
-            contentTMP.text = $"SCORED  <color=#{cyanHex}>0</color>";
-            contentTMP.font = OvertoneUI.PressStart2P;
-            contentTMP.fontSize = 9;
-            contentTMP.characterSpacing = 2;
-            contentTMP.color = OC.muted;
-            contentTMP.alignment = TextAlignmentOptions.Center;
-            contentTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
-            contentTMP.richText = true;
-            contentTMP.raycastTarget = false;
-            scoredTMP = contentTMP;
-
             // Action row: Share (primary) + Play Again (ghost/outline)
             var actionRow = OvertoneUI.CreateUIObject("ActionRow", parent);
             var actionHLG = actionRow.AddComponent<HorizontalLayoutGroup>();
@@ -182,11 +124,11 @@ namespace MergeGame.UI
             actionHLG.childForceExpandWidth = true;
             actionHLG.padding = new RectOffset(0, 0, 0, 0);
             var arLE = actionRow.AddComponent<LayoutElement>();
-            arLE.preferredHeight = 28;
-            arLE.minHeight = 28;
+            arLE.preferredHeight = 44;
+            arLE.minHeight = 44;
 
             // SHARE — primary cyan button
-            var (shareGO, shareLabel) = OvertoneUI.CreatePrimaryButton(actionRow.transform, "SHARE", 28, "ShareButton");
+            var (shareGO, shareLabel) = OvertoneUI.CreatePrimaryButton(actionRow.transform, "SHARE", 44, "ShareButton");
             shareGO.GetComponent<LayoutElement>().flexibleWidth = 1;
             shareGO.GetComponent<Button>().onClick.AddListener(OnShareClicked);
 
@@ -252,13 +194,6 @@ namespace MergeGame.UI
 
             if (todayValue != null)
                 todayValue.text = todayScore.ToString("N0");
-
-            // Update scored badge
-            if (scoredTMP != null)
-            {
-                string cyanHex = ColorUtility.ToHtmlStringRGB(OC.cyan);
-                scoredTMP.text = $"SCORED  <color=#{cyanHex}>{todayScore.ToString("N0")}</color>";
-            }
 
             // Best score
             if (bestValue != null)

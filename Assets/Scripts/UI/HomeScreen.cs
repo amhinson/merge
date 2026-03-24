@@ -105,13 +105,16 @@ namespace MergeGame.UI
 
             BuildLeaderboardCard(content.transform);
 
-            // CTA container
+            // CTA container — fixed height, don't let layout stretch it
             ctaContainer = OvertoneUI.CreateUIObject("CTABlock", content.transform).transform;
+            var ctaLE = ctaContainer.gameObject.AddComponent<LayoutElement>();
+            ctaLE.flexibleHeight = 0;
             var ctaVLG = ctaContainer.gameObject.AddComponent<VerticalLayoutGroup>();
             ctaVLG.childAlignment = TextAnchor.MiddleCenter;
             ctaVLG.childControlWidth = true;
-            ctaVLG.childControlHeight = false;
+            ctaVLG.childControlHeight = true;
             ctaVLG.childForceExpandWidth = true;
+            ctaVLG.childForceExpandHeight = false;
             ctaVLG.padding = new RectOffset(24, 24, 6, 4);
             ctaVLG.spacing = 4;
 
