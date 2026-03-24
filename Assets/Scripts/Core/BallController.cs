@@ -30,7 +30,7 @@ namespace MergeGame.Core
         public int TierIndex => ballData != null ? ballData.tierIndex : -1;
         public bool HasLanded => hasLanded;
 
-        public void Initialize(BallData data, BallTierConfig config, PhysicsConfig physics = null)
+        public void Initialize(BallData data, BallTierConfig config, PhysicsConfig physics = null, bool skipSpawnAnimation = false)
         {
             ballData = data;
             tierConfig = config;
@@ -44,7 +44,7 @@ namespace MergeGame.Core
             ApplyVisuals();
             ApplySize();
             ApplyPhysicsConfig();
-            PlaySpawnAnimation();
+            if (!skipSpawnAnimation) PlaySpawnAnimation();
 
             // Add waveform animator
             var waveAnim = GetComponent<WaveformAnimator>();
@@ -198,58 +198,120 @@ namespace MergeGame.Core
             isMerging = true;
             other.isMerging = true;
 
-            // Spawn at the LOWER ball's position — promotes chain merges
-            Vector3 spawnPos = transform.position.y <= other.transform.position.y
-                ? transform.position
-                : other.transform.position;
-            int currentTier = TierIndex;
+            // Run the animated merge on a host that won't be destroyed mid-coroutine
+            var host = GameManager.Instance;
+            if (host != null)
+                host.StartCoroutine(MergeCoroutine(other));
+            else
+                MergeImmediate(other); // fallback if no host
+        }
 
+        private void MergeImmediate(BallController other)
+        {
+            Vector3 spawnPos = transform.position.y <= other.transform.position.y
+                ? transform.position : other.transform.position;
+            int currentTier = TierIndex;
             bool isMaxTier = currentTier >= tierConfig.MaxTierIndex;
 
             if (isMaxTier)
             {
-                int points = ballData.pointValue * 2;
-                if (ScoreManager.Instance != null)
-                    ScoreManager.Instance.AddScore(points);
-
-                if (AudioManager.Instance != null)
-                    AudioManager.Instance.PlayMerge(currentTier);
-
-                // Track merge
+                if (ScoreManager.Instance != null) ScoreManager.Instance.AddScore(ballData.pointValue * 2);
+                if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(currentTier);
                 RecordMerge(currentTier);
-
-                // Particles (no shake on merge)
                 SpawnMergeParticles(spawnPos, ballData.color, currentTier);
-
                 Destroy(other.gameObject);
                 Destroy(gameObject);
                 return;
             }
 
             BallData nextTier = tierConfig.GetNextTier(currentTier);
-            if (nextTier == null)
-            {
-                Destroy(other.gameObject);
-                Destroy(gameObject);
-                return;
-            }
+            if (nextTier == null) { Destroy(other.gameObject); Destroy(gameObject); return; }
 
-            if (ScoreManager.Instance != null)
-                ScoreManager.Instance.AddScore(nextTier.pointValue);
-
-            if (AudioManager.Instance != null)
-                AudioManager.Instance.PlayMerge(nextTier.tierIndex);
-
-            // Track merge — count the consumed tier, not the created one
+            if (ScoreManager.Instance != null) ScoreManager.Instance.AddScore(nextTier.pointValue);
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(nextTier.tierIndex);
             RecordMerge(currentTier);
-
-            // Particles (no shake on merge)
             SpawnMergeParticles(spawnPos, nextTier.color, nextTier.tierIndex);
-
             SpawnMergedBall(nextTier, spawnPos);
-
             Destroy(other.gameObject);
             Destroy(gameObject);
+        }
+
+        private System.Collections.IEnumerator MergeCoroutine(BallController other)
+        {
+            // --- Phase 1: Absorb — both balls shrink toward merge point ---
+            Vector3 spawnPos = transform.position.y <= other.transform.position.y
+                ? transform.position : other.transform.position;
+            int currentTier = TierIndex;
+            float oldRadius = ballData.radius;
+
+            Vector3 startPosA = transform.position;
+            Vector3 startPosB = other.transform.position;
+            Vector3 startScaleA = transform.localScale;
+            Vector3 startScaleB = other.transform.localScale;
+
+            // Freeze physics on both balls during absorb
+            var rbA = GetComponent<Rigidbody2D>();
+            var rbB = other.GetComponent<Rigidbody2D>();
+            if (rbA != null) { rbA.linearVelocity = Vector2.zero; rbA.bodyType = RigidbodyType2D.Kinematic; }
+            if (rbB != null) { rbB.linearVelocity = Vector2.zero; rbB.bodyType = RigidbodyType2D.Kinematic; }
+
+            float absorbDuration = physicsConfig != null ? physicsConfig.mergeAbsorbDuration : 0.12f;
+            float elapsed = 0f;
+
+            while (elapsed < absorbDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / absorbDuration;
+                // Ease in (accelerate into the merge point)
+                float eased = t * t;
+
+                // Move toward merge point and shrink
+                if (this != null && gameObject != null)
+                {
+                    transform.position = Vector3.Lerp(startPosA, spawnPos, eased);
+                    transform.localScale = Vector3.Lerp(startScaleA, startScaleA * 0.3f, eased);
+                }
+                if (other != null && other.gameObject != null)
+                {
+                    other.transform.position = Vector3.Lerp(startPosB, spawnPos, eased);
+                    other.transform.localScale = Vector3.Lerp(startScaleB, startScaleB * 0.3f, eased);
+                }
+
+                yield return null;
+            }
+
+            // --- Phase 2: Destroy originals, spawn merged ball ---
+            bool isMaxTier = currentTier >= tierConfig.MaxTierIndex;
+
+            if (isMaxTier)
+            {
+                if (ScoreManager.Instance != null) ScoreManager.Instance.AddScore(ballData.pointValue * 2);
+                if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(currentTier);
+                RecordMerge(currentTier);
+                SpawnMergeParticles(spawnPos, ballData.color, currentTier);
+                if (other != null) Destroy(other.gameObject);
+                if (this != null) Destroy(gameObject);
+                yield break;
+            }
+
+            BallData nextTier = tierConfig.GetNextTier(currentTier);
+            if (nextTier == null)
+            {
+                if (other != null) Destroy(other.gameObject);
+                if (this != null) Destroy(gameObject);
+                yield break;
+            }
+
+            if (ScoreManager.Instance != null) ScoreManager.Instance.AddScore(nextTier.pointValue);
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(nextTier.tierIndex);
+            RecordMerge(currentTier);
+            SpawnMergeParticles(spawnPos, nextTier.color, nextTier.tierIndex);
+
+            if (other != null) Destroy(other.gameObject);
+            if (this != null) Destroy(gameObject);
+
+            // Spawn merged ball with scale animation from old size → new size
+            SpawnMergedBall(nextTier, spawnPos, oldRadius);
         }
 
         private void RecordMerge(int resultTier)
@@ -323,7 +385,7 @@ namespace MergeGame.Core
             cam.transform.rotation = originalRot;
         }
 
-        private void SpawnMergedBall(BallData nextTier, Vector3 position)
+        private void SpawnMergedBall(BallData nextTier, Vector3 position, float oldRadius = 0f)
         {
             GameObject newBall = Instantiate(
                 DropController.Instance.BallPrefab,
@@ -331,10 +393,11 @@ namespace MergeGame.Core
                 Quaternion.identity
             );
 
+            bool hasMergeScale = oldRadius > 0f;
             var controller = newBall.GetComponent<BallController>();
             if (controller != null)
             {
-                controller.Initialize(nextTier, tierConfig, physicsConfig);
+                controller.Initialize(nextTier, tierConfig, physicsConfig, skipSpawnAnimation: hasMergeScale);
                 controller.hasLanded = true;
             }
 
@@ -349,6 +412,73 @@ namespace MergeGame.Core
                     rb.AddForce(Vector2.up * physicsConfig.postMergePopForce, ForceMode2D.Impulse);
                 }
             }
+
+            // Gentle radial impulse on nearby balls — simulates the larger ball squeezing in
+            // Same-tier balls are exempt so chain merges still happen naturally
+            ApplyRadialImpulse(position, nextTier.radius, physicsConfig, nextTier.tierIndex);
+
+            // Scale animation: old ball size → new ball size
+            if (oldRadius > 0f && controller != null)
+            {
+                float scaleRatio = oldRadius / nextTier.radius;
+                float scaleDuration = physicsConfig != null ? physicsConfig.mergeScaleDuration : 0.18f;
+                var host = GameManager.Instance;
+                if (host != null)
+                    host.StartCoroutine(MergeScaleCoroutine(newBall.transform, scaleRatio, scaleDuration));
+            }
+        }
+
+        private static void ApplyRadialImpulse(Vector3 center, float mergedRadius, PhysicsConfig config, int mergedTier = -1)
+        {
+            float rangeMul = config != null ? config.mergeRadialRange : 3f;
+            float impulseRadius = mergedRadius * rangeMul;
+            float impulseStrength = config != null ? config.mergeRadialImpulse : 1.5f;
+
+            var hits = Physics2D.OverlapCircleAll(center, impulseRadius);
+            foreach (var hit in hits)
+            {
+                var otherRb = hit.attachedRigidbody;
+                if (otherRb == null || otherRb.bodyType != RigidbodyType2D.Dynamic) continue;
+
+                // Skip same-tier balls so they can still chain-merge
+                var otherBall = hit.GetComponent<BallController>();
+                if (otherBall != null && mergedTier >= 0 && otherBall.TierIndex == mergedTier) continue;
+
+                // Skip the merged ball itself
+                Vector2 diff = (Vector2)hit.transform.position - (Vector2)center;
+                float dist = diff.magnitude;
+                if (dist < 0.01f) continue;
+
+                // Inverse falloff — closer balls get pushed more
+                float falloff = 1f - Mathf.Clamp01(dist / impulseRadius);
+                Vector2 force = diff.normalized * impulseStrength * falloff;
+                otherRb.AddForce(force, ForceMode2D.Impulse);
+            }
+        }
+
+        private static System.Collections.IEnumerator MergeScaleCoroutine(Transform ball, float startRatio, float duration)
+        {
+            if (ball == null) yield break;
+
+            Vector3 targetScale = ball.localScale;
+            ball.localScale = targetScale * startRatio;
+
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                if (ball == null) yield break;
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                // Ease-out with slight overshoot (back ease): overshoots ~10% then settles
+                float s = 1.4f;
+                float eased = 1f + (t - 1f) * (t - 1f) * ((s + 1f) * (t - 1f) + s);
+                ball.localScale = Vector3.LerpUnclamped(targetScale * startRatio, targetScale, eased);
+                yield return null;
+            }
+
+            if (ball != null)
+                ball.localScale = targetScale;
         }
 
         public void SetAboveDeathLine(bool above)

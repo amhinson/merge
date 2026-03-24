@@ -21,7 +21,9 @@
       "WebFetch(domain:github.com)",
       "Bash(find /Users/alex/projects/personal/merge/Supabase -type f -name *.cs)",
       "Bash(find /Users/alex/projects/personal/merge/Assets -type f \\\\\\(-name *gear* -o -name *settings*icon* -o -name *Gear* -o -name *Settings* \\\\\\))",
-      "Bash(grep -E \"\\\\.\\(png|jpg|prefab|unity\\)$\")"
+      "Bash(grep -E \"\\\\.\\(png|jpg|prefab|unity\\)$\")",
+      "Bash(find /Users/alex/projects/personal/merge -name *.cs)",
+      "Bash(find /Users/alex/projects/personal/merge/Assets -name *.cs)"
     ]
   }
 }

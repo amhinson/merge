@@ -23,6 +23,10 @@ MonoBehaviour:
   angularDrag: 0.05
   dropHeight: 5.5
   cooldownDuration: 0.5
+  mergeAbsorbDuration: 0.12
+  mergeScaleDuration: 0.18
+  mergeRadialImpulse: 1.5
+  mergeRadialRange: 3
   postMergePopForce: 1.5
   chainReactionDelay: 0.05
   shakeIntensityByTier:
