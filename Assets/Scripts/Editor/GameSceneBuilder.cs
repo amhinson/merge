@@ -422,6 +422,16 @@ namespace MergeGame.Editor
             var scoreTickUp = scoreText.gameObject.AddComponent<ScoreTickUp>();
             SetProperty(scoreTickUp, "scoreText", scoreText);
 
+            // Combo indicator (below score)
+            var comboGO = new GameObject("ComboUI");
+            comboGO.transform.SetParent(panel.transform, false);
+            var comboRT = comboGO.AddComponent<RectTransform>();
+            SetAnchors(comboRT, 0, 1, 0, 1);
+            comboRT.anchoredPosition = new Vector2(60, -(safeTop + 60));
+            comboRT.sizeDelta = new Vector2(120, 18);
+            comboRT.pivot = new Vector2(0, 1);
+            comboGO.AddComponent<ComboUI>();
+
             // Next ball card (top-right) — large enough to contain any ball
             var nextCard = new GameObject("NextBallCard");
             nextCard.transform.SetParent(panel.transform, false);

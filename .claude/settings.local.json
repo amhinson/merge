@@ -23,7 +23,14 @@
       "Bash(find /Users/alex/projects/personal/merge/Assets -type f \\\\\\(-name *gear* -o -name *settings*icon* -o -name *Gear* -o -name *Settings* \\\\\\))",
       "Bash(grep -E \"\\\\.\\(png|jpg|prefab|unity\\)$\")",
       "Bash(find /Users/alex/projects/personal/merge -name *.cs)",
-      "Bash(find /Users/alex/projects/personal/merge/Assets -name *.cs)"
+      "Bash(find /Users/alex/projects/personal/merge/Assets -name *.cs)",
+      "Bash(grep -r \"OnScoreChanged\\\\|AddScore\\\\|score\" /Users/alex/projects/personal/merge/Assets/Scripts/UI/*.cs)",
+      "Bash(grep:*)",
+      "Bash(sed -i '' 's/pointValue: 2$/pointValue: 1/' BallData_Tier2.asset)",
+      "Bash(sed -i '' 's/pointValue: 3$/pointValue: 2/' BallData_Tier3.asset)",
+      "Bash(sed -i '' 's/pointValue: 5$/pointValue: 3/' BallData_Tier4.asset)",
+      "Bash(sed -i '' 's/pointValue: 7$/pointValue: 4/' BallData_Tier5.asset)",
+      "Bash(sed -i '' 's/pointValue: 10$/pointValue: 5/' BallData_Tier6.asset)"
     ]
   }
 }

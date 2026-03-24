@@ -1,5 +1,3 @@
-Make merge animation cooler.
-
 Save game so I can come back.
 Emphasize everyone gets the same drop in a day somehow.
 Music & SFX.

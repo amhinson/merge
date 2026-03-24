@@ -215,9 +215,10 @@ namespace MergeGame.Core
 
             if (isMaxTier)
             {
-                if (ScoreManager.Instance != null) ScoreManager.Instance.AddScore(ballData.pointValue * 2);
-                if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(currentTier);
                 RecordMerge(currentTier);
+                int chainLen = MergeTracker.Instance != null ? MergeTracker.Instance.CurrentChainLength : 1;
+                if (ScoreManager.Instance != null) ScoreManager.Instance.AddScoreWithCombo(ballData.pointValue * 2, chainLen, spawnPos);
+                if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(currentTier);
                 SpawnMergeParticles(spawnPos, ballData.color, currentTier);
                 Destroy(other.gameObject);
                 Destroy(gameObject);
@@ -227,9 +228,10 @@ namespace MergeGame.Core
             BallData nextTier = tierConfig.GetNextTier(currentTier);
             if (nextTier == null) { Destroy(other.gameObject); Destroy(gameObject); return; }
 
-            if (ScoreManager.Instance != null) ScoreManager.Instance.AddScore(nextTier.pointValue);
-            if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(nextTier.tierIndex);
             RecordMerge(currentTier);
+            int chain = MergeTracker.Instance != null ? MergeTracker.Instance.CurrentChainLength : 1;
+            if (ScoreManager.Instance != null) ScoreManager.Instance.AddScoreWithCombo(nextTier.pointValue, chain, spawnPos);
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(nextTier.tierIndex);
             SpawnMergeParticles(spawnPos, nextTier.color, nextTier.tierIndex);
             SpawnMergedBall(nextTier, spawnPos);
             Destroy(other.gameObject);
@@ -285,9 +287,10 @@ namespace MergeGame.Core
 
             if (isMaxTier)
             {
-                if (ScoreManager.Instance != null) ScoreManager.Instance.AddScore(ballData.pointValue * 2);
-                if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(currentTier);
                 RecordMerge(currentTier);
+                int chainLen = MergeTracker.Instance != null ? MergeTracker.Instance.CurrentChainLength : 1;
+                if (ScoreManager.Instance != null) ScoreManager.Instance.AddScoreWithCombo(ballData.pointValue * 2, chainLen, spawnPos);
+                if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(currentTier);
                 SpawnMergeParticles(spawnPos, ballData.color, currentTier);
                 if (other != null) Destroy(other.gameObject);
                 if (this != null) Destroy(gameObject);
@@ -302,9 +305,10 @@ namespace MergeGame.Core
                 yield break;
             }
 
-            if (ScoreManager.Instance != null) ScoreManager.Instance.AddScore(nextTier.pointValue);
-            if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(nextTier.tierIndex);
             RecordMerge(currentTier);
+            int chain = MergeTracker.Instance != null ? MergeTracker.Instance.CurrentChainLength : 1;
+            if (ScoreManager.Instance != null) ScoreManager.Instance.AddScoreWithCombo(nextTier.pointValue, chain, spawnPos);
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayMerge(nextTier.tierIndex);
             SpawnMergeParticles(spawnPos, nextTier.color, nextTier.tierIndex);
 
             if (other != null) Destroy(other.gameObject);

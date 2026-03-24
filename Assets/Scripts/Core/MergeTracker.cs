@@ -23,6 +23,7 @@ namespace MergeGame.Core
         // Per-round stats
         public int HighestTierCreated { get; private set; }
         public int LongestChain { get; private set; }
+        public int CurrentChainLength => currentChainLength;
         public int TotalMerges { get; private set; }
         public float RoundStartTime { get; private set; }
         public float RoundDuration => Time.time - RoundStartTime;
