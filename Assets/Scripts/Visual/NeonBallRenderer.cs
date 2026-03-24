@@ -33,19 +33,19 @@ namespace MergeGame.Visual
         // All use thread style. waveType: 0=sine, 1=sawtooth, 2=triangle, 3=square
         // waveType: 0=sine, 1=sawtooth, 2=triangle, 3=square
         // Each tier has a unique waveType + freq combination
-        private static readonly (int freq, int waveType, float lineOpacity)[] WaveConfig =
+        public static readonly (int freq, int waveType, float lineOpacity)[] WaveConfig =
         {
-            (3, 0, 0.80f), // tier 0 (L11): Sine 3 — fuchsia
-            (4, 1, 0.80f), // tier 1 (L10): Sawtooth 4 — silver
-            (5, 0, 0.80f), // tier 2 (L9):  Sine 5 — blue
-            (3, 2, 0.80f), // tier 3 (L8):  Triangle 3 — red
-            (6, 0, 0.80f), // tier 4 (L7):  Sine 6 — sky
-            (4, 3, 0.80f), // tier 5 (L6):  Square 4 — orange
-            (3, 1, 0.80f), // tier 6 (L5):  Sawtooth 3 — lime
-            (5, 0, 0.80f), // tier 7 (L4):  Sine 5 — violet
-            (2, 2, 0.80f), // tier 8 (L3):  Triangle 2 — amber
-            (4, 0, 0.80f), // tier 9 (L2):  Sine 4 — pink
-            (3, 0, 0.80f), // tier 10 (L1): Sine 3 — cyan
+            (3, 0, 0.85f), // tier 0 (L11): Sine 3 — fuchsia
+            (4, 1, 1.00f), // tier 1 (L10): Sawtooth 4 — silver (bright ball, needs full opacity)
+            (5, 0, 0.85f), // tier 2 (L9):  Sine 5 — blue
+            (3, 2, 0.85f), // tier 3 (L8):  Triangle 3 — red
+            (6, 0, 0.85f), // tier 4 (L7):  Sine 6 — sky
+            (4, 3, 1.00f), // tier 5 (L6):  Square 4 — orange (warm tone, needs full opacity)
+            (3, 1, 1.00f), // tier 6 (L5):  Sawtooth 3 — lime (bright ball, needs full opacity)
+            (5, 0, 0.85f), // tier 7 (L4):  Sine 5 — violet
+            (2, 2, 0.85f), // tier 8 (L3):  Triangle 2 — amber
+            (4, 0, 0.85f), // tier 9 (L2):  Sine 4 — pink
+            (3, 0, 0.85f), // tier 10 (L1): Sine 3 — cyan
         };
 
         // Per-tier scroll speeds in seconds (tier 0=smallest to tier 10=largest)
@@ -60,6 +60,23 @@ namespace MergeGame.Visual
         }
 
         // ===== Main generation =====
+
+        /// <summary>Generate ball body pixels WITHOUT the wave (for shader-based animation).</summary>
+        public static Color[] GenerateStaticBallPixels(int tier, Color ballColor, float radius, out int texSize)
+        {
+            int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * PixelsPerUnit));
+            texSize = diameter + Padding * 2;
+            return GenerateBallPixelsInternal(tier, ballColor, radius, -1f, texSize, diameter);
+        }
+
+        /// <summary>Get the drawn ball radius in UV space (0-1) for shader use.</summary>
+        public static float GetBallRadiusUV(float radius)
+        {
+            int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * PixelsPerUnit));
+            int texSize = diameter + Padding * 2;
+            float r = (diameter / 2f) - 2f; // matches the shrink in GenerateBallPixelsInternal
+            return r / texSize;
+        }
 
         /// <summary>Generate ball pixels directly — no PNG encode/decode overhead.</summary>
         public static Color[] GenerateBallPixels(int tier, Color ballColor, float radius, float phase, out int texSize)
@@ -169,8 +186,8 @@ namespace MergeGame.Visual
                 }
             }
 
-            // === 3. Wave (thread style for all balls) ===
-            if (tier >= 0 && tier < WaveConfig.Length)
+            // === 3. Wave (thread style for all balls) — skip if phase < 0 (static body only) ===
+            if (phase >= 0f && tier >= 0 && tier < WaveConfig.Length)
             {
                 var wc = WaveConfig[tier];
                 float amp = r * 0.22f;
