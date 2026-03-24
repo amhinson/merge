@@ -1,9 +1,8 @@
-Username validation and error handling?
-Fix onboarding animation.
 Clean up old & unused code.
 
 Cooler username generator. Maybe obscure phish references? need to generate A LOT of variations on the server.
 Username profanity filter.
+Make merge animation cooler.
 
 Save game so I can come back.
 Emphasize everyone gets the same drop in a day somehow.

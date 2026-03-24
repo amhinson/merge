@@ -230,7 +230,7 @@ namespace MergeGame.UI
             OvertoneUI.StretchFill(stepGroups[1].GetComponent<RectTransform>());
             ballA = CreateDemoBall(stepGroups[1].transform, 1, new Vector2(0, -80), DemoBallSizeSmall);
             ballB = CreateDemoBall(stepGroups[1].transform, 1, new Vector2(0, -110), DemoBallSizeSmall);
-            mergeRing = CreateMergeRing(stepGroups[1].transform, new Vector2(0, -95));
+            // mergeRing removed — merge effect uses particle burst + ball pop instead
 
             // Step 2: SCORE — merged result ball + score pop
             stepGroups[2] = OvertoneUI.CreateUIObject("Step2Group", arenaGO.transform);
@@ -472,8 +472,7 @@ namespace MergeGame.UI
 
             // Reset visibility of objects within each step
             if (ballA != null) { ballA.SetActive(true); ballA.GetComponent<RectTransform>().localScale = Vector3.one; }
-            if (ballB != null) ballB.SetActive(true);
-            if (mergeRing != null) mergeRing.SetActive(false);
+            if (ballB != null) { ballB.SetActive(true); ballB.GetComponent<RectTransform>().localScale = Vector3.one; }
 
             // Ensure merged ball is in step 2's group (it may have been reparented to step 1 during merge anim)
             if (mergedBall != null && stepGroups[2] != null)
@@ -533,42 +532,31 @@ namespace MergeGame.UI
 
         private IEnumerator AnimateStep1()
         {
-            yield return new WaitForSeconds(0.3f);
+            // Both balls shrink into the merge point immediately
+            float shrinkDuration = 0.15f;
+            float shrinkElapsed = 0f;
+            var rtA = ballA != null ? ballA.GetComponent<RectTransform>() : null;
+            var rtB = ballB != null ? ballB.GetComponent<RectTransform>() : null;
 
-            // Merge ring scale-out + fade
-            if (mergeRing != null)
+            while (shrinkElapsed < shrinkDuration)
             {
-                mergeRing.SetActive(true);
-                var ringRT = mergeRing.GetComponent<RectTransform>();
-                var ringCG = mergeRing.GetComponent<CanvasGroup>();
-                if (ringCG == null) ringCG = mergeRing.AddComponent<CanvasGroup>();
-
-                float duration = 0.3f;
-                float elapsed = 0f;
-                ringCG.alpha = 0.5f;
-                ringRT.localScale = Vector3.one;
-
-                while (elapsed < duration)
-                {
-                    elapsed += Time.deltaTime;
-                    float t = Mathf.Clamp01(elapsed / duration);
-                    float eased = 1f - (1f - t) * (1f - t);
-                    ringRT.localScale = Vector3.Lerp(Vector3.one, Vector3.one * 2f, eased);
-                    ringCG.alpha = Mathf.Lerp(0.5f, 0f, eased);
-                    yield return null;
-                }
-
-                mergeRing.SetActive(false);
+                shrinkElapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(shrinkElapsed / shrinkDuration);
+                float scale = 1f - t * t; // ease in
+                if (rtA != null) rtA.localScale = Vector3.one * scale;
+                if (rtB != null) rtB.localScale = Vector3.one * scale;
+                yield return null;
             }
 
-            yield return ScaleObject(ballA, Vector3.one, Vector3.zero, 0.12f);
-            ballB.SetActive(false);
+            if (ballA != null) ballA.SetActive(false);
+            if (ballB != null) ballB.SetActive(false);
 
+            // Particles burst from merge point
             SpawnMergeParticles(stepGroups[1].transform, new Vector2(0, -95f));
 
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.1f);
 
-            // Show merged ball in place (reuse mergedBall but parent it to step 1 group temporarily)
+            // Merged ball pops in with a bounce
             if (mergedBall != null)
             {
                 mergedBall.transform.SetParent(stepGroups[1].transform, false);
@@ -576,8 +564,8 @@ namespace MergeGame.UI
                 mbRT.anchoredPosition = new Vector2(0, -95);
                 mergedBall.SetActive(true);
                 mbRT.localScale = Vector3.zero;
-                yield return ScaleObject(mergedBall, Vector3.zero, Vector3.one * 1.15f, 0.2f);
-                yield return ScaleObject(mergedBall, Vector3.one * 1.15f, Vector3.one, 0.1f);
+                yield return ScaleObject(mergedBall, Vector3.zero, Vector3.one * 1.15f, 0.18f);
+                yield return ScaleObject(mergedBall, Vector3.one * 1.15f, Vector3.one, 0.08f);
             }
 
             // Wait for user to press NEXT — don't auto-advance
@@ -722,12 +710,14 @@ namespace MergeGame.UI
             {
                 var dropperRT = dropperBall.GetComponent<RectTransform>();
                 float startY = dropperRT.anchoredPosition.y;
-                float targetY = -95f;
-                float duration = 0.6f;
+                // Land just above the placed ball (not overlapping)
+                float targetY = -75f;
+                float duration = 0.5f;
                 float elapsed = 0f;
 
                 if (dropLine != null) dropLine.SetActive(false);
 
+                // Ease-in (accelerating, like gravity)
                 while (elapsed < duration)
                 {
                     elapsed += Time.deltaTime;
@@ -738,7 +728,7 @@ namespace MergeGame.UI
                 }
             }
 
-            yield return new WaitForSeconds(0.1f);
+            // Transition immediately — no visible pause
             SetStep(1);
         }
 
