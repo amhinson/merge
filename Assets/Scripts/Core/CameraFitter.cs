@@ -24,6 +24,8 @@ namespace MergeGame.Core
         private const float MinDropZone = 2.2f;            // minimum world units above container for drop ball
 
         private Camera cam;
+        private int lastScreenWidth;
+        private int lastScreenHeight;
 
         private void Start()
         {
@@ -33,7 +35,9 @@ namespace MergeGame.Core
 
         private void Update()
         {
-            FitCamera();
+            // Only recalculate if screen size actually changed (orientation flip)
+            if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
+                FitCamera();
         }
 
         private void FitCamera()
@@ -86,6 +90,9 @@ namespace MergeGame.Core
             // Center camera on the gameplay area (biased slightly toward the container)
             float centerY = (requiredTop + requiredBottom) / 2f;
             cam.transform.position = new Vector3(0f, centerY, cam.transform.position.z);
+
+            lastScreenWidth = Screen.width;
+            lastScreenHeight = Screen.height;
         }
     }
 }

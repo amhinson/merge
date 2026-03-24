@@ -373,21 +373,30 @@ namespace MergeGame.Core
             return ballTop >= DeathLineY;
         }
 
+        private int frameSkipCounter;
+
         private void Update()
         {
             if (!hasLanded || isMerging || gameOverTriggered)
             {
                 // Restore color if not in danger
-                if (spriteRenderer != null && ballData != null && timeAboveDeathLine > 0f)
+                if (timeAboveDeathLine > 0f)
                 {
-                    spriteRenderer.color = Color.white;
+                    if (spriteRenderer != null && ballData != null)
+                        spriteRenderer.color = Color.white;
                     timeAboveDeathLine = 0f;
                     flashTimer = 0f;
                 }
                 return;
             }
 
-            // Check actual position every frame — don't rely on trigger state
+            // Throttle death line checks: only check every 3rd frame if not already in danger
+            if (timeAboveDeathLine <= 0f)
+            {
+                frameSkipCounter++;
+                if (frameSkipCounter % 3 != 0) return;
+            }
+
             bool aboveLine = IsActuallyAboveDeathLine();
 
             if (aboveLine)

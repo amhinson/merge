@@ -4,103 +4,74 @@ using MergeGame.Data;
 namespace MergeGame.Visual
 {
     /// <summary>
-    /// Animates the waveform inside a ball using pre-baked sprite frames.
-    /// Caches frames per tier so all balls of the same tier share textures.
-    /// Smooth scrolling via high frame count (48 frames per cycle).
+    /// Assigns a static waveform sprite to a ball's SpriteRenderer.
+    /// Uses a single pre-cached sprite per tier (no animation) for maximum performance.
+    /// Call PrewarmCache() during loading to avoid any runtime hitches.
     /// </summary>
     public class WaveformAnimator : MonoBehaviour
     {
-        private SpriteRenderer spriteRenderer;
-        private BallData ballData;
-        private float scrollOffset;
-        private float scrollSpeed;
-        private int tier;
-        private float radius;
-        private int lastFrame = -1;
+        private static Sprite[] spriteCache; // [tier]
 
-        private const int FrameCount = 48; // frames per full scroll cycle
-        private static Sprite[][] frameCache; // [tier][frame]
-        private static bool[] cacheBuilt;
+        // Default radii per tier (must match NeonBallRenderer / BallTierConfig)
+        private static readonly float[] DefaultRadii =
+            { 0.22f, 0.30f, 0.40f, 0.50f, 0.60f, 0.70f, 0.80f, 0.90f, 1.10f, 1.20f, 1.40f };
 
         public void Initialize(BallData data, Color color)
         {
-            ballData = data;
-            tier = data != null ? data.tierIndex : 0;
-            radius = data != null ? data.radius : 0.5f;
-            spriteRenderer = GetComponent<SpriteRenderer>();
-            scrollOffset = Random.Range(0f, 1f);
-
-            scrollSpeed = tier >= 0 && tier < NeonBallRenderer.ScrollSpeeds.Length
-                ? NeonBallRenderer.ScrollSpeeds[tier]
-                : 12.0f;
-
-            EnsureCache();
-            UpdateSprite();
-        }
-
-        private void Update()
-        {
-            if (spriteRenderer == null || ballData == null) return;
-
-            scrollOffset += Time.deltaTime / scrollSpeed;
-            scrollOffset %= 1.0f;
-
-            UpdateSprite();
-        }
-
-        private void UpdateSprite()
-        {
-            int frame = Mathf.FloorToInt(scrollOffset * FrameCount) % FrameCount;
-            if (frame == lastFrame) return; // no change, skip
-            lastFrame = frame;
+            int tier = data != null ? data.tierIndex : 0;
+            float radius = data != null ? data.radius : 0.5f;
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr == null) return;
 
             EnsureCache();
 
-            if (frameCache[tier] == null)
-                BuildTierCache(tier, radius);
+            if (spriteCache[tier] == null)
+                BuildTierSprite(tier, radius);
 
-            if (frameCache[tier][frame] != null)
-                spriteRenderer.sprite = frameCache[tier][frame];
+            sr.sprite = spriteCache[tier];
+        }
+
+        /// <summary>
+        /// Pre-generate sprites for all 11 tiers. Call during loading screen
+        /// so gameplay has zero generation hitches.
+        /// </summary>
+        public static void PrewarmCache()
+        {
+            EnsureCache();
+            for (int tier = 0; tier < 11; tier++)
+            {
+                if (spriteCache[tier] == null)
+                {
+                    float radius = tier < DefaultRadii.Length ? DefaultRadii[tier] : 0.5f;
+                    BuildTierSprite(tier, radius);
+                }
+            }
         }
 
         private static void EnsureCache()
         {
-            if (frameCache == null)
-            {
-                frameCache = new Sprite[11][];
-                cacheBuilt = new bool[11];
-            }
+            if (spriteCache == null)
+                spriteCache = new Sprite[11];
         }
 
-        private static void BuildTierCache(int tier, float radius)
+        private static void BuildTierSprite(int tier, float radius)
         {
-            if (cacheBuilt[tier]) return;
-            cacheBuilt[tier] = true;
-            frameCache[tier] = new Sprite[FrameCount];
-
             var color = NeonBallRenderer.GetBallColor(tier);
-            int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * NeonBallRenderer.PixelsPerUnit));
-            int size = diameter + 12; // padding
+            float phase = tier * 0.09f; // slight offset per tier so they don't all look identical
+            var pixels = NeonBallRenderer.GenerateBallPixels(tier, color, radius, phase, out int texSize);
 
-            for (int i = 0; i < FrameCount; i++)
-            {
-                float phase = (float)i / FrameCount;
-                // Generate directly to texture (skip PNG encode/decode)
-                var pixels = NeonBallRenderer.GenerateBallPixels(tier, color, radius, phase, out int texSize);
-                var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
-                tex.filterMode = FilterMode.Bilinear;
-                tex.SetPixels(pixels);
-                tex.Apply(false, true); // makeNoLongerReadable = true, saves memory
+            var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.SetPixels(pixels);
+            tex.Apply(false, true); // makeNoLongerReadable = true, saves memory
 
-                frameCache[tier][i] = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
-                    new Vector2(0.5f, 0.5f), NeonBallRenderer.PixelsPerUnit);
-            }
+            spriteCache[tier] = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
+                new Vector2(0.5f, 0.5f), NeonBallRenderer.PixelsPerUnit);
         }
 
         public static void ClearCache()
         {
-            frameCache = null;
-            cacheBuilt = null;
+            spriteCache = null;
         }
     }
 }

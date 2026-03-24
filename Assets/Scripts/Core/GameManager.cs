@@ -44,6 +44,9 @@ namespace MergeGame.Core
                 return;
             }
             Instance = this;
+
+            // Ensure consistent 60fps on all devices
+            Application.targetFrameRate = 60;
         }
 
         private void Start()

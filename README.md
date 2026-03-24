@@ -1,5 +1,4 @@
 Fix ball colors so that no 2 are the same.
-Ball images not great resolution on iPhone. Need to be MUCH clearer and crisp. Need clean round edges too.
 Home screen SCORED lock icon overlapping with text. This can actually just be removed. Its redundant and takes up space.
 Scroll not working on leaderboard.
 Can't see score on leaderboard. Only rank all& username.

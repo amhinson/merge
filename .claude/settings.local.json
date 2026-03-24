@@ -10,7 +10,8 @@
       "Bash(grep -r titleScreen. /Users/alex/projects/personal/merge/Assets/Scripts --include=*.cs)",
       "Bash(find /Users/alex/projects/personal/merge -path */supabase/functions/get-player-rank* -type f)",
       "Bash(sips:*)",
-      "Bash(grep -E \"\\\\.\\(cs|meta\\)$\")"
+      "Bash(grep -E \"\\\\.\\(cs|meta\\)$\")",
+      "Bash(find /Users/alex/projects/personal/merge/Assets -maxdepth 3 -name *.cs -type f)"
     ]
   }
 }

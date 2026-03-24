@@ -23,6 +23,9 @@ namespace MergeGame.UI
         {
             Instance = this;
             BuildUI();
+
+            // Pre-generate all ball sprites while loading screen is visible
+            Visual.WaveformAnimator.PrewarmCache();
         }
 
         private void BuildUI()

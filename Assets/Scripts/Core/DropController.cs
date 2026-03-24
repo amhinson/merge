@@ -133,24 +133,30 @@ namespace MergeGame.Core
             }
         }
 
+        private Vector3 cachedNextBallWorldPos;
+        private bool nextBallPosCached;
+
         private void UpdateNextBallPosition()
         {
             if (nextBallObj == null || mainCamera == null) return;
 
-            Vector3 worldPos;
-            if (nextBallAnchor != null)
+            // Cache the world position — UI anchor doesn't move during gameplay
+            if (!nextBallPosCached)
             {
-                // Convert the UI anchor's center position to world space — no offset
-                Vector3 screenPos = RectTransformUtility.WorldToScreenPoint(null, nextBallAnchor.position);
-                worldPos = mainCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 10f));
-                worldPos.z = 0f;
-            }
-            else
-            {
-                worldPos = new Vector3(2f, 5f, 0f);
+                if (nextBallAnchor != null)
+                {
+                    Vector3 screenPos = RectTransformUtility.WorldToScreenPoint(null, nextBallAnchor.position);
+                    cachedNextBallWorldPos = mainCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 10f));
+                    cachedNextBallWorldPos.z = 0f;
+                }
+                else
+                {
+                    cachedNextBallWorldPos = new Vector3(2f, 5f, 0f);
+                }
+                nextBallPosCached = true;
             }
 
-            nextBallObj.transform.position = worldPos;
+            nextBallObj.transform.position = cachedNextBallWorldPos;
         }
 
         private void UpdateGuideLine(float x)
