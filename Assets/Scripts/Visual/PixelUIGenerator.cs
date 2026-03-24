@@ -188,6 +188,48 @@ namespace MergeGame.Visual
             return Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), s);
         }
 
+        public static Sprite CreateGameCenterIcon(int size, Color color)
+        {
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            ClearTexture(tex);
+
+            int s = size;
+            float center = s / 2f;
+
+            // Draw 4 overlapping circles in a cluster pattern (Game Center logo style)
+            float offset = s * 0.15f;
+            float radius = s * 0.22f;
+
+            Vector2[] centers = new Vector2[]
+            {
+                new Vector2(center - offset, center + offset), // top-left
+                new Vector2(center + offset, center + offset), // top-right
+                new Vector2(center - offset, center - offset), // bottom-left
+                new Vector2(center + offset, center - offset), // bottom-right
+            };
+
+            for (int y = 0; y < s; y++)
+            {
+                for (int x = 0; x < s; x++)
+                {
+                    foreach (var c in centers)
+                    {
+                        float dx = x - c.x + 0.5f;
+                        float dy = y - c.y + 0.5f;
+                        if (dx * dx + dy * dy <= radius * radius)
+                        {
+                            tex.SetPixel(x, y, color);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), s);
+        }
+
         public static Sprite CreateBackIcon(int size, Color color)
         {
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);

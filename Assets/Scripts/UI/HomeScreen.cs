@@ -167,6 +167,56 @@ namespace MergeGame.UI
                 if (ScreenManager.Instance != null)
                     ScreenManager.Instance.NavigateTo(Screen.Settings);
             });
+
+            // Game Center button — directly below settings button, same style
+            BuildGameCenterButton(settingsRT);
+        }
+
+        private void BuildGameCenterButton(RectTransform settingsRT)
+        {
+            var gcGO = OvertoneUI.CreateUIObject("GameCenterButton", transform);
+            var gcRT = gcGO.GetComponent<RectTransform>();
+            gcRT.anchorMin = new Vector2(1, 1);
+            gcRT.anchorMax = new Vector2(1, 1);
+            gcRT.pivot = new Vector2(1, 1);
+            // Position directly below the settings button with 8px gap
+            float settingsBottom = settingsRT.anchoredPosition.y - settingsRT.sizeDelta.y;
+            gcRT.anchoredPosition = new Vector2(-24, settingsBottom - 8);
+            gcRT.sizeDelta = new Vector2(34, 34);
+
+            var bgImg = gcGO.AddComponent<Image>();
+            bgImg.sprite = GetOutlineRoundedRect();
+            bgImg.type = Image.Type.Simple;
+            bgImg.color = OC.border;
+
+            var iconGO = OvertoneUI.CreateUIObject("GameCenterIcon", gcGO.transform);
+            var iconRT = iconGO.GetComponent<RectTransform>();
+            iconRT.anchorMin = new Vector2(0.5f, 0.5f);
+            iconRT.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRT.pivot = new Vector2(0.5f, 0.5f);
+            iconRT.anchoredPosition = Vector2.zero;
+            iconRT.sizeDelta = new Vector2(16, 16);
+            var iconImg = iconGO.AddComponent<Image>();
+            iconImg.sprite = Visual.PixelUIGenerator.CreateGameCenterIcon(32, new Color(1, 1, 1, 0.35f));
+            iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false;
+
+            var btn = gcGO.AddComponent<Button>();
+            btn.targetGraphic = bgImg;
+            btn.onClick.AddListener(OpenGameCenter);
+
+#if !UNITY_IOS
+            gcGO.SetActive(false);
+#endif
+        }
+
+        private static void OpenGameCenter()
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            Social.ShowAchievementsUI();
+#else
+            Debug.Log("GameCenter: Not available on this platform");
+#endif
         }
 
         private void BuildLogoBlock(Transform parent)

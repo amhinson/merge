@@ -18,7 +18,10 @@
       "Bash(./deploy.sh prod:*)",
       "WebSearch",
       "WebFetch(domain:www.npmjs.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(find /Users/alex/projects/personal/merge/Supabase -type f -name *.cs)",
+      "Bash(find /Users/alex/projects/personal/merge/Assets -type f \\\\\\(-name *gear* -o -name *settings*icon* -o -name *Gear* -o -name *Settings* \\\\\\))",
+      "Bash(grep -E \"\\\\.\\(png|jpg|prefab|unity\\)$\")"
     ]
   }
 }
