@@ -215,9 +215,6 @@ namespace MergeGame.Editor
             var newLeaderboardPanel = CreateNewScreenPanel(safeArea.transform, "NewLeaderboardScreen", tierConfig);
             newLeaderboardPanel.AddComponent<NewLeaderboardScreen>();
 
-            // GameScreenHUD not added here — the legacy gameplay panel
-            // already has its own HUD (score, shake, next ball preview).
-            // TODO: replace legacy HUD with GameScreenHUD when ready.
 
             // CanvasGroups for new screens
             var onboardingCG = onboardingPanel.GetComponent<CanvasGroup>();
@@ -268,9 +265,6 @@ namespace MergeGame.Editor
             // UIManager
             var uiManager = canvasObj.AddComponent<UIManager>();
             var uiSO = new SerializedObject(uiManager);
-            uiSO.FindProperty("menuPanel").objectReferenceValue = titlePanel;
-            uiSO.FindProperty("playingPanel").objectReferenceValue = gameplayPanel;
-            uiSO.FindProperty("gameOverPanel").objectReferenceValue = resultsPanel;
             uiSO.FindProperty("titleScreen").objectReferenceValue = titleScreen;
             uiSO.FindProperty("resultsScreen").objectReferenceValue = resultsScreen;
             uiSO.FindProperty("settingsScreen").objectReferenceValue = settingsScreen;
@@ -279,13 +273,9 @@ namespace MergeGame.Editor
             uiSO.FindProperty("shakeCountText").objectReferenceValue = shakeCountTMP;
             uiSO.FindProperty("nextBallPreview").objectReferenceValue = nextBallImg;
             uiSO.FindProperty("nextBallPreviewUI").objectReferenceValue = nextBallPreviewUI;
-            uiSO.FindProperty("miniLeaderboard").objectReferenceValue = miniLB;
             uiSO.FindProperty("scoreTickUp").objectReferenceValue = scoreTickUp;
             uiSO.FindProperty("playButton").objectReferenceValue = titleScreen.PlayButton;
             uiSO.FindProperty("restartButton").objectReferenceValue = resultsScreen.PlayAgainButton;
-            // Old leaderboard UI removed — new screens handle their own
-            // uiSO.FindProperty("leaderboardBackButton") — not wired
-            // uiSO.FindProperty("leaderboardUI") — not wired
             uiSO.FindProperty("tierConfig").objectReferenceValue = tierConfig;
             uiSO.ApplyModifiedPropertiesWithoutUndo();
 
@@ -705,49 +695,6 @@ namespace MergeGame.Editor
             rsSO.ApplyModifiedPropertiesWithoutUndo();
 
             return (panel, resultsScreen);
-        }
-
-        // ===== LEADERBOARD SCREEN =====
-
-        private static (GameObject, Button) CreateLeaderboardPanel(Transform parent)
-        {
-            var panel = CreateFullPanel(parent, "LeaderboardScreen");
-            var bg = panel.AddComponent<Image>();
-            bg.color = BgColor;
-
-            // Back button
-            var backBtn = CreateIconButton(panel.transform, "BackBtn", 0.02f, 0.90f, 0.14f, 0.98f);
-
-            // Title
-            var title = CreateText(panel.transform, "LBTitle", "Leaderboard", 36, TextColor);
-            SetAnchors(title.rectTransform, 0.15f, 0.90f, 0.85f, 0.96f);
-
-            var dateText = CreateText(panel.transform, "LBDate", "Day #1", 20, MutedText);
-            SetAnchors(dateText.rectTransform, 0.2f, 0.87f, 0.8f, 0.91f);
-
-            // Content area (simple panel with vertical layout — no ScrollRect)
-            var content = new GameObject("Content");
-            content.transform.SetParent(panel.transform, false);
-            var contentRT = content.AddComponent<RectTransform>();
-            SetAnchors(contentRT, 0.03f, 0.05f, 0.97f, 0.86f);
-            var vlg = content.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 6;
-            vlg.padding = new RectOffset(0, 0, 0, 0);
-            vlg.childForceExpandWidth = true;
-            vlg.childForceExpandHeight = false;
-            vlg.childControlWidth = true;
-            vlg.childControlHeight = false;
-
-            // Empty state is handled by LeaderboardUI.Populate()
-
-            // Wire LeaderboardUI component
-            var lbUI = panel.AddComponent<LeaderboardUI>();
-            var lbSO = new SerializedObject(lbUI);
-            lbSO.FindProperty("entriesContainer").objectReferenceValue = content.transform;
-            lbSO.FindProperty("titleText").objectReferenceValue = title;
-            lbSO.ApplyModifiedPropertiesWithoutUndo();
-
-            return (panel, backBtn.GetComponent<Button>());
         }
 
         // ===== SETTINGS SCREEN =====

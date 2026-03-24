@@ -207,55 +207,6 @@ namespace MergeGame.UI
 
         // Base class PopulateLeaderboardRows already handles the YourRank row
 
-        private static Sprite _lockSprite;
-        private static Sprite CreateLockSprite()
-        {
-            if (_lockSprite != null) return _lockSprite;
-
-            // 10x12 pixel-art padlock
-            int w = 10, h = 12;
-            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Bilinear;
-
-            Color[] px = new Color[w * h];
-            for (int i = 0; i < px.Length; i++) px[i] = Color.clear;
-
-            // Shackle (top arc, rows 8-11)
-            for (int y = 8; y < 12; y++)
-                for (int x = 2; x < 8; x++)
-                {
-                    bool outer = (x == 2 || x == 7 || y == 11);
-                    bool inner = (x >= 4 && x <= 5 && y <= 9);
-                    if (outer || (y == 11 && x >= 2 && x <= 7))
-                        px[y * w + x] = Color.white;
-                    if (inner) px[y * w + x] = Color.clear;
-                }
-            // Top of shackle
-            for (int x = 3; x <= 6; x++) px[11 * w + x] = Color.white;
-            for (int x = 2; x <= 7; x++) px[10 * w + x] = Color.white;
-            px[9 * w + 2] = Color.white; px[9 * w + 3] = Color.white;
-            px[9 * w + 6] = Color.white; px[9 * w + 7] = Color.white;
-            px[8 * w + 2] = Color.white; px[8 * w + 3] = Color.white;
-            px[8 * w + 6] = Color.white; px[8 * w + 7] = Color.white;
-
-            // Body (rectangle, rows 0-7)
-            for (int y = 0; y <= 7; y++)
-                for (int x = 1; x <= 8; x++)
-                    px[y * w + x] = Color.white;
-
-            // Keyhole (small dark spot in body center)
-            px[4 * w + 4] = Color.clear; px[4 * w + 5] = Color.clear;
-            px[3 * w + 4] = Color.clear; px[3 * w + 5] = Color.clear;
-            px[2 * w + 5] = Color.clear;
-
-            tex.SetPixels(px);
-            tex.Apply();
-
-            _lockSprite = Sprite.Create(tex, new Rect(0, 0, w, h),
-                new Vector2(0.5f, 0.5f), 1f);
-            _lockSprite.name = "LockIcon";
-            return _lockSprite;
-        }
 
         private void OnShareClicked()
         {

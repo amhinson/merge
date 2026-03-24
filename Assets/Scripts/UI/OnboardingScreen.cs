@@ -34,7 +34,6 @@ namespace MergeGame.UI
         private GameObject dropperBall;
         private GameObject placedBall;
         private GameObject dropLine;
-        private GameObject mergeRing;
         private GameObject ballA;
         private GameObject ballB;
         private GameObject mergedBall;
@@ -230,7 +229,6 @@ namespace MergeGame.UI
             OvertoneUI.StretchFill(stepGroups[1].GetComponent<RectTransform>());
             ballA = CreateDemoBall(stepGroups[1].transform, 1, new Vector2(0, -80), DemoBallSizeSmall);
             ballB = CreateDemoBall(stepGroups[1].transform, 1, new Vector2(0, -110), DemoBallSizeSmall);
-            // mergeRing removed — merge effect uses particle burst + ball pop instead
 
             // Step 2: SCORE — merged result ball + score pop
             stepGroups[2] = OvertoneUI.CreateUIObject("Step2Group", arenaGO.transform);
@@ -795,24 +793,6 @@ namespace MergeGame.UI
             return go;
         }
 
-        private GameObject CreateMergeRing(Transform parent, Vector2 pos)
-        {
-            var go = OvertoneUI.CreateUIObject("MergeRing", parent);
-            var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = new Vector2(50, 50);
-
-            var img = go.AddComponent<Image>();
-            img.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
-            img.type = Image.Type.Sliced;
-            img.color = OC.A(OC.cyan, 0.5f);
-            img.raycastTarget = false;
-
-            return go;
-        }
 
         private GameObject CreateScorePop(Transform parent, Vector2 pos)
         {

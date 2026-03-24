@@ -48,11 +48,6 @@ namespace MergeGame.Visual
             (3, 0, 0.85f), // tier 10 (L1): Sine 3 — cyan
         };
 
-        // Per-tier scroll speeds in seconds (tier 0=smallest to tier 10=largest)
-        public static readonly float[] ScrollSpeeds =
-        {
-            13f, 10f, 14f, 12f, 15f, 13f, 11f, 16f, 10f, 14f, 12f
-        };
 
         public static Color GetBallColor(int tier)
         {

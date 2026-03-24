@@ -1,5 +1,3 @@
-Clean up old & unused code.
-
 Cooler username generator. Maybe obscure phish references? need to generate A LOT of variations on the server.
 Username profanity filter.
 Make merge animation cooler.

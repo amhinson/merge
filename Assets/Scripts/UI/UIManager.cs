@@ -13,11 +13,6 @@ namespace MergeGame.UI
     /// </summary>
     public class UIManager : MonoBehaviour
     {
-        [Header("Panels (legacy — kept for compatibility)")]
-        [SerializeField] private GameObject menuPanel;
-        [SerializeField] private GameObject playingPanel;
-        [SerializeField] private GameObject gameOverPanel;
-
         [Header("Screen Components")]
         [SerializeField] private TitleScreen titleScreen;
         [SerializeField] private ResultsScreen resultsScreen;
@@ -27,12 +22,7 @@ namespace MergeGame.UI
         [SerializeField] private TextMeshProUGUI scoreText;
         [SerializeField] private TextMeshProUGUI highScoreText;
         [SerializeField] private Image nextBallPreview;
-        [SerializeField] private TextMeshProUGUI nextBallLabel;
-#pragma warning disable CS0414
-        [SerializeField] private float previewBaseSize = 120f;
-#pragma warning restore CS0414
         [SerializeField] private NextBallPreviewUI nextBallPreviewUI;
-        [SerializeField] private MiniLeaderboardUI miniLeaderboard;
         [SerializeField] private ScoreTickUp scoreTickUp;
 
         [Header("Shake UI")]
@@ -44,10 +34,6 @@ namespace MergeGame.UI
         [SerializeField] private TextMeshProUGUI finalHighScoreText;
         [SerializeField] private Button restartButton;
         [SerializeField] private Button playButton;
-
-        [Header("Leaderboard")]
-        [SerializeField] private Button leaderboardBackButton;
-        [SerializeField] private LeaderboardUI leaderboardUI;
 
         [Header("References")]
         [SerializeField] private BallTierConfig tierConfig;
@@ -88,10 +74,6 @@ namespace MergeGame.UI
             if (settingsScreen != null && settingsScreen.BackButton != null)
                 settingsScreen.BackButton.onClick.AddListener(OnHomeClicked);
 
-            // Leaderboard back button
-            if (leaderboardBackButton != null)
-                leaderboardBackButton.onClick.AddListener(OnHomeClicked);
-
             // Subscribe to events
             if (GameManager.Instance != null)
                 GameManager.Instance.OnShakesChanged += UpdateShakeCount;
@@ -105,7 +87,6 @@ namespace MergeGame.UI
             if (DropController.Instance != null)
                 DropController.Instance.OnNextBallChanged += UpdateNextBallPreview;
 
-            // OnLeaderboardUpdated event no longer needed — home screens handle their own data
         }
 
         private void OnDestroy()
@@ -126,67 +107,32 @@ namespace MergeGame.UI
 
         public void ShowMenu()
         {
-            // Don't refresh old TitleScreen — new Home screens handle their own refresh
-
             if (ScreenManager.Instance != null)
             {
-                // Route based on whether scored attempt was completed today
                 bool hasPlayed = Core.GameSession.HasPlayedToday ||
                     (Core.DailySeedManager.Instance != null && Core.DailySeedManager.Instance.HasCompletedScoredAttempt());
                 var target = hasPlayed ? Screen.HomePlayed : Screen.HomeFresh;
                 ScreenManager.Instance.TransitionTo(target);
             }
-            else
-            {
-                SetPanelActive(menuPanel, true);
-                SetPanelActive(playingPanel, false);
-                SetPanelActive(gameOverPanel, false);
-            }
         }
 
         public void ShowPlaying()
         {
-
             if (ScreenManager.Instance != null)
-            {
                 ScreenManager.Instance.TransitionTo(Screen.Gameplay);
-            }
-            else
-            {
-                SetPanelActive(menuPanel, false);
-                SetPanelActive(playingPanel, true);
-                SetPanelActive(gameOverPanel, false);
-            }
 
             UpdateScore(0);
             if (scoreTickUp != null) scoreTickUp.SetImmediate(0);
             if (ScoreManager.Instance != null)
                 UpdateHighScore(ScoreManager.Instance.HighScore);
-            // miniLeaderboard removed from gameplay UI
         }
 
         public void ShowGameOver(int finalScore, int highScore)
         {
-            // Snapshot merge counts into session
             Core.GameSession.CaptureMergeCounts();
 
             if (ScreenManager.Instance != null)
-            {
-                // ResultOverlay is an overlay — game screen stays visible underneath
                 ScreenManager.Instance.NavigateTo(Screen.ResultOverlay);
-            }
-            else
-            {
-                SetPanelActive(menuPanel, false);
-                SetPanelActive(playingPanel, true);
-                SetPanelActive(gameOverPanel, true);
-            }
-
-            // Legacy game over panel
-            if (finalScoreText != null)
-                finalScoreText.text = $"Score: {finalScore}";
-            if (finalHighScoreText != null)
-                finalHighScoreText.text = $"Best: {highScore}";
 
             // Results screen
             if (resultsScreen != null)
@@ -214,7 +160,6 @@ namespace MergeGame.UI
             if (scoreTickUp != null)
                 scoreTickUp.AnimateTo(score);
 
-            // miniLeaderboard removed from gameplay UI
         }
 
         private void UpdateHighScore(int highScore)
@@ -276,13 +221,6 @@ namespace MergeGame.UI
         private static readonly Color PanelColor = new Color(0.12f, 0.12f, 0.15f);
         private static readonly Color TextColor = new Color(0.92f, 0.92f, 0.95f);
 
-        // ===== Leaderboard data =====
-
-        private void OnLeaderboardDataUpdated(System.Collections.Generic.List<LeaderboardEntry> entries)
-        {
-            // miniLeaderboard removed from gameplay UI
-        }
-
         // ===== Button handlers =====
 
         private void OnPlayClicked()
@@ -314,19 +252,7 @@ namespace MergeGame.UI
             if (ScreenManager.Instance != null)
                 ScreenManager.Instance.TransitionTo(Screen.Leaderboard);
 
-            // Fetch leaderboard data
-            if (LeaderboardService.Instance != null && DailySeedManager.Instance != null)
-            {
-                DailySeedManager.Instance.RefreshDay();
-                Debug.Log($"Fetching leaderboard for {DailySeedManager.Instance.GameDate}");
-                LeaderboardService.Instance.FetchLeaderboard(DailySeedManager.Instance.GameDate,
-                    (entries) =>
-                    {
-                        Debug.Log($"Leaderboard returned {entries?.Count ?? 0} entries");
-                        if (leaderboardUI != null)
-                            leaderboardUI.Populate(entries);
-                    });
-            }
+            // NewLeaderboardScreen handles its own data fetching
         }
 
         private void OnSettingsClicked()
@@ -342,9 +268,5 @@ namespace MergeGame.UI
                 ResultCardGenerator.Instance.ShareCard();
         }
 
-        private void SetPanelActive(GameObject panel, bool active)
-        {
-            if (panel != null) panel.SetActive(active);
-        }
     }
 }
