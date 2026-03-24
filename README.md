@@ -1,10 +1,7 @@
-Scroll not working on leaderboard.
-Can't see score on leaderboard. Only rank all& username.
 Username validation and error handling?
-Sometimes day number doesn't load?
 Fix onboarding animation.
 
-Cooler username generator.
+Cooler username generator. Maybe obscure phish references? need to generate A LOT of variations on the server.
 Username profanity filter.
 
 Save game so I can come back.

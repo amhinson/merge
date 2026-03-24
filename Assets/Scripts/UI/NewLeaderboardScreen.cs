@@ -185,7 +185,10 @@ namespace MergeGame.UI
             // Viewport with mask
             var viewport = OvertoneUI.CreateUIObject("Viewport", scrollGO.transform);
             OvertoneUI.StretchFill(viewport.GetComponent<RectTransform>());
-            viewport.AddComponent<RectMask2D>(); // clips content without needing a sprite
+            viewport.AddComponent<RectMask2D>(); // clips content
+            // Invisible Image needed for ScrollRect to receive touch/drag events
+            var vpImg = viewport.AddComponent<Image>();
+            vpImg.color = Color.clear;
 
             // Content
             var content = OvertoneUI.CreateUIObject("Content", viewport.transform);
@@ -322,7 +325,7 @@ namespace MergeGame.UI
                 rowHLG.spacing = 6;
                 rowHLG.padding = new RectOffset(10, 10, 0, 0);
                 rowHLG.childAlignment = TextAnchor.MiddleLeft;
-                rowHLG.childControlWidth = false;
+                rowHLG.childControlWidth = true;
                 rowHLG.childControlHeight = true;
                 rowHLG.childForceExpandWidth = false;
                 rowHLG.childForceExpandHeight = true;

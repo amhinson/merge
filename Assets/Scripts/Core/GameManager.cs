@@ -99,7 +99,9 @@ namespace MergeGame.Core
                         if (profile != null)
                         {
                             GameSession.TodayScore = profile.today_score;
-                            GameSession.TodayDayNumber = profile.day_number;
+                            // Only override day number if server returned a valid value
+                            if (profile.day_number > 0)
+                                GameSession.TodayDayNumber = profile.day_number;
 
                             if (GameSession.CurrentPlayer == null)
                                 GameSession.CurrentPlayer = new Player();
