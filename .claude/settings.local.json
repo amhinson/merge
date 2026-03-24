@@ -11,7 +11,11 @@
       "Bash(find /Users/alex/projects/personal/merge -path */supabase/functions/get-player-rank* -type f)",
       "Bash(sips:*)",
       "Bash(grep -E \"\\\\.\\(cs|meta\\)$\")",
-      "Bash(find /Users/alex/projects/personal/merge/Assets -maxdepth 3 -name *.cs -type f)"
+      "Bash(find /Users/alex/projects/personal/merge/Assets -maxdepth 3 -name *.cs -type f)",
+      "Bash(find /Users/alex/projects/personal/merge -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx \\\\\\) ! -path */node_modules/* ! -path */.next/* ! -path */build/* ! -path */dist/* ! -path *Library*)",
+      "Bash(find /Users/alex/projects/personal/merge/Assets -type f -name *.cs)",
+      "Bash(./deploy.sh dev:*)",
+      "Bash(./deploy.sh prod:*)"
     ]
   }
 }

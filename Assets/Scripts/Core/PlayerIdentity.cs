@@ -11,7 +11,7 @@ namespace MergeGame.Core
         private const string UUIDKey = "player_uuid";
         private const string DisplayNameKey = "player_display_name";
         private const int MinNameLength = 3;
-        private const int MaxNameLength = 16;
+        private const int MaxNameLength = 24;
 
         public string DeviceUUID { get; private set; }
         public string DisplayName { get; private set; }
@@ -40,14 +40,52 @@ namespace MergeGame.Core
         {
             if (SupabaseClient.Instance == null) return;
 
-            string json = $"{{\"device_uuid\":\"{DeviceUUID}\",\"display_name\":\"{DisplayName}\"}}";
+            // Only send display_name if the player already has one (returning player).
+            // New players get a name generated server-side.
+            bool isNewPlayer = string.IsNullOrEmpty(DisplayName);
+            string json = isNewPlayer
+                ? $"{{\"device_uuid\":\"{DeviceUUID}\"}}"
+                : $"{{\"device_uuid\":\"{DeviceUUID}\",\"display_name\":\"{DisplayName}\"}}";
+
             SupabaseClient.Instance.CallFunction("register-player", json, (success, response) =>
             {
                 if (success)
+                {
                     Debug.Log("PlayerIdentity: Registered with backend");
+
+                    // If we were a new player, adopt the name the backend generated
+                    if (isNewPlayer)
+                    {
+                        try
+                        {
+                            var parsed = JsonUtility.FromJson<RegisterResponse>(response);
+                            if (!string.IsNullOrEmpty(parsed.display_name))
+                            {
+                                DisplayName = parsed.display_name;
+                                PlayerPrefs.SetString(DisplayNameKey, DisplayName);
+                                PlayerPrefs.Save();
+                                OnDisplayNameChanged?.Invoke(DisplayName);
+                                Debug.Log($"PlayerIdentity: Assigned name '{DisplayName}'");
+                            }
+                        }
+                        catch (System.Exception e)
+                        {
+                            Debug.LogWarning($"PlayerIdentity: Could not parse backend name — {e.Message}");
+                        }
+                    }
+                }
                 else
+                {
                     Debug.LogWarning($"PlayerIdentity: Backend registration failed — {response}");
+                }
             });
+        }
+
+        [System.Serializable]
+        private class RegisterResponse
+        {
+            public bool success;
+            public string display_name;
         }
 
         private void LoadOrCreateIdentity()
@@ -60,21 +98,11 @@ namespace MergeGame.Core
                 PlayerPrefs.SetString(UUIDKey, DeviceUUID);
             }
 
-            // Display name
+            // Display name — loaded from local cache; new players get their name
+            // from the backend during registration.
             DisplayName = PlayerPrefs.GetString(DisplayNameKey, "");
-            if (string.IsNullOrEmpty(DisplayName))
-            {
-                DisplayName = GenerateDefaultName();
-                PlayerPrefs.SetString(DisplayNameKey, DisplayName);
-            }
 
             PlayerPrefs.Save();
-        }
-
-        private static string GenerateDefaultName()
-        {
-            int digits = Random.Range(100000, 999999);
-            return $"Player{digits}";
         }
 
         /// <summary>

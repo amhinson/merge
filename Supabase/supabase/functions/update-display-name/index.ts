@@ -25,11 +25,11 @@ serve(async (req) => {
       );
     }
 
-    // Validate name: 3-16 chars, alphanumeric + spaces/underscores/hyphens
+    // Validate name: 3-24 chars, alphanumeric + spaces/underscores/hyphens
     const sanitized = display_name.replace(/[^a-zA-Z0-9 _\-]/g, "").trim();
-    if (sanitized.length < 3 || sanitized.length > 16) {
+    if (sanitized.length < 3 || sanitized.length > 24) {
       return new Response(
-        JSON.stringify({ error: "Name must be 3-16 alphanumeric characters" }),
+        JSON.stringify({ error: "Name must be 3-24 alphanumeric characters" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
