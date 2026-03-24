@@ -187,7 +187,7 @@ namespace MergeGame.UI
                 int rank = GameSession.ResultRank;
                 int total = GameSession.ResultTotalPlayers;
                 if (rankLabel != null)
-                    rankLabel.text = rank > 0 ? $"#{rank}" : "#—";
+                    rankLabel.text = rank > 0 ? $"#{rank}" : "";
                 if (rankSubLabel != null)
                     rankSubLabel.text = rank > 0 && total > 0
                         ? $"of {total} players today"
@@ -230,7 +230,7 @@ namespace MergeGame.UI
                 GameSession.ResultRank = rank;
                 GameSession.ResultTotalPlayers = totalPlayers;
                 if (rankLabel != null)
-                    rankLabel.text = rank > 0 ? $"#{rank}" : "#—";
+                    rankLabel.text = rank > 0 ? $"#{rank}" : "";
                 if (rankSubLabel != null)
                     rankSubLabel.text = rank > 0 && totalPlayers > 0
                         ? $"of {totalPlayers} players today"
@@ -360,7 +360,7 @@ namespace MergeGame.UI
             fImg.raycastTarget = false;
 
             // Rank label (left)
-            rankLabel = OvertoneUI.CreateLabel(pill.transform, "#—",
+            rankLabel = OvertoneUI.CreateLabel(pill.transform, "",
                 OvertoneUI.PressStart2P, 8, OC.cyan, "RankLabel");
             rankLabel.characterSpacing = 1;
             rankLabel.textWrappingMode = TextWrappingModes.NoWrap;
