@@ -51,15 +51,19 @@ namespace MergeGame.Core
                 new Vector2(width + wallThickness * 2f, bottomThickness),
                 wallMat);
 
+            // Nudge walls inward slightly so ball sprites (which extend a couple
+            // of pixels past their collider for stroke + AA) stay inside the grid.
+            float wallInset = 0.03f;
+
             // Left wall
             CreateWall("LeftWall",
-                new Vector3(-halfWidth - wallThickness / 2f, bottomY + height / 2f, 0f),
+                new Vector3(-halfWidth - wallThickness / 2f + wallInset, bottomY + height / 2f, 0f),
                 new Vector2(wallThickness, height),
                 wallMat);
 
             // Right wall
             CreateWall("RightWall",
-                new Vector3(halfWidth + wallThickness / 2f, bottomY + height / 2f, 0f),
+                new Vector3(halfWidth + wallThickness / 2f - wallInset, bottomY + height / 2f, 0f),
                 new Vector2(wallThickness, height),
                 wallMat);
         }

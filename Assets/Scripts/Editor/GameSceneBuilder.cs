@@ -27,12 +27,12 @@ namespace MergeGame.Editor
         // Tier colors: tier 0 = smallest (Level 11), tier 10 = largest (Level 1)
         private static readonly Color[] TierColors = new[]
         {
-            HexColor("E8587A"), // tier 0 (L11): Pink
-            HexColor("F0B429"), // tier 1 (L10): Amber
-            HexColor("4DD9C0"), // tier 2 (L9):  Cyan
-            HexColor("FB7185"), // tier 3 (L8):  Rose
-            HexColor("FB923C"), // tier 4 (L7):  Orange
-            HexColor("38BDF8"), // tier 5 (L6):  Sky
+            HexColor("E879F9"), // tier 0 (L11): Fuchsia
+            HexColor("CBD5E1"), // tier 1 (L10): Silver
+            HexColor("1D4ED8"), // tier 2 (L9):  Blue
+            HexColor("EF4444"), // tier 3 (L8):  Red
+            HexColor("38BDF8"), // tier 4 (L7):  Sky
+            HexColor("F97316"), // tier 5 (L6):  Orange
             HexColor("A3E635"), // tier 6 (L5):  Lime
             HexColor("A78BFA"), // tier 7 (L4):  Violet
             HexColor("F0B429"), // tier 8 (L3):  Amber
@@ -884,6 +884,9 @@ namespace MergeGame.Editor
             obj.transform.SetParent(parent, false);
             obj.AddComponent<RectTransform>();
             var tmp = obj.AddComponent<TextMeshProUGUI>();
+            var font = Resources.Load<TMP_FontAsset>("Fonts/PressStart2P-Regular SDF")
+                    ?? Resources.Load<TMP_FontAsset>("Fonts/DMMono-Medium SDF");
+            if (font != null) tmp.font = font;
             tmp.text = text;
             tmp.fontSize = fontSize;
             tmp.color = color;

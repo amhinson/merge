@@ -16,12 +16,12 @@ namespace MergeGame.Visual
         // Level 11 (smallest) → tier 0, Level 1 (largest) → tier 10
         public static readonly Color[] BallColors =
         {
-            HexColor("E8587A"), // tier 0 (Level 11, smallest): pink
-            HexColor("F0B429"), // tier 1 (Level 10): amber
-            HexColor("4DD9C0"), // tier 2 (Level 9): cyan
-            HexColor("FB7185"), // tier 3 (Level 8): rose
-            HexColor("FB923C"), // tier 4 (Level 7): orange
-            HexColor("38BDF8"), // tier 5 (Level 6): sky
+            HexColor("E879F9"), // tier 0 (Level 11, smallest): fuchsia
+            HexColor("CBD5E1"), // tier 1 (Level 10): silver
+            HexColor("1D4ED8"), // tier 2 (Level 9): blue
+            HexColor("EF4444"), // tier 3 (Level 8): red
+            HexColor("38BDF8"), // tier 4 (Level 7): sky
+            HexColor("F97316"), // tier 5 (Level 6): orange
             HexColor("A3E635"), // tier 6 (Level 5): lime
             HexColor("A78BFA"), // tier 7 (Level 4): violet
             HexColor("F0B429"), // tier 8 (Level 3): amber
@@ -31,19 +31,21 @@ namespace MergeGame.Visual
 
         // Per-tier config (tier 0=smallest to tier 10=largest): freq, waveType, lineOpacity
         // All use thread style. waveType: 0=sine, 1=sawtooth, 2=triangle, 3=square
+        // waveType: 0=sine, 1=sawtooth, 2=triangle, 3=square
+        // Each tier has a unique waveType + freq combination
         private static readonly (int freq, int waveType, float lineOpacity)[] WaveConfig =
         {
-            (3, 0, 0.75f), // tier 0 (L11): Sine
-            (4, 1, 0.68f), // tier 1 (L10): Sawtooth
-            (5, 0, 0.75f), // tier 2 (L9):  Sine
-            (3, 2, 0.70f), // tier 3 (L8):  Triangle
-            (4, 3, 0.68f), // tier 4 (L7):  Square
-            (6, 0, 0.75f), // tier 5 (L6):  Sine
-            (3, 1, 0.70f), // tier 6 (L5):  Sawtooth
-            (5, 0, 0.75f), // tier 7 (L4):  Sine
-            (2, 2, 0.70f), // tier 8 (L3):  Triangle
-            (4, 0, 0.75f), // tier 9 (L2):  Sine
-            (3, 0, 0.75f), // tier 10 (L1): Sine
+            (3, 0, 0.80f), // tier 0 (L11): Sine 3 — fuchsia
+            (4, 1, 0.80f), // tier 1 (L10): Sawtooth 4 — silver
+            (5, 0, 0.80f), // tier 2 (L9):  Sine 5 — blue
+            (3, 2, 0.80f), // tier 3 (L8):  Triangle 3 — red
+            (6, 0, 0.80f), // tier 4 (L7):  Sine 6 — sky
+            (4, 3, 0.80f), // tier 5 (L6):  Square 4 — orange
+            (3, 1, 0.80f), // tier 6 (L5):  Sawtooth 3 — lime
+            (5, 0, 0.80f), // tier 7 (L4):  Sine 5 — violet
+            (2, 2, 0.80f), // tier 8 (L3):  Triangle 2 — amber
+            (4, 0, 0.80f), // tier 9 (L2):  Sine 4 — pink
+            (3, 0, 0.80f), // tier 10 (L1): Sine 3 — cyan
         };
 
         // Per-tier scroll speeds in seconds (tier 0=smallest to tier 10=largest)
@@ -83,7 +85,9 @@ namespace MergeGame.Visual
 
         private static Color[] GenerateBallPixelsInternal(int tier, Color ballColor, float radius, float phase, int size, int diameter)
         {
-            float r = diameter / 2f;
+            // Shrink draw radius slightly so the visible edge (stroke + AA fringe)
+            // stays within the physics collider radius.
+            float r = (diameter / 2f) - 2f;
             float cx = size / 2f;
             float cy = size / 2f;
 
@@ -145,7 +149,7 @@ namespace MergeGame.Visual
             }
 
             // === 2. Circle stroke (anti-aliased) ===
-            float strokeWidth = Mathf.Max(1.5f, r * 0.035f);
+            float strokeWidth = Mathf.Max(1.8f, r * 0.04f);
             for (int py = 0; py < size; py++)
             {
                 for (int px = 0; px < size; px++)
@@ -154,11 +158,12 @@ namespace MergeGame.Visual
                     float dy = py - cy;
                     float dist = Mathf.Sqrt(dx * dx + dy * dy);
                     float edgeDist = Mathf.Abs(dist - r);
-                    float strokeRange = strokeWidth + aaWidth;
-                    if (edgeDist > strokeRange) continue;
+                    if (edgeDist > strokeWidth + 1f) continue;
 
-                    // Smooth falloff from stroke center
-                    float strokeAlpha = Mathf.Clamp01(1f - edgeDist / strokeRange) * 0.55f;
+                    // Sharp stroke with thin AA fringe
+                    float strokeAlpha = Mathf.Clamp01(1f - edgeDist / strokeWidth);
+                    strokeAlpha *= strokeAlpha; // square for sharper falloff
+                    strokeAlpha *= 0.8f;
                     Color stroke = new Color(ballColor.r, ballColor.g, ballColor.b, strokeAlpha);
                     pixels[py * size + px] = BlendOver(pixels[py * size + px], stroke);
                 }
@@ -169,8 +174,8 @@ namespace MergeGame.Visual
             {
                 var wc = WaveConfig[tier];
                 float amp = r * 0.22f;
-                float haloW = Mathf.Max(2.5f, r * 0.10f);
-                float lineW = Mathf.Max(0.8f, r * 0.032f);
+                float haloW = 2.5f;  // fixed glow width in pixels
+                float lineW = 0.8f;  // fixed line width — same thickness on all balls
 
                 DrawThreadWave(pixels, size, cx, cy, r, ballColor,
                     wc.freq, wc.waveType, amp, phase, haloW, lineW, wc.lineOpacity);
@@ -189,9 +194,9 @@ namespace MergeGame.Visual
             float endX = cx + r;
             int sampleCount = Mathf.Max(32, Mathf.RoundToInt((endX - startX) * 4f));
 
-            // Halo pass (wide, low opacity)
+            // Halo pass (wide, subtle glow)
             DrawPolylineWave(pixels, size, cx, cy, r, ballColor, freq, waveType, amp, phase,
-                startX, endX, sampleCount, haloWidth, 0.12f);
+                startX, endX, sampleCount, haloWidth, 0.16f);
 
             // Line pass (thin, per-tier opacity)
             DrawPolylineWave(pixels, size, cx, cy, r, ballColor, freq, waveType, amp, phase,
@@ -247,11 +252,11 @@ namespace MergeGame.Visual
                     float closestY = y0 + t * dy;
                     float dist = Mathf.Sqrt((px - closestX) * (px - closestX) + (py - closestY) * (py - closestY));
 
-                    if (dist < halfW + 1f) // +1 pixel for AA fringe
+                    if (dist < halfW + 0.8f) // tight AA fringe
                     {
-                        float falloff = Mathf.Clamp01(1f - dist / halfW);
-                        // Smooth cubic falloff for cleaner edges
-                        falloff = falloff * falloff * (3f - 2f * falloff);
+                        // Solid core with sharp AA edge
+                        float falloff = Mathf.Clamp01((halfW - dist + 0.8f) / 0.8f);
+                        falloff = Mathf.Min(1f, falloff);
                         Color c = new Color(color.r, color.g, color.b, color.a * falloff);
                         pixels[py * size + px] = BlendOver(pixels[py * size + px], c);
                     }
