@@ -16,11 +16,11 @@ namespace MergeGame.Core
         [SerializeField] private float horizontalPadding = 0.3f;
 
         // UI zones as fractions of screen height (matches the 390x844 canvas layout)
-        // Header: back button + score + next card = ~72pt out of 844 = 8.5%
-        // Bottom: shake button + count + safe area = ~60pt out of 844 = 7.1%
+        // Header: back button + score + shake button + next card = ~72pt out of 844
+        // Bottom: grid flush to bottom, only safe area margin
         // Drop zone: space above container for the drop ball = ~1.5 world units minimum
         private const float HeaderScreenFraction = 0.14f;  // top 14% reserved for header + next card + drop ball
-        private const float BottomScreenFraction = 0.10f;  // bottom 10% reserved for shake button + safe area
+        private const float BottomScreenFraction = 0.02f;  // minimal bottom margin (safe area only, no shake button)
         private const float MinDropZone = 2.2f;            // minimum world units above container for drop ball
 
         private Camera cam;

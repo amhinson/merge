@@ -438,22 +438,7 @@ namespace MergeGame.Editor
             nextCardRT.anchoredPosition = new Vector2(-16, -8);
             nextCardRT.sizeDelta = new Vector2(60, 60);
             nextCardRT.pivot = new Vector2(1, 1);
-            var nextCardBg = nextCard.AddComponent<Image>();
-            nextCardBg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
-            nextCardBg.type = Image.Type.Sliced;
-            nextCardBg.color = HexColor("161B24");
-            nextCardBg.raycastTarget = false;
-            // Border outline
-            var nextOutline = new GameObject("Outline");
-            nextOutline.transform.SetParent(nextCard.transform, false);
-            var nextOutlineRT = nextOutline.AddComponent<RectTransform>();
-            nextOutlineRT.anchorMin = Vector2.zero; nextOutlineRT.anchorMax = Vector2.one;
-            nextOutlineRT.offsetMin = Vector2.zero; nextOutlineRT.offsetMax = Vector2.zero;
-            var nextOutlineImg = nextOutline.AddComponent<Image>();
-            nextOutlineImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
-            nextOutlineImg.type = Image.Type.Sliced;
-            nextOutlineImg.color = HexColor("232838");
-            nextOutlineImg.raycastTarget = false;
+            // No background or border — passive display, not a button
             // "NEXT" label
             var nextLabelTMP = CreateText(nextCard.transform, "NextLabel", "NEXT", 6, new Color(1, 1, 1, 0.22f));
             var nextLabelRT = nextLabelTMP.rectTransform;
@@ -501,21 +486,21 @@ namespace MergeGame.Editor
             // Arena grid is created as a world-space object (not UI) in BuildGameScene
             // so it renders BEHIND balls. See CreateArenaGrid().
 
-            // ===== SHAKE BUTTON (bottom-left, safely below grid) =====
+            // ===== SHAKE BUTTON (center-top, in header area) =====
             var shakeArea = new GameObject("ShakeArea");
             shakeArea.transform.SetParent(panel.transform, false);
             var shakeAreaRT = shakeArea.AddComponent<RectTransform>();
-            // Anchor at bottom-left, position above safe area
-            SetAnchors(shakeAreaRT, 0, 0, 0, 0);
-            shakeAreaRT.anchoredPosition = new Vector2(16, 10);
-            shakeAreaRT.sizeDelta = new Vector2(120, 44);
-            shakeAreaRT.pivot = new Vector2(0, 0);
+            // Anchor at top-center
+            SetAnchors(shakeAreaRT, 0.5f, 1, 0.5f, 1);
+            shakeAreaRT.anchoredPosition = new Vector2(0, -14);
+            shakeAreaRT.sizeDelta = new Vector2(120, 36);
+            shakeAreaRT.pivot = new Vector2(0.5f, 1);
 
             // Shake button
             var shakeBtn = new GameObject("ShakeButton");
             shakeBtn.transform.SetParent(shakeArea.transform, false);
             var shakeBtnRT = shakeBtn.AddComponent<RectTransform>();
-            shakeBtnRT.anchorMin = new Vector2(0, 0.32f); shakeBtnRT.anchorMax = new Vector2(1, 1);
+            shakeBtnRT.anchorMin = Vector2.zero; shakeBtnRT.anchorMax = Vector2.one;
             shakeBtnRT.offsetMin = Vector2.zero; shakeBtnRT.offsetMax = Vector2.zero;
             var shakeBtnImg = shakeBtn.AddComponent<Image>();
             shakeBtnImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
@@ -533,19 +518,19 @@ namespace MergeGame.Editor
             shakeOutlineImg.type = Image.Type.Sliced;
             shakeOutlineImg.color = HexColor("232838");
             shakeOutlineImg.raycastTarget = false;
-            // Shake label — "SHAKE" with small square icon
+            // Shake label with count inline — "Shake · 3"
             var shakeTMP = CreateText(shakeBtn.transform, "ShakeLabel", "Shake", 8, new Color(1, 1, 1, 0.35f));
             shakeTMP.alignment = TextAlignmentOptions.Center;
             var shakeTMPRT = shakeTMP.rectTransform;
-            shakeTMPRT.anchorMin = Vector2.zero; shakeTMPRT.anchorMax = Vector2.one;
+            shakeTMPRT.anchorMin = new Vector2(0, 0); shakeTMPRT.anchorMax = new Vector2(0.7f, 1);
             shakeTMPRT.offsetMin = Vector2.zero; shakeTMPRT.offsetMax = Vector2.zero;
 
-            // Count below shake button
-            var shakeCountTMP = CreateText(shakeArea.transform, "ShakeCount", "3 left", 7, new Color(1, 1, 1, 0.22f));
-            shakeCountTMP.alignment = TextAlignmentOptions.Left;
+            // Count to the right of the label
+            var shakeCountTMP = CreateText(shakeBtn.transform, "ShakeCount", "3", 8, new Color(1, 1, 1, 0.22f));
+            shakeCountTMP.alignment = TextAlignmentOptions.Center;
             var shakeCountRT = shakeCountTMP.rectTransform;
-            shakeCountRT.anchorMin = new Vector2(0, 0); shakeCountRT.anchorMax = new Vector2(1, 0.35f);
-            shakeCountRT.offsetMin = new Vector2(2, 0); shakeCountRT.offsetMax = Vector2.zero;
+            shakeCountRT.anchorMin = new Vector2(0.7f, 0); shakeCountRT.anchorMax = new Vector2(1, 1);
+            shakeCountRT.offsetMin = Vector2.zero; shakeCountRT.offsetMax = Vector2.zero;
 
             // ===== EXIT CONFIRM MODAL =====
             var confirmPanel = new GameObject("ExitConfirm");

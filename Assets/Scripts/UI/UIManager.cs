@@ -263,7 +263,7 @@ namespace MergeGame.UI
         private void UpdateShakeCount(int remaining)
         {
             if (shakeCountText != null)
-                shakeCountText.text = remaining > 0 ? $"{remaining} left" : "0 left";
+                shakeCountText.text = remaining.ToString();
             if (shakeButton != null)
             {
                 shakeButton.interactable = remaining > 0;
