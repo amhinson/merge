@@ -170,7 +170,7 @@ PlayerSettings:
     Android: com.overtone.game
     Standalone: com.overtone.game
     WebGL: com.overtone.game
-    iPhone: com.overtone.game.dev
+    iPhone: com.overtone.game
   buildNumber:
     Android: 1
     Standalone: 0

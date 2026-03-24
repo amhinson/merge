@@ -30,7 +30,8 @@
       "Bash(sed -i '' 's/pointValue: 3$/pointValue: 2/' BallData_Tier3.asset)",
       "Bash(sed -i '' 's/pointValue: 5$/pointValue: 3/' BallData_Tier4.asset)",
       "Bash(sed -i '' 's/pointValue: 7$/pointValue: 4/' BallData_Tier5.asset)",
-      "Bash(sed -i '' 's/pointValue: 10$/pointValue: 5/' BallData_Tier6.asset)"
+      "Bash(sed -i '' 's/pointValue: 10$/pointValue: 5/' BallData_Tier6.asset)",
+      "Bash(chmod:*)"
     ]
   }
 }

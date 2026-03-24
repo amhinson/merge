@@ -25,14 +25,17 @@ namespace MergeGame.Editor
         public static void BuildiOS()
         {
             bool isDev = false;
-            foreach (string arg in System.Environment.GetCommandLineArgs())
+            string buildNumber = null;
+            var args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
             {
-                if (arg == "-development") isDev = true;
+                if (args[i] == "-development") isDev = true;
+                if (args[i] == "-buildNumber" && i + 1 < args.Length) buildNumber = args[i + 1];
             }
-            Build(isDev);
+            Build(isDev, buildNumber);
         }
 
-        private static void Build(bool development)
+        private static void Build(bool development, string buildNumber = null)
         {
             string buildPath = "Build/iOS";
 
@@ -46,7 +49,7 @@ namespace MergeGame.Editor
             PlayerSettings.productName = "Overtone";
             PlayerSettings.companyName = "Overtone";
             PlayerSettings.bundleVersion = "0.1.0";              // display version (CFBundleShortVersionString)
-            PlayerSettings.iOS.buildNumber = "1";                 // build number (CFBundleVersion)
+            PlayerSettings.iOS.buildNumber = buildNumber ?? "1";  // build number (CFBundleVersion)
             PlayerSettings.iOS.applicationDisplayName = "Overtone";
             PlayerSettings.iOS.appInBackgroundBehavior = iOSAppInBackgroundBehavior.Suspend;
 

@@ -58,3 +58,4 @@ Thumbs.db
 .temp
 Supabase/supabase/.temp
 Supabase/supabase/.gitignore
+.build-number

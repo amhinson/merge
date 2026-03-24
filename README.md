@@ -1,3 +1,7 @@
+Button sizes should be consistent between onboarding, home & settings screens.
+Shake button text is too small.
+New ball should always rez in the center. Right now it does briefly, then jumps to the last drop spot.
+
 Save game so I can come back.
 Emphasize everyone gets the same drop in a day somehow.
 Music & SFX.

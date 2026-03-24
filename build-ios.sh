@@ -1,86 +1,103 @@
 #!/bin/bash
 # Build iOS and upload to TestFlight.
 # Usage:
-#   ./build-ios.sh dev     # Development build (dev Supabase)
-#   ./build-ios.sh prod    # Release build (prod Supabase, ready for TestFlight)
+#   ./build-ios.sh dev      # Development build (dev Supabase)
+#   ./build-ios.sh prod     # Release build (prod Supabase)
+#   ./build-ios.sh all      # Both dev and prod (sequentially)
+#
+# Build number auto-increments from .build-number file.
+# Override with: BUILD_NUMBER=42 ./build-ios.sh prod
 #
 # Prerequisites:
 #   - Unity installed (uses command-line build)
 #   - Xcode installed
 #   - Valid Apple Developer account configured in Xcode
-#   - fastlane installed: brew install fastlane
-#   - App Store Connect API key set up for fastlane (see below)
 
 set -e
 
-ENV="${1:-dev}"
 PROJECT_PATH="$(cd "$(dirname "$0")" && pwd)"
 UNITY_PATH="/Applications/Unity/Hub/Editor/6000.3.11f1/Unity.app/Contents/MacOS/Unity"
-BUILD_DIR="$PROJECT_PATH/Build/iOS"
-XCODE_PROJECT="$BUILD_DIR/Unity-iPhone.xcodeproj"
+BUILD_NUM_FILE="$PROJECT_PATH/.build-number"
 
-# Check Unity exists
-if [ ! -f "$UNITY_PATH" ]; then
-    echo "❌ Unity not found at $UNITY_PATH"
-    echo "   Update UNITY_PATH in this script to match your Unity installation."
-    exit 1
-fi
+# ===== Build number =====
 
-echo "========================================"
-echo "  Building iOS ($ENV)"
-echo "========================================"
+get_next_build_number() {
+    if [ -n "$BUILD_NUMBER" ]; then
+        echo "$BUILD_NUMBER"
+        return
+    fi
+    if [ -f "$BUILD_NUM_FILE" ]; then
+        echo $(( $(cat "$BUILD_NUM_FILE") + 1 ))
+    else
+        echo 1
+    fi
+}
 
-# Clean previous build
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
+save_build_number() {
+    echo "$1" > "$BUILD_NUM_FILE"
+}
 
-# Set build method based on environment
-if [ "$ENV" = "prod" ]; then
-    BUILD_OPTIONS="-buildTarget iOS"
-    echo "📦 PRODUCTION build (release, prod Supabase)"
-else
-    BUILD_OPTIONS="-buildTarget iOS -development"
-    echo "🔧 DEVELOPMENT build (dev Supabase)"
-fi
+# ===== Build one environment =====
 
-# Unity command-line build
-echo ""
-echo "🔨 Building Xcode project with Unity..."
-"$UNITY_PATH" \
-    -batchmode \
-    -nographics \
-    -quit \
-    -projectPath "$PROJECT_PATH" \
-    $BUILD_OPTIONS \
-    -executeMethod BuildScript.BuildiOS \
-    -logFile "$PROJECT_PATH/Build/unity-build.log" \
-    || { echo "❌ Unity build failed. Check Build/unity-build.log"; exit 1; }
+build_env() {
+    local env="$1"
+    local build_num="$2"
 
-echo "✅ Xcode project generated at $BUILD_DIR"
+    echo "========================================"
+    echo "  iOS $env — build #$build_num"
+    echo "========================================"
 
-# Build and archive with xcodebuild
-echo ""
-echo "📱 Building and archiving with Xcode..."
-ARCHIVE_PATH="$PROJECT_PATH/Build/Overtone.xcarchive"
+    local BUILD_DIR="$PROJECT_PATH/Build/iOS"
+    local XCODE_PROJECT="$BUILD_DIR/Unity-iPhone.xcodeproj"
+    local ARCHIVE_PATH="$PROJECT_PATH/Build/Overtone-${env}.xcarchive"
+    local IPA_DIR="$PROJECT_PATH/Build/IPA-${env}"
 
-xcodebuild \
-    -project "$XCODE_PROJECT" \
-    -scheme "Unity-iPhone" \
-    -configuration Release \
-    -archivePath "$ARCHIVE_PATH" \
-    -allowProvisioningUpdates \
-    archive \
-    || { echo "❌ Xcode archive failed"; exit 1; }
+    # Clean
+    rm -rf "$BUILD_DIR"
+    mkdir -p "$BUILD_DIR"
 
-echo "✅ Archive created"
+    # Unity flags
+    local BUILD_OPTIONS="-buildTarget iOS"
+    if [ "$env" = "dev" ]; then
+        BUILD_OPTIONS="$BUILD_OPTIONS -development"
+    fi
 
-# Export IPA
-echo ""
-echo "📤 Exporting IPA..."
-IPA_DIR="$PROJECT_PATH/Build/IPA"
-mkdir -p "$IPA_DIR"
+    # Unity build
+    echo ""
+    echo "Building Xcode project with Unity..."
+    "$UNITY_PATH" \
+        -batchmode \
+        -nographics \
+        -quit \
+        -projectPath "$PROJECT_PATH" \
+        $BUILD_OPTIONS \
+        -executeMethod BuildScript.BuildiOS \
+        -buildNumber "$build_num" \
+        -logFile "$PROJECT_PATH/Build/unity-build-${env}.log" \
+        || { echo "Unity build failed ($env). Check Build/unity-build-${env}.log"; exit 1; }
 
-cat > "$PROJECT_PATH/Build/ExportOptions.plist" << 'PLIST'
+    echo "Xcode project generated"
+
+    # Archive
+    echo ""
+    echo "Archiving with Xcode..."
+    xcodebuild \
+        -project "$XCODE_PROJECT" \
+        -scheme "Unity-iPhone" \
+        -configuration Release \
+        -archivePath "$ARCHIVE_PATH" \
+        -allowProvisioningUpdates \
+        archive \
+        || { echo "Xcode archive failed ($env)"; exit 1; }
+
+    echo "Archive created"
+
+    # Export + upload
+    echo ""
+    echo "Exporting IPA and uploading to App Store Connect..."
+    mkdir -p "$IPA_DIR"
+
+    cat > "$PROJECT_PATH/Build/ExportOptions.plist" << 'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -93,27 +110,42 @@ cat > "$PROJECT_PATH/Build/ExportOptions.plist" << 'PLIST'
 </plist>
 PLIST
 
-xcodebuild \
-    -exportArchive \
-    -archivePath "$ARCHIVE_PATH" \
-    -exportPath "$IPA_DIR" \
-    -exportOptionsPlist "$PROJECT_PATH/Build/ExportOptions.plist" \
-    -allowProvisioningUpdates \
-    || { echo "❌ IPA export failed"; exit 1; }
+    xcodebuild \
+        -exportArchive \
+        -archivePath "$ARCHIVE_PATH" \
+        -exportPath "$IPA_DIR" \
+        -exportOptionsPlist "$PROJECT_PATH/Build/ExportOptions.plist" \
+        -allowProvisioningUpdates \
+        || { echo "IPA export failed ($env)"; exit 1; }
 
-echo ""
-echo "========================================"
-echo "  ✅ Build complete!"
-echo "  IPA: $IPA_DIR"
-echo "========================================"
+    echo ""
+    echo "  $env build #$build_num uploaded to TestFlight"
+    echo "========================================"
+    echo ""
+}
 
-if [ "$ENV" = "prod" ]; then
-    echo ""
-    echo "The IPA was exported with 'app-store-connect' method."
-    echo "It should be automatically uploaded to App Store Connect."
-    echo "Check TestFlight in App Store Connect for the new build."
-else
-    echo ""
-    echo "Dev build exported. To install on device, use Xcode or:"
-    echo "  xcrun devicectl install app --device <UDID> $IPA_DIR/*.ipa"
+# ===== Main =====
+
+ENV="${1:-dev}"
+
+if [ ! -f "$UNITY_PATH" ]; then
+    echo "Unity not found at $UNITY_PATH"
+    echo "Update UNITY_PATH in this script to match your Unity installation."
+    exit 1
 fi
+
+BUILD_NUM=$(get_next_build_number)
+START_TIME=$(date +%s)
+
+if [ "$ENV" = "all" ]; then
+    build_env "dev" "$BUILD_NUM"
+    build_env "prod" "$BUILD_NUM"
+else
+    build_env "$ENV" "$BUILD_NUM"
+fi
+
+save_build_number "$BUILD_NUM"
+
+END_TIME=$(date +%s)
+ELAPSED=$(( END_TIME - START_TIME ))
+echo "Done in $(( ELAPSED / 60 ))m $(( ELAPSED % 60 ))s — build #$BUILD_NUM"
