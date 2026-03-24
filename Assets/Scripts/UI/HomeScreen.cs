@@ -117,8 +117,8 @@ namespace MergeGame.UI
 
             BuildCTABlock(ctaContainer);
 
-            // Bottom padding
-            AddSpacer(content.transform, 24);
+            // Bottom padding (includes safe area for home indicator)
+            AddSpacer(content.transform, 24 + OS.safeAreaBottom);
         }
 
         /// <summary>Override to insert content between flex and puzzle row.</summary>

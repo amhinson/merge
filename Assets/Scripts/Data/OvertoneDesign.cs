@@ -54,7 +54,48 @@ namespace MergeGame.Data
         public const float screenPadV = 16f;
         public const float cardRadius = 4f;
         public const float borderWidth = 1f;
-        public const float safeAreaTop = 32f;
+
+        // Canvas reference resolution (must match CanvasScaler settings)
+        private const float RefWidth = 390f;
+        private const float RefHeight = 844f;
+        private const float RefMatch = 0.5f; // matchWidthOrHeight
+
+        /// <summary>
+        /// Top safe area inset in canvas units. Reads the device safe area at runtime
+        /// so it returns ~59 on Dynamic Island iPhones, ~47 on notch iPhones, and 0 on
+        /// devices with no notch.
+        /// </summary>
+        public static float safeAreaTop
+        {
+            get
+            {
+                float insetPx = Screen.height - (Screen.safeArea.y + Screen.safeArea.height);
+                return insetPx * CanvasScale;
+            }
+        }
+
+        /// <summary>Bottom safe area inset in canvas units (home indicator area).</summary>
+        public static float safeAreaBottom
+        {
+            get
+            {
+                float insetPx = Screen.safeArea.y;
+                return insetPx * CanvasScale;
+            }
+        }
+
+        /// <summary>Converts screen pixels to canvas units based on the CanvasScaler settings.</summary>
+        private static float CanvasScale
+        {
+            get
+            {
+                float logW = Mathf.Log(Screen.width / RefWidth, 2);
+                float logH = Mathf.Log(Screen.height / RefHeight, 2);
+                float logScale = Mathf.Lerp(logW, logH, RefMatch);
+                float scale = Mathf.Pow(2, logScale);
+                return 1f / scale;
+            }
+        }
     }
 
     public static class OFont

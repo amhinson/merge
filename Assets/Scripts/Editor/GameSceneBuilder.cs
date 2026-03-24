@@ -151,9 +151,6 @@ namespace MergeGame.Editor
             es.AddComponent<UnityEngine.EventSystems.EventSystem>();
             es.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 
-            // Note: no full-screen BG here — each screen that needs it has its own.
-            // Gameplay screen has NO background so the container/balls are visible.
-
             // Safe area root (content sits inside safe area)
             GameObject safeArea = new GameObject("SafeArea");
             safeArea.transform.SetParent(canvasObj.transform, false);
@@ -162,7 +159,8 @@ namespace MergeGame.Editor
             safeRT.anchorMax = Vector2.one;
             safeRT.offsetMin = Vector2.zero;
             safeRT.offsetMax = Vector2.zero;
-            safeArea.AddComponent<SafeAreaHandler>();
+            // No SafeAreaHandler — screens handle safe area padding internally via OS.safeAreaTop.
+            // This lets screen backgrounds extend behind the notch/home indicator for a seamless look.
 
             // ===== TITLE SCREEN =====
             var (titlePanel, titleScreen) = CreateTitleScreenPanel(safeArea.transform);
@@ -364,12 +362,16 @@ namespace MergeGame.Editor
             // No background — gameplay world shows through
 
             // ===== HEADER BAR (top) =====
+            // Safe area inset for gameplay header — this is baked at editor time,
+            // so we use a fixed value (59 = iPhone Dynamic Island). On devices without
+            // a notch the extra padding is harmless (just slightly more top margin).
+            float safeTop = 59f;
             // Back/close button (top-left) — smooth border, transparent bg, matching home screen style
             var backBtn = new GameObject("BackButton");
             backBtn.transform.SetParent(panel.transform, false);
             var backBtnRT = backBtn.AddComponent<RectTransform>();
             SetAnchors(backBtnRT, 0, 1, 0, 1);
-            backBtnRT.anchoredPosition = new Vector2(16, -14);
+            backBtnRT.anchoredPosition = new Vector2(16, -(safeTop + 14));
             backBtnRT.sizeDelta = new Vector2(34, 34);
             backBtnRT.pivot = new Vector2(0, 1);
             // Border only — no fill, camera bg shows through perfectly
@@ -408,7 +410,7 @@ namespace MergeGame.Editor
             // Score block (next to back button) — disable raycast on text so they don't block the button
             var scoreLabelTMP = CreateText(panel.transform, "ScoreLabel", "SCORE", 7, new Color(1, 1, 1, 0.22f));
             SetAnchors(scoreLabelTMP.rectTransform, 0, 1, 0, 1);
-            scoreLabelTMP.rectTransform.anchoredPosition = new Vector2(60, -14);
+            scoreLabelTMP.rectTransform.anchoredPosition = new Vector2(60, -(safeTop + 14));
             scoreLabelTMP.rectTransform.sizeDelta = new Vector2(80, 12);
             scoreLabelTMP.rectTransform.pivot = new Vector2(0, 1);
             scoreLabelTMP.alignment = TextAlignmentOptions.Left;
@@ -416,7 +418,7 @@ namespace MergeGame.Editor
 
             var scoreText = CreateText(panel.transform, "Score", "0", 28, HexColor("4DD9C0"));
             SetAnchors(scoreText.rectTransform, 0, 1, 0, 1);
-            scoreText.rectTransform.anchoredPosition = new Vector2(60, -26);
+            scoreText.rectTransform.anchoredPosition = new Vector2(60, -(safeTop + 26));
             scoreText.rectTransform.sizeDelta = new Vector2(150, 34);
             scoreText.rectTransform.pivot = new Vector2(0, 1);
             scoreText.alignment = TextAlignmentOptions.Left;
@@ -435,7 +437,7 @@ namespace MergeGame.Editor
             nextCard.transform.SetParent(panel.transform, false);
             var nextCardRT = nextCard.AddComponent<RectTransform>();
             SetAnchors(nextCardRT, 1, 1, 1, 1); // top-right
-            nextCardRT.anchoredPosition = new Vector2(-16, -8);
+            nextCardRT.anchoredPosition = new Vector2(-16, -(safeTop + 8));
             nextCardRT.sizeDelta = new Vector2(60, 60);
             nextCardRT.pivot = new Vector2(1, 1);
             // No background or border — passive display, not a button
@@ -492,7 +494,7 @@ namespace MergeGame.Editor
             var shakeAreaRT = shakeArea.AddComponent<RectTransform>();
             // Anchor at top-center
             SetAnchors(shakeAreaRT, 0.5f, 1, 0.5f, 1);
-            shakeAreaRT.anchoredPosition = new Vector2(0, -14);
+            shakeAreaRT.anchoredPosition = new Vector2(0, -(safeTop + 14));
             shakeAreaRT.sizeDelta = new Vector2(120, 36);
             shakeAreaRT.pivot = new Vector2(0.5f, 1);
 

@@ -118,15 +118,15 @@ namespace MergeGame.UI
             // Bottom safe area padding
             var bottomPad = OvertoneUI.CreateUIObject("BottomPad", content.transform);
             var bottomPadLE = bottomPad.AddComponent<LayoutElement>();
-            bottomPadLE.preferredHeight = 44;
-            bottomPadLE.minHeight = 44;
+            bottomPadLE.preferredHeight = 44 + OS.safeAreaBottom;
+            bottomPadLE.minHeight = 44 + OS.safeAreaBottom;
         }
 
         private void BuildLogoBlock(Transform parent)
         {
             var block = OvertoneUI.CreateUIObject("LogoBlock", parent);
             var blockLE = block.AddComponent<LayoutElement>();
-            blockLE.preferredHeight = 90;
+            blockLE.preferredHeight = 90 + OS.safeAreaTop;
 
             // Use a nested VLG for internal layout
             var inner = OvertoneUI.CreateUIObject("LogoInner", block.transform);
@@ -143,7 +143,7 @@ namespace MergeGame.UI
             innerVLG.childControlHeight = false;
             innerVLG.childForceExpandWidth = false;
             innerVLG.childForceExpandHeight = false;
-            innerVLG.padding = new RectOffset(0, 0, 20, 0);
+            innerVLG.padding = new RectOffset(0, 0, (int)OS.safeAreaTop + 20, 0);
 
             // Single TMP with rich text for OVER + TONE — avoids layout gap entirely
             var titleGO = OvertoneUI.CreateUIObject("Title", inner.transform);

@@ -45,7 +45,7 @@ namespace MergeGame.UI
             var cRT = content.GetComponent<RectTransform>();
             cRT.anchorMin = Vector2.zero;
             cRT.anchorMax = Vector2.one;
-            cRT.offsetMin = new Vector2(24, 80); // above save button area
+            cRT.offsetMin = new Vector2(24, 80 + (int)OS.safeAreaBottom); // above save button area
             cRT.offsetMax = new Vector2(-24, -(OS.safeAreaTop + 56)); // below header
 
             var vlg = content.AddComponent<VerticalLayoutGroup>();
@@ -345,7 +345,7 @@ namespace MergeGame.UI
             wRT.anchorMin = new Vector2(0, 0);
             wRT.anchorMax = new Vector2(1, 0);
             wRT.pivot = new Vector2(0.5f, 0);
-            wRT.anchoredPosition = new Vector2(0, 30);
+            wRT.anchoredPosition = new Vector2(0, 30 + OS.safeAreaBottom);
             wRT.sizeDelta = new Vector2(-48, 34); // -48 = 24px padding each side
 
             var (saveGO, saveTMP) = OvertoneUI.CreatePrimaryButton(wrapper.transform, "SAVE", 34, "SaveButton");

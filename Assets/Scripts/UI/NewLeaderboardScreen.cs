@@ -201,7 +201,7 @@ namespace MergeGame.UI
             cVLG.childForceExpandWidth = true;
             cVLG.childForceExpandHeight = false;
             cVLG.spacing = 2;
-            cVLG.padding = new RectOffset(24, 24, 8, 32);
+            cVLG.padding = new RectOffset(24, 24, 8, 32 + (int)OS.safeAreaBottom);
 
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 

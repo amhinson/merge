@@ -96,7 +96,7 @@ namespace MergeGame.UI
             // Cancel button
             var cancelPadding = OvertoneUI.CreateUIObject("CancelPad", panelGO.transform);
             var cancelVLG = cancelPadding.AddComponent<VerticalLayoutGroup>();
-            cancelVLG.padding = new RectOffset(20, 20, 0, 44);
+            cancelVLG.padding = new RectOffset(20, 20, 0, 44 + (int)OS.safeAreaBottom);
             cancelVLG.childControlWidth = true;
             cancelVLG.childControlHeight = false;
             cancelVLG.childForceExpandWidth = true;
