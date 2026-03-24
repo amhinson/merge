@@ -413,10 +413,23 @@ namespace MergeGame.UI
         {
             if (nameInput == null || PlayerIdentity.Instance == null) return;
 
-            string newName = nameInput.text;
+            string newName = nameInput.text.Trim();
+
+            if (string.IsNullOrEmpty(newName) || newName.Length < 3)
+            {
+                Toast.Show("Name must be at least 3 characters");
+                return;
+            }
+
             bool success = PlayerIdentity.Instance.TrySetDisplayName(newName);
 
-            if (success && LeaderboardService.Instance != null)
+            if (!success)
+            {
+                Toast.Show("Invalid name — letters, numbers, and spaces only");
+                return;
+            }
+
+            if (LeaderboardService.Instance != null)
                 LeaderboardService.Instance.UpdateDisplayName(newName);
 
             OnBackClicked();
