@@ -254,7 +254,7 @@ namespace MergeGame.UI
                 var img = ballGO.AddComponent<Image>();
 
                 // Use real ball sprite from NeonBallRenderer
-                float uiRadius = sizes[i] / (2f * 48f);
+                float uiRadius = sizes[i] / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
                 var png = Visual.NeonBallRenderer.GenerateBallPNG(tiers[i], Color.white, uiRadius, 0f);
                 var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                 tex.filterMode = FilterMode.Bilinear;

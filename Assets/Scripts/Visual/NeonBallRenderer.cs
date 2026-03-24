@@ -9,8 +9,8 @@ namespace MergeGame.Visual
     /// </summary>
     public static class NeonBallRenderer
     {
-        private const int PixelsPerUnit = 48;
-        private const int Padding = 4;
+        public const int PixelsPerUnit = 128;
+        private const int Padding = 6;
 
         // Ball colors per tier (0-indexed). Tier 0 = smallest ball, tier 10 = largest.
         // Level 11 (smallest) → tier 0, Level 1 (largest) → tier 10
@@ -96,7 +96,10 @@ namespace MergeGame.Visual
             float gradCx = cx - r * 0.16f;
             float gradCy = cy + r * 0.28f; // upper area (in Unity tex coords, +y is up)
 
-            // === 1. Ball body — opaque base + radial gradient ===
+            // AA edge width in pixels (1.2px smooth falloff)
+            float aaWidth = 1.2f;
+
+            // === 1. Ball body — opaque base + radial gradient with anti-aliased edge ===
             for (int py = 0; py < size; py++)
             {
                 for (int px = 0; px < size; px++)
@@ -104,10 +107,14 @@ namespace MergeGame.Visual
                     float dx = px - cx;
                     float dy = py - cy;
                     float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                    if (dist > r) continue;
+                    if (dist > r + aaWidth) continue;
 
-                    // Opaque dark base
-                    pixels[py * size + px] = baseFill;
+                    // Anti-aliased edge: smooth falloff over aaWidth pixels
+                    float edgeAlpha = Mathf.Clamp01((r - dist) / aaWidth);
+
+                    // Opaque dark base (modulated by edge alpha)
+                    Color base_ = new Color(baseFill.r, baseFill.g, baseFill.b, baseFill.a * edgeAlpha);
+                    pixels[py * size + px] = base_;
 
                     // Radial gradient from top-left center
                     float gdx = px - gradCx;
@@ -115,7 +122,7 @@ namespace MergeGame.Visual
                     float gradDist = Mathf.Sqrt(gdx * gdx + gdy * gdy);
                     float gradT = Mathf.Clamp01(gradDist / (r * 1.2f));
 
-                    float alpha = Mathf.Lerp(0.72f, 0.32f, gradT);
+                    float alpha = Mathf.Lerp(0.72f, 0.32f, gradT) * edgeAlpha;
                     Color grad = new Color(ballColor.r, ballColor.g, ballColor.b, alpha);
                     pixels[py * size + px] = BlendOver(pixels[py * size + px], grad);
                 }
@@ -123,7 +130,7 @@ namespace MergeGame.Visual
 
             // === 1b. Scanlines (subtle CRT texture) ===
             Color scanColor = new Color(0, 0, 0, 0.10f);
-            float scanSpacing = 3f;
+            float scanSpacing = Mathf.Max(3f, r * PixelsPerUnit * 0.045f); // scale with resolution
             for (float sy = 0; sy < r * 2f; sy += scanSpacing)
             {
                 float localY = sy - r; // -r to +r
@@ -137,8 +144,8 @@ namespace MergeGame.Visual
                     pixels[py * size + px] = BlendOver(pixels[py * size + px], scanColor);
             }
 
-            // === 2. Circle stroke ===
-            float strokeWidth = Mathf.Max(1.0f, r * 0.028f);
+            // === 2. Circle stroke (anti-aliased) ===
+            float strokeWidth = Mathf.Max(1.5f, r * 0.035f);
             for (int py = 0; py < size; py++)
             {
                 for (int px = 0; px < size; px++)
@@ -147,12 +154,13 @@ namespace MergeGame.Visual
                     float dy = py - cy;
                     float dist = Mathf.Sqrt(dx * dx + dy * dy);
                     float edgeDist = Mathf.Abs(dist - r);
-                    if (edgeDist < strokeWidth && dist <= r + strokeWidth)
-                    {
-                        float strokeAlpha = (1f - edgeDist / strokeWidth) * 0.55f;
-                        Color stroke = new Color(ballColor.r, ballColor.g, ballColor.b, strokeAlpha);
-                        pixels[py * size + px] = BlendOver(pixels[py * size + px], stroke);
-                    }
+                    float strokeRange = strokeWidth + aaWidth;
+                    if (edgeDist > strokeRange) continue;
+
+                    // Smooth falloff from stroke center
+                    float strokeAlpha = Mathf.Clamp01(1f - edgeDist / strokeRange) * 0.55f;
+                    Color stroke = new Color(ballColor.r, ballColor.g, ballColor.b, strokeAlpha);
+                    pixels[py * size + px] = BlendOver(pixels[py * size + px], stroke);
                 }
             }
 
@@ -179,7 +187,7 @@ namespace MergeGame.Visual
         {
             float startX = cx - r;
             float endX = cx + r;
-            int sampleCount = Mathf.Max(16, Mathf.RoundToInt((endX - startX) * 2f));
+            int sampleCount = Mathf.Max(32, Mathf.RoundToInt((endX - startX) * 4f));
 
             // Halo pass (wide, low opacity)
             DrawPolylineWave(pixels, size, cx, cy, r, ballColor, freq, waveType, amp, phase,
@@ -239,9 +247,11 @@ namespace MergeGame.Visual
                     float closestY = y0 + t * dy;
                     float dist = Mathf.Sqrt((px - closestX) * (px - closestX) + (py - closestY) * (py - closestY));
 
-                    if (dist < halfW)
+                    if (dist < halfW + 1f) // +1 pixel for AA fringe
                     {
-                        float falloff = 1f - dist / halfW;
+                        float falloff = Mathf.Clamp01(1f - dist / halfW);
+                        // Smooth cubic falloff for cleaner edges
+                        falloff = falloff * falloff * (3f - 2f * falloff);
                         Color c = new Color(color.r, color.g, color.b, color.a * falloff);
                         pixels[py * size + px] = BlendOver(pixels[py * size + px], c);
                     }

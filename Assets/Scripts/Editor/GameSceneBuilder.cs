@@ -1072,7 +1072,7 @@ namespace MergeGame.Editor
                 if (imp != null)
                 {
                     imp.textureType = TextureImporterType.Sprite;
-                    imp.spritePixelsPerUnit = 48;
+                    imp.spritePixelsPerUnit = NeonBallRenderer.PixelsPerUnit;
                     imp.filterMode = FilterMode.Bilinear;
                     imp.textureCompression = TextureImporterCompression.Uncompressed;
                     imp.spriteImportMode = SpriteImportMode.Single;

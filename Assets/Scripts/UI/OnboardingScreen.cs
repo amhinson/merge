@@ -772,9 +772,9 @@ namespace MergeGame.UI
             var img = go.AddComponent<Image>();
 
             // Generate a real ball sprite at UI-friendly size
-            float uiRadius = forcedSize / (2f * 48f); // 48 = PixelsPerUnit
+            float uiRadius = forcedSize / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
             var png = Visual.NeonBallRenderer.GenerateBallPNG(tierIndex, Color.white, uiRadius, 0f);
-            int expectedSize = Mathf.Max(8, Mathf.RoundToInt(uiRadius * 2f * 48f)) + 8;
+            int expectedSize = Mathf.Max(8, Mathf.RoundToInt(uiRadius * 2f * Visual.NeonBallRenderer.PixelsPerUnit)) + 8;
             var tex = new Texture2D(expectedSize, expectedSize, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
             tex.LoadImage(png);

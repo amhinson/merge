@@ -128,7 +128,7 @@ namespace MergeGame.UI
                     ballRT.sizeDelta = new Vector2(shareSize, shareSize);
 
                     var ballImg = ballGO.AddComponent<Image>();
-                    float uiRadius = shareSize / (2f * 48f);
+                    float uiRadius = shareSize / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
                     var pixels = Visual.NeonBallRenderer.GenerateBallPixels(
                         tier, ballColor, uiRadius, 0f, out int texSize);
                     var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);

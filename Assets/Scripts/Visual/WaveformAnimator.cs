@@ -79,8 +79,8 @@ namespace MergeGame.Visual
             frameCache[tier] = new Sprite[FrameCount];
 
             var color = NeonBallRenderer.GetBallColor(tier);
-            int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * 48));
-            int size = diameter + 8; // padding
+            int diameter = Mathf.Max(8, Mathf.RoundToInt(radius * 2f * NeonBallRenderer.PixelsPerUnit));
+            int size = diameter + 12; // padding
 
             for (int i = 0; i < FrameCount; i++)
             {
@@ -93,7 +93,7 @@ namespace MergeGame.Visual
                 tex.Apply(false, true); // makeNoLongerReadable = true, saves memory
 
                 frameCache[tier][i] = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
-                    new Vector2(0.5f, 0.5f), 48);
+                    new Vector2(0.5f, 0.5f), NeonBallRenderer.PixelsPerUnit);
             }
         }
 

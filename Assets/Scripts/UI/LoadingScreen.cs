@@ -69,7 +69,7 @@ namespace MergeGame.UI
 
             ballImage = ballGO.AddComponent<Image>();
             // Generate a ball sprite
-            float uiRadius = 40f / (2f * 48f);
+            float uiRadius = 40f / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
             var pixels = Visual.NeonBallRenderer.GenerateBallPixels(
                 10, Visual.NeonBallRenderer.GetBallColor(10), uiRadius, 0f, out int texSize);
             var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
@@ -112,7 +112,7 @@ namespace MergeGame.UI
             if (Time.frameCount % 10 == 0)
             {
                 float phase = (pulseTimer * 0.05f) % 1f;
-                float uiRadius = 40f / (2f * 48f);
+                float uiRadius = 40f / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
                 var pixels = Visual.NeonBallRenderer.GenerateBallPixels(
                     10, Visual.NeonBallRenderer.GetBallColor(10), uiRadius, phase, out int texSize);
                 var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
