@@ -1,11 +1,10 @@
 AUDIT
 
 - Privacy policy required — App Store requires one. You collect device UUID + display name + scores. Minimal, but needs to be documented.
-- JSON built via string interpolation in some places — works due to sanitization but fragile. Should standardize to JsonUtility.ToJson().
 
 Offline mode
 
-Basic Analytics
+Change name to murge
 
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
 Create Gamecenter achievement.

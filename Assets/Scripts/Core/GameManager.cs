@@ -272,6 +272,10 @@ namespace MergeGame.Core
             if (GameSession.IsPractice && UI.PracticeToast.Instance != null)
                 UI.PracticeToast.Instance.Show();
 
+            // Analytics
+            if (OvertoneAnalytics.Instance != null)
+                OvertoneAnalytics.Instance.TrackPuzzleStarted();
+
             // Fetch initial leaderboard for live rank
             liveRankRefreshTimer = 0f;
             if (DailySeedManager.Instance != null && LeaderboardService.Instance != null)
@@ -291,6 +295,13 @@ namespace MergeGame.Core
             int finalScore = scoreManager != null ? scoreManager.CurrentScore : 0;
             int highScore = scoreManager != null ? scoreManager.HighScore : 0;
 
+            // Analytics
+            if (OvertoneAnalytics.Instance != null)
+            {
+                float duration = MergeTracker.Instance != null ? MergeTracker.Instance.RoundDuration : 0f;
+                OvertoneAnalytics.Instance.TrackPuzzleCompleted(finalScore, duration);
+            }
+
             // Achievement tracking
             if (AchievementManager.Instance != null)
                 AchievementManager.Instance.OnGameCompleted(finalScore);
@@ -307,7 +318,11 @@ namespace MergeGame.Core
                 daily.MarkScoredAttemptComplete();
 
                 if (StreakManager.Instance != null)
+                {
                     StreakManager.Instance.RecordScoredAttempt();
+                    if (OvertoneAnalytics.Instance != null)
+                        OvertoneAnalytics.Instance.TrackStreakUpdated(StreakManager.Instance.CurrentStreak);
+                }
 
                 // Store score and merge counts in session BEFORE submitting
                 GameSession.TodayScore = finalScore;
@@ -400,6 +415,9 @@ namespace MergeGame.Core
 
             ShakesRemaining--;
             OnShakesChanged?.Invoke(ShakesRemaining);
+
+            if (OvertoneAnalytics.Instance != null)
+                OvertoneAnalytics.Instance.TrackShakeUsed(ShakesRemaining);
 
             if (HapticManager.Instance != null)
                 HapticManager.Instance.PlayGameOver(); // Medium haptic for shake

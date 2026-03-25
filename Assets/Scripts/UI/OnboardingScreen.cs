@@ -613,6 +613,8 @@ namespace MergeGame.UI
         private void FinishOnboarding()
         {
             GameSession.MarkOnboardingComplete();
+            if (Core.OvertoneAnalytics.Instance != null)
+                Core.OvertoneAnalytics.Instance.TrackOnboardingComplete();
             if (ScreenManager.Instance != null)
                 ScreenManager.Instance.NavigateTo(Screen.HomeFresh);
         }

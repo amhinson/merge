@@ -625,6 +625,9 @@ namespace MergeGame.UI
             if (LeaderboardService.Instance != null)
                 LeaderboardService.Instance.UpdateDisplayName(newName);
 
+            if (Core.OvertoneAnalytics.Instance != null)
+                Core.OvertoneAnalytics.Instance.TrackNameChanged();
+
             OnBackClicked();
         }
 

@@ -92,6 +92,8 @@ namespace MergeGame.Editor
             managers.AddComponent<OfflineScoreQueue>();
             managers.AddComponent<ShareManager>();
             managers.AddComponent<MergeParticles>();
+            managers.AddComponent<GameAnalyticsSDK.GameAnalytics>();
+            managers.AddComponent<OvertoneAnalytics>();
 
             // Debug overlay removed from production builds
 

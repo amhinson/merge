@@ -1,5 +1,21 @@
 {
   "dependencies": {
+    "com.gameanalytics.sdk": {
+      "version": "7.10.6",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.google.external-dependency-manager": "1.2.168"
+      },
+      "url": "https://package.openupm.com"
+    },
+    "com.google.external-dependency-manager": {
+      "version": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm#v1.2.183",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "3e97c8d815ca4a947ff93fd468e7b2e108b39150"
+    },
     "com.unity.2d.animation": {
       "version": "13.0.4",
       "depth": 1,

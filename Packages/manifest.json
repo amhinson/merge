@@ -1,5 +1,14 @@
 {
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": ["com.gameanalytics"]
+    }
+  ],
   "dependencies": {
+    "com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm#v1.2.183",
+    "com.gameanalytics.sdk": "7.10.6",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.feature.2d": "2.0.1",
     "com.unity.textmeshpro": "3.0.6",

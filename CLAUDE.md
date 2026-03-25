@@ -128,6 +128,26 @@ Saved to PlayerPrefs after each drop settles + on app background. Includes: ball
 - Failed score submissions are queued to PlayerPrefs (`OfflineScoreQueue`) and retried on next app launch.
 - Launch date is defined once in `GameSession.LaunchDate` — referenced by DailySeedManager and NewLeaderboardScreen.
 
+## Analytics (GameAnalytics)
+
+SDK: `com.gameanalytics.sdk` via OpenUPM. Wrapper: `OvertoneAnalytics.cs`. All events fail silently.
+
+| Event | GA Type | When |
+|-------|---------|------|
+| `puzzle:start` | Progression Start | Game begins (scored/practice) |
+| `puzzle:score` | Design | Game over — final score |
+| `puzzle:duration_seconds` | Design | Game over — round time |
+| `puzzle:highest_tier` | Design | Game over — max tier reached |
+| `puzzle:total_merges` | Design | Game over — merge count |
+| `puzzle:longest_chain` | Design | Game over — best combo chain |
+| `social:share_card` | Design | Share button tapped |
+| `engagement:streak` | Design | Streak updated after scored game |
+| `engagement:name_changed` | Design | Display name saved |
+| `onboarding:complete` | Design | Onboarding finished |
+| `gameplay:shake_used` | Design | Shake button used (value = remaining) |
+
+**Setup**: Add the GameAnalytics prefab to the scene and configure game keys in its inspector. `OvertoneAnalytics` is added to the Managers object by GameSceneBuilder.
+
 ## Conventions
 - No emoji in code or UI unless explicitly requested
 - Only use basic ASCII characters in UI text — PressStart2P font lacks unicode glyphs (e.g. `×` renders blank, use `x` instead)
