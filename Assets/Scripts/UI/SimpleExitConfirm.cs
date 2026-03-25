@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using TMPro;
 using MergeGame.Core;
 
 namespace MergeGame.UI
@@ -9,6 +10,7 @@ namespace MergeGame.UI
     /// Handles exit confirmation. Uses Update() to detect clicks on the back button area
     /// since Button.onClick doesn't fire (likely blocked by DropController input handling).
     /// Blocks ball drops while the confirm modal is open or when the back button is tapped.
+    /// Quitting triggers game over (submits score for scored games, shows results for all).
     /// </summary>
     public class SimpleExitConfirm : MonoBehaviour
     {
@@ -16,6 +18,7 @@ namespace MergeGame.UI
         private GameObject confirmPanel;
         private Button yesButton;
         private Button noButton;
+        private TextMeshProUGUI subtitleText;
         private Canvas parentCanvas;
         private Camera canvasCamera;
         private bool wired;
@@ -44,17 +47,20 @@ namespace MergeGame.UI
             // Wire modal buttons
             var yesBtnTransform = confirmPanelTransform.Find("ModalCard/ButtonRow/YesBtn");
             var noBtnTransform = confirmPanelTransform.Find("ModalCard/ButtonRow/NoBtn");
+            var subtitleTransform = confirmPanelTransform.Find("ModalCard/SubtitleText");
 
             if (yesBtnTransform != null) yesButton = yesBtnTransform.GetComponent<Button>();
             if (noBtnTransform != null) noButton = noBtnTransform.GetComponent<Button>();
+            if (subtitleTransform != null) subtitleText = subtitleTransform.GetComponent<TextMeshProUGUI>();
 
             if (yesButton != null)
             {
                 yesButton.onClick.AddListener(() =>
                 {
                     HideConfirm();
+                    // Trigger game over — submits score for scored games, shows results for all
                     if (GameManager.Instance != null)
-                        GameManager.Instance.SetState(GameState.Menu);
+                        GameManager.Instance.TriggerGameOver();
                 });
             }
 
@@ -66,6 +72,14 @@ namespace MergeGame.UI
 
         private void ShowConfirm()
         {
+            // Update subtitle based on attempt type
+            if (subtitleText != null)
+            {
+                bool isScored = DailySeedManager.Instance != null &&
+                    DailySeedManager.Instance.CurrentAttemptType == AttemptType.Scored;
+                subtitleText.text = isScored ? "Your score will be submitted" : "";
+            }
+
             if (confirmPanel != null)
                 confirmPanel.SetActive(true);
             if (DropController.Instance != null)

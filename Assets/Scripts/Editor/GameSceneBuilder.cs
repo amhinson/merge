@@ -574,6 +574,13 @@ namespace MergeGame.Editor
             ctRT.offsetMin = new Vector2(16, 0); ctRT.offsetMax = new Vector2(-16, 0);
             confirmText.alignment = TextAlignmentOptions.Center;
 
+            // Subtitle (shown for scored games)
+            var subtitleText = CreateText(modalCard.transform, "SubtitleText", "", 8, MutedText);
+            var subRT = subtitleText.rectTransform;
+            subRT.anchorMin = new Vector2(0, 0.38f); subRT.anchorMax = new Vector2(1, 0.55f);
+            subRT.offsetMin = new Vector2(16, 0); subRT.offsetMax = new Vector2(-16, 0);
+            subtitleText.alignment = TextAlignmentOptions.Center;
+
             // Button row (fixed 44px height, pinned to bottom of card)
             var btnRow = new GameObject("ButtonRow");
             btnRow.transform.SetParent(modalCard.transform, false);
