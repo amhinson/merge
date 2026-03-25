@@ -114,6 +114,7 @@ Saved to PlayerPrefs after each drop settles + on app background. Includes: ball
 
 ## Conventions
 - No emoji in code or UI unless explicitly requested
+- Only use basic ASCII characters in UI text — PressStart2P font lacks unicode glyphs (e.g. `×` renders blank, use `x` instead)
 - Prefer editing existing files over creating new ones
 - All UI screens build themselves procedurally — no scene-based UI
 - GameSceneBuilder changes require scene rebuild from Unity menu
