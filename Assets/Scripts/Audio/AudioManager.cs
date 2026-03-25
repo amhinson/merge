@@ -16,8 +16,12 @@ namespace MergeGame.Audio
         [SerializeField] private float mergePitchIncrement = 0.1f;
         [SerializeField] [Range(0f, 1f)] private float mergeVolume = 0.3f;
 
+        private const string SfxEnabledKey = "sfx_enabled";
+
         private AudioSource audioSource;
         private AudioClip proceduralMergeClip;
+
+        public bool IsSfxEnabled { get; private set; }
 
         private void Awake()
         {
@@ -28,6 +32,8 @@ namespace MergeGame.Audio
             }
             Instance = this;
 
+            IsSfxEnabled = PlayerPrefs.GetInt(SfxEnabledKey, 1) == 1;
+
             audioSource = GetComponent<AudioSource>();
             if (audioSource == null)
                 audioSource = gameObject.AddComponent<AudioSource>();
@@ -35,6 +41,13 @@ namespace MergeGame.Audio
             // Generate procedural merge sound if no clip assigned
             if (mergeClip == null)
                 mergeClip = GenerateMergeSound();
+        }
+
+        public void SetSfxEnabled(bool enabled)
+        {
+            IsSfxEnabled = enabled;
+            PlayerPrefs.SetInt(SfxEnabledKey, enabled ? 1 : 0);
+            PlayerPrefs.Save();
         }
 
         public void PlayDrop()
@@ -55,6 +68,7 @@ namespace MergeGame.Audio
 
         private void PlayClip(AudioClip clip, float pitch, float volume = 0.3f)
         {
+            if (!IsSfxEnabled) return;
             if (clip == null || audioSource == null) return;
 
             audioSource.pitch = pitch;

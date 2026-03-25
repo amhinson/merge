@@ -14,6 +14,10 @@ namespace MergeGame.UI
         private Image toggleTrack;
         private RectTransform toggleThumb;
         private bool hapticOn;
+
+        private Image sfxToggleTrack;
+        private RectTransform sfxToggleThumb;
+        private bool sfxOn;
         private bool isBuilt;
 
         private void OnEnable()
@@ -28,6 +32,7 @@ namespace MergeGame.UI
                 nameInput.text = PlayerIdentity.Instance.DisplayName;
             UpdateCharCount();
             hapticOn = HapticManager.Instance != null && HapticManager.Instance.IsEnabled;
+            sfxOn = MergeGame.Audio.AudioManager.Instance != null && MergeGame.Audio.AudioManager.Instance.IsSfxEnabled;
             UpdateToggleVisual(false);
         }
 
@@ -270,6 +275,47 @@ namespace MergeGame.UI
 
             // Toggle (right)
             BuildToggle(row.transform);
+
+            AddSpacer(parent, 8);
+
+            // SFX row
+            var sfxRow = OvertoneUI.CreateUIObject("SfxRow", parent);
+            var sfxRowLE = sfxRow.AddComponent<LayoutElement>();
+            sfxRowLE.preferredHeight = 56; sfxRowLE.minHeight = 56;
+
+            // Border + fill
+            var sfxBdr = OvertoneUI.CreateUIObject("Border", sfxRow.transform);
+            OvertoneUI.StretchFill(sfxBdr.GetComponent<RectTransform>());
+            sfxBdr.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            sfxBdr.GetComponent<Image>().type = Image.Type.Sliced;
+            sfxBdr.GetComponent<Image>().color = OC.border;
+            sfxBdr.GetComponent<Image>().raycastTarget = false;
+            var sfxFill = OvertoneUI.CreateUIObject("Fill", sfxRow.transform);
+            var sfRT = sfxFill.GetComponent<RectTransform>();
+            sfRT.anchorMin = Vector2.zero; sfRT.anchorMax = Vector2.one;
+            sfRT.offsetMin = new Vector2(1, 1); sfRT.offsetMax = new Vector2(-1, -1);
+            sfxFill.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            sfxFill.GetComponent<Image>().type = Image.Type.Sliced;
+            sfxFill.GetComponent<Image>().color = OC.surface;
+            sfxFill.GetComponent<Image>().raycastTarget = false;
+
+            var sfxTitle = OvertoneUI.CreateLabel(sfxRow.transform, "Sound effects",
+                OvertoneUI.DMMono, 14, OC.white, "SfxTitle");
+            var sfxTtRT = sfxTitle.GetComponent<RectTransform>();
+            sfxTtRT.anchorMin = new Vector2(0, 0.5f); sfxTtRT.anchorMax = new Vector2(0.7f, 1);
+            sfxTtRT.offsetMin = new Vector2(14, 0); sfxTtRT.offsetMax = new Vector2(0, -8);
+            sfxTitle.alignment = TextAlignmentOptions.Left;
+            sfxTitle.verticalAlignment = VerticalAlignmentOptions.Bottom;
+
+            var sfxSub = OvertoneUI.CreateLabel(sfxRow.transform, "Merge sounds",
+                OvertoneUI.DMMono, 11, OC.muted, "SfxSub");
+            var sfxStRT = sfxSub.GetComponent<RectTransform>();
+            sfxStRT.anchorMin = new Vector2(0, 0); sfxStRT.anchorMax = new Vector2(0.7f, 0.5f);
+            sfxStRT.offsetMin = new Vector2(14, 8); sfxStRT.offsetMax = Vector2.zero;
+            sfxSub.alignment = TextAlignmentOptions.Left;
+            sfxSub.verticalAlignment = VerticalAlignmentOptions.Top;
+
+            BuildSfxToggle(sfxRow.transform);
         }
 
         private void BuildToggle(Transform parent)
@@ -305,6 +351,38 @@ namespace MergeGame.UI
             var btn = toggleGO.AddComponent<Button>();
             btn.targetGraphic = toggleTrack;
             btn.onClick.AddListener(OnToggleHaptic);
+        }
+
+        private void BuildSfxToggle(Transform parent)
+        {
+            var toggleGO = OvertoneUI.CreateUIObject("SfxToggle", parent);
+            var tgRT = toggleGO.GetComponent<RectTransform>();
+            tgRT.anchorMin = new Vector2(1, 0.5f); tgRT.anchorMax = new Vector2(1, 0.5f);
+            tgRT.pivot = new Vector2(1, 0.5f);
+            tgRT.anchoredPosition = new Vector2(-14, 0);
+            tgRT.sizeDelta = new Vector2(48, 26);
+
+            sfxToggleTrack = toggleGO.AddComponent<Image>();
+            sfxToggleTrack.sprite = GetSmoothPill();
+            sfxToggleTrack.type = Image.Type.Sliced;
+            sfxToggleTrack.color = sfxOn ? OC.cyan : OC.border;
+
+            var thumbGO = OvertoneUI.CreateUIObject("Thumb", toggleGO.transform);
+            sfxToggleThumb = thumbGO.GetComponent<RectTransform>();
+            sfxToggleThumb.anchorMin = new Vector2(0, 0.5f);
+            sfxToggleThumb.anchorMax = new Vector2(0, 0.5f);
+            sfxToggleThumb.pivot = new Vector2(0, 0.5f);
+            sfxToggleThumb.sizeDelta = new Vector2(20, 20);
+            sfxToggleThumb.anchoredPosition = new Vector2(sfxOn ? 25 : 3, 0);
+
+            var thumbImg = thumbGO.AddComponent<Image>();
+            thumbImg.sprite = GetSmoothCircle();
+            thumbImg.type = Image.Type.Simple;
+            thumbImg.color = Color.white;
+
+            var btn = toggleGO.AddComponent<Button>();
+            btn.targetGraphic = sfxToggleTrack;
+            btn.onClick.AddListener(OnToggleSfx);
         }
 
         private void BuildGameCenterRow(Transform parent)
@@ -477,6 +555,51 @@ namespace MergeGame.UI
 
             toggleTrack.color = targetColor;
             toggleThumb.anchoredPosition = targetPos;
+        }
+
+        private void OnToggleSfx()
+        {
+            sfxOn = !sfxOn;
+            if (MergeGame.Audio.AudioManager.Instance != null)
+                MergeGame.Audio.AudioManager.Instance.SetSfxEnabled(sfxOn);
+            UpdateSfxToggleVisual(true);
+        }
+
+        private void UpdateSfxToggleVisual(bool animate)
+        {
+            if (sfxToggleTrack == null || sfxToggleThumb == null) return;
+
+            Color targetColor = sfxOn ? OC.cyan : OC.border;
+            Vector2 targetPos = new Vector2(sfxOn ? 25 : 3, 0);
+
+            if (animate)
+                StartCoroutine(AnimateSfxToggle(targetColor, targetPos));
+            else
+            {
+                sfxToggleTrack.color = targetColor;
+                sfxToggleThumb.anchoredPosition = targetPos;
+            }
+        }
+
+        private System.Collections.IEnumerator AnimateSfxToggle(Color targetColor, Vector2 targetPos)
+        {
+            Color startColor = sfxToggleTrack.color;
+            Vector2 startPos = sfxToggleThumb.anchoredPosition;
+            float elapsed = 0f;
+            float duration = 0.2f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float eased = 1f - (1f - t) * (1f - t);
+                sfxToggleTrack.color = Color.Lerp(startColor, targetColor, eased);
+                sfxToggleThumb.anchoredPosition = Vector2.Lerp(startPos, targetPos, eased);
+                yield return null;
+            }
+
+            sfxToggleTrack.color = targetColor;
+            sfxToggleThumb.anchoredPosition = targetPos;
         }
 
         private void OnSaveClicked()
