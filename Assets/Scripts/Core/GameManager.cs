@@ -260,6 +260,10 @@ namespace MergeGame.Core
             if (dropController != null) dropController.SetActive(true);
             if (uiManager != null) uiManager.ShowPlaying();
 
+            // Show practice toast if replay
+            if (GameSession.IsPractice && UI.PracticeToast.Instance != null)
+                UI.PracticeToast.Instance.Show();
+
             // Fetch initial leaderboard for live rank
             liveRankRefreshTimer = 0f;
             if (DailySeedManager.Instance != null && LeaderboardService.Instance != null)
@@ -539,6 +543,10 @@ namespace MergeGame.Core
             if (uiManager != null) uiManager.ShowPlaying();
             // Override the score display after ShowPlaying resets it
             if (scoreManager != null) scoreManager.SetScore(state.currentScore);
+
+            // Show practice toast if replay
+            if (GameSession.IsPractice && UI.PracticeToast.Instance != null)
+                UI.PracticeToast.Instance.Show();
 
             liveRankRefreshTimer = 0f;
             if (DailySeedManager.Instance != null && LeaderboardService.Instance != null)
