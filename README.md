@@ -1,6 +1,7 @@
-Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
-Create Gamecenter achievement.
 Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.
+
+Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
+Note any top 3 finished on profile.
 
 Affirmations afterwards, and really give an honest recap based on the users historical performance. Some light AI usage here.
 Makes it a fun thing to look forward to after each game because it will always be unique.
@@ -16,9 +17,8 @@ Can group segements. Top 10 get their own. Then remaining top 50%, then lower 40
 I really don't care about sharing much, for as much as I'm pushing it in the game. Maybe I shouldn't push the viral agenda too hard
 and just appear more humble, and that I just wanted to build this game for myself, so I did.
 
-Still not sold on the name or design. It should feel good to me, even if its simple. Make it genuine.
 Ball design doesn't inspire me. Waves seem stale. Colors a bit boring?
 
 Add username edit prompt after first game?
+
 Wavelength react somehow to nearby?
-Note any top 3 finished on profile.

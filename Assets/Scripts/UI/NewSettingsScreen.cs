@@ -484,6 +484,26 @@ namespace MergeGame.UI
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.lineSpacing = 12;
             MurgeUI.StretchFill(tmp.GetComponent<RectTransform>());
+
+            // Hidden achievement: tap 10 times
+            var hitImg = card.AddComponent<Image>();
+            hitImg.color = Color.clear;
+            var btn = card.AddComponent<Button>();
+            btn.targetGraphic = hitImg;
+            btn.onClick.AddListener(OnComingSoonTapped);
+        }
+
+        private int comingSoonTapCount;
+
+        private void OnComingSoonTapped()
+        {
+            comingSoonTapCount++;
+            if (comingSoonTapCount >= 10)
+            {
+                comingSoonTapCount = 0;
+                if (AchievementManager.Instance != null)
+                    AchievementManager.Instance.UnlockHiddenAchievement();
+            }
         }
 
         private void BuildSaveButton(Transform parent)

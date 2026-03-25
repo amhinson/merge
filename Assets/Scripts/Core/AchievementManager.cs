@@ -7,7 +7,8 @@ namespace MergeGame.Core
     {
         // Placeholder achievements — all will be replaced with final ones later
         FirstGameCompleted,
-        FirstTier5,
+        ReachTier10,
+        ReachTier11,
         SevenDayStreak,
         HiddenAchievement,
     }
@@ -17,9 +18,7 @@ namespace MergeGame.Core
     {
         public AchievementId id;
         public string gameCenterId; // Apple Game Center ID
-        public string displayName;
-        public string description;
-        public bool hidden;
+        public string displayName; // internal reference only — Game Center shows its own strings
     }
 
     /// <summary>
@@ -36,38 +35,11 @@ namespace MergeGame.Core
         // Placeholder achievement definitions
         private static readonly AchievementDef[] Achievements = new[]
         {
-            new AchievementDef
-            {
-                id = AchievementId.FirstGameCompleted,
-                gameCenterId = "first_game_completed",
-                displayName = "First Steps",
-                description = "Complete your first game",
-                hidden = false
-            },
-            new AchievementDef
-            {
-                id = AchievementId.FirstTier5,
-                gameCenterId = "first_tier5",
-                displayName = "Getting Bigger",
-                description = "Create a Tier 5 ball",
-                hidden = false
-            },
-            new AchievementDef
-            {
-                id = AchievementId.SevenDayStreak,
-                gameCenterId = "seven_day_streak",
-                displayName = "Dedicated",
-                description = "Maintain a 7-day streak",
-                hidden = false
-            },
-            new AchievementDef
-            {
-                id = AchievementId.HiddenAchievement,
-                gameCenterId = "hidden_secret",
-                displayName = "???",
-                description = "You found a secret!",
-                hidden = true
-            },
+            new AchievementDef { id = AchievementId.FirstGameCompleted, gameCenterId = "first_game_completed", displayName = "First game completed" },
+            new AchievementDef { id = AchievementId.ReachTier10, gameCenterId = "reach_tier10", displayName = "Reach tier 10" },
+            new AchievementDef { id = AchievementId.ReachTier11, gameCenterId = "reach_tier11", displayName = "Reach tier 11" },
+            new AchievementDef { id = AchievementId.SevenDayStreak, gameCenterId = "seven_day_streak", displayName = "7-day streak" },
+            new AchievementDef { id = AchievementId.HiddenAchievement, gameCenterId = "hidden_secret", displayName = "Hidden: tap coming soon 10x" },
         };
 
         private void Awake()
@@ -120,20 +92,20 @@ namespace MergeGame.Core
         public void OnGameCompleted(int finalScore)
         {
             ReportAchievement(AchievementId.FirstGameCompleted);
+        }
 
-            // Hidden: exact score of 1234
-            if (finalScore == 1234)
-            {
-                ReportAchievement(AchievementId.HiddenAchievement);
-            }
+        /// <summary>Called externally to unlock the hidden achievement.</summary>
+        public void UnlockHiddenAchievement()
+        {
+            ReportAchievement(AchievementId.HiddenAchievement);
         }
 
         private void HandleMerge(int resultTier, int chainLength, Vector3 worldPos)
         {
-            if (resultTier >= 4)
-            {
-                ReportAchievement(AchievementId.FirstTier5);
-            }
+            if (resultTier >= 9) // tier index 9 = tier 10 (0-indexed)
+                ReportAchievement(AchievementId.ReachTier10);
+            if (resultTier >= 10) // tier index 10 = tier 11 (largest)
+                ReportAchievement(AchievementId.ReachTier11);
         }
 
         private void HandleStreakUpdated(int current, int longest)
