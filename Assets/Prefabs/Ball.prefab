@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1172527414347290400
+--- !u!1 &5858178229508456700
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8975052889417922916}
-  - component: {fileID: 3412077292212181540}
-  - component: {fileID: 3944212117086102959}
+  - component: {fileID: 3531431774748418383}
+  - component: {fileID: 1217677359949053275}
+  - component: {fileID: 6502601641965699564}
   m_Layer: 0
   m_Name: TierLabel
   m_TagString: Untagged
@@ -18,32 +18,32 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!224 &8975052889417922916
+--- !u!224 &3531431774748418383
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1172527414347290400}
+  m_GameObject: {fileID: 5858178229508456700}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6336488453630389506}
+  m_Father: {fileID: 7653700448669430898}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!23 &3412077292212181540
+--- !u!23 &1217677359949053275
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1172527414347290400}
+  m_GameObject: {fileID: 5858178229508456700}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -86,13 +86,13 @@ MeshRenderer:
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &3944212117086102959
+--- !u!114 &6502601641965699564
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1172527414347290400}
+  m_GameObject: {fileID: 5858178229508456700}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
@@ -179,9 +179,9 @@ MonoBehaviour:
   _SortingLayerID: 0
   _SortingOrder: 1
   m_hasFontAssetChanged: 0
-  m_renderer: {fileID: 3412077292212181540}
+  m_renderer: {fileID: 1217677359949053275}
   m_maskType: 0
---- !u!1 &6547998878812701346
+--- !u!1 &8747315411485899038
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -189,11 +189,11 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6336488453630389506}
-  - component: {fileID: 697503143535560812}
-  - component: {fileID: 8518342743602409646}
-  - component: {fileID: 2494556477341608305}
-  - component: {fileID: 1134002647205281791}
+  - component: {fileID: 7653700448669430898}
+  - component: {fileID: 1161995139391444287}
+  - component: {fileID: 7750207993774485500}
+  - component: {fileID: 3855261905031110244}
+  - component: {fileID: 6072748188087768310}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -201,30 +201,30 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6336488453630389506
+--- !u!4 &7653700448669430898
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6547998878812701346}
+  m_GameObject: {fileID: 8747315411485899038}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8975052889417922916}
+  - {fileID: 3531431774748418383}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &697503143535560812
+--- !u!212 &1161995139391444287
 SpriteRenderer:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6547998878812701346}
+  m_GameObject: {fileID: 8747315411485899038}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -276,14 +276,14 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!50 &8518342743602409646
+--- !u!50 &7750207993774485500
 Rigidbody2D:
   serializedVersion: 5
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6547998878812701346}
+  m_GameObject: {fileID: 8747315411485899038}
   m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
@@ -303,13 +303,13 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 0
---- !u!58 &2494556477341608305
+--- !u!58 &3855261905031110244
 CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6547998878812701346}
+  m_GameObject: {fileID: 8747315411485899038}
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
@@ -339,17 +339,17 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
---- !u!114 &1134002647205281791
+--- !u!114 &6072748188087768310
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6547998878812701346}
+  m_GameObject: {fileID: 8747315411485899038}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf71602a00b724ddaa8604b417f7dff5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MergeGame.Core.BallController
-  spriteRenderer: {fileID: 697503143535560812}
-  tierLabel: {fileID: 3944212117086102959}
+  spriteRenderer: {fileID: 1161995139391444287}
+  tierLabel: {fileID: 6502601641965699564}

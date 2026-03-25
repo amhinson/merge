@@ -304,6 +304,7 @@ namespace MergeGame.Core
                         daily.GameDate,
                         daily.DayNumber,
                         GameSession.MergeCounts,
+                        GameSession.LongestChain,
                         (success) =>
                         {
                             Debug.Log($"GameManager: Score submit result: {success}");

@@ -1,5 +1,3 @@
-Escalating haptic for combos.
-Put biggest combo on the recap and share.
 Onboarding should describe the one sequence per day thing.
 Better GameCenter icon.
 Save game so I can come back.
@@ -21,7 +19,7 @@ Maybe each day also has an AI generated funny Phish-adjacent phrase that is shor
 Recap push notification the next day. "You played 2nd out of 98 people!" "You were in the top 75% of all players yesterday"
 "Well, someone had to get last, right?"
 Configure recap update time. Make it seem informative, not pushy to play the next day.
-Use AL so it's unique each day.
+Use AI so it's unique each day.
 Can group segements. Top 10 get their own. Then remaining top 50%, then lower 40% and 10%, then last gets something unique and funny-ish.
 
 I really don't care about sharing much, for as much as I'm pushing it in the game. Maybe I shouldn't push the viral agenda too hard

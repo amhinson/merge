@@ -47,6 +47,7 @@ namespace MergeGame.Backend
         public string game_date;
         public int day_number;
         public int[] merge_counts; // 11-element array, index 0=tier0 to 10=tier10
+        public int longest_chain;
     }
 
     public class LeaderboardService : MonoBehaviour
@@ -71,7 +72,7 @@ namespace MergeGame.Backend
             Instance = this;
         }
 
-        public void SubmitScore(int score, string gameDate, int dayNumber, int[] mergeCounts, Action<bool> callback = null)
+        public void SubmitScore(int score, string gameDate, int dayNumber, int[] mergeCounts, int longestChain = 0, Action<bool> callback = null)
         {
             if (SupabaseClient.Instance == null)
             {
@@ -93,7 +94,8 @@ namespace MergeGame.Backend
                 score = score,
                 game_date = gameDate,
                 day_number = dayNumber,
-                merge_counts = mergeCounts ?? new int[11]
+                merge_counts = mergeCounts ?? new int[11],
+                longest_chain = longestChain
             };
 
             string json = JsonUtility.ToJson(request);

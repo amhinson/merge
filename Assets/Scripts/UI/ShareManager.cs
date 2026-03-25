@@ -22,6 +22,8 @@ namespace MergeGame.UI
         private TextMeshProUGUI dateLine;
         private TextMeshProUGUI scoreText;
         private Transform ballRow;
+        private Transform shareBallRow2;
+        private TextMeshProUGUI shareChainLabel;
         private TextMeshProUGUI footerText;
 
         private static readonly float[] BaseSizes = { 14, 18, 22, 26, 32, 38, 46, 54, 64, 76, 92 };
@@ -49,7 +51,7 @@ namespace MergeGame.UI
             yield return new WaitForEndOfFrame();
 
             // Capture — compact card format
-            int w = 700, h = 380;
+            int w = 700, h = 500;
             RenderTexture rt = new RenderTexture(w, h, 24);
             shareCamera.targetTexture = rt;
             shareCamera.Render();
@@ -108,23 +110,36 @@ namespace MergeGame.UI
             {
                 foreach (Transform child in ballRow)
                     Destroy(child.gameObject);
+                if (shareBallRow2 != null)
+                    foreach (Transform child in shareBallRow2)
+                        Destroy(child.gameObject);
 
                 int[] counts = GameSession.MergeCounts ?? new int[11];
-                Debug.Log($"[ShareManager] MergeCounts: [{string.Join(",", counts)}]");
 
                 for (int tier = 10; tier >= 0; tier--)
                 {
+                    Transform targetRow = tier >= 6 ? ballRow : (shareBallRow2 ?? ballRow);
+
                     int count = tier < counts.Length ? counts[tier] : 0;
                     Color ballColor = Visual.NeonBallRenderer.GetBallColor(tier);
                     float baseSize = BaseSizes[tier];
-                    float gridSize = Mathf.Max(16f, baseSize * 0.38f);
-                    // Scale for the compact share card
+                    float gridSize = Mathf.Max(20f, baseSize * 0.55f);
                     float shareSize = gridSize * 1.5f;
 
-                    var ballGO = new GameObject($"Ball{tier}");
+                    var cellGO = new GameObject($"Ball{tier}");
+                    cellGO.layer = shareCardRoot.layer;
+                    cellGO.transform.SetParent(targetRow, false);
+                    var cellRT = cellGO.AddComponent<RectTransform>();
+                    cellRT.sizeDelta = new Vector2(shareSize + 4, shareSize + 16);
+
+                    // Ball
+                    var ballGO = new GameObject("Ball");
                     ballGO.layer = shareCardRoot.layer;
-                    ballGO.transform.SetParent(ballRow, false);
+                    ballGO.transform.SetParent(cellGO.transform, false);
                     var ballRT = ballGO.AddComponent<RectTransform>();
+                    ballRT.anchorMin = new Vector2(0.5f, 1); ballRT.anchorMax = new Vector2(0.5f, 1);
+                    ballRT.pivot = new Vector2(0.5f, 1);
+                    ballRT.anchoredPosition = Vector2.zero;
                     ballRT.sizeDelta = new Vector2(shareSize, shareSize);
 
                     var ballImg = ballGO.AddComponent<Image>();
@@ -144,16 +159,16 @@ namespace MergeGame.UI
                     if (count > 0)
                     {
                         var countGO = new GameObject("Count");
-                        countGO.layer = ballGO.layer;
-                        countGO.transform.SetParent(ballGO.transform, false);
+                        countGO.layer = cellGO.layer;
+                        countGO.transform.SetParent(cellGO.transform, false);
                         var countRT = countGO.AddComponent<RectTransform>();
                         countRT.anchorMin = new Vector2(0.5f, 0);
                         countRT.anchorMax = new Vector2(0.5f, 0);
-                        countRT.pivot = new Vector2(0.5f, 1);
-                        countRT.anchoredPosition = new Vector2(0, -2);
+                        countRT.pivot = new Vector2(0.5f, 0);
+                        countRT.anchoredPosition = Vector2.zero;
                         countRT.sizeDelta = new Vector2(shareSize + 4, 14);
                         var countTMP = countGO.AddComponent<TextMeshProUGUI>();
-                        countTMP.text = $"x{count}";
+                        countTMP.text = $"{count}";
                         countTMP.font = OvertoneUI.PressStart2P;
                         countTMP.fontSize = 10;
                         countTMP.color = ballColor;
@@ -161,8 +176,16 @@ namespace MergeGame.UI
                         countTMP.raycastTarget = false;
                     }
 
-                    ballGO.AddComponent<LayoutElement>();
+                    cellGO.AddComponent<LayoutElement>();
                 }
+            }
+
+            // Chain label
+            if (shareChainLabel != null)
+            {
+                int chain = GameSession.LongestChain;
+                shareChainLabel.text = chain >= 2 ? $"BEST CHAIN x{chain}" : "";
+                Debug.Log($"[ShareManager] LongestChain={chain}, label='{shareChainLabel.text}'");
             }
         }
 
@@ -177,8 +200,8 @@ namespace MergeGame.UI
             camObj.transform.position = new Vector3(200, 200, -10);
             shareCamera = camObj.AddComponent<Camera>();
             shareCamera.orthographic = true;
-            shareCamera.orthographicSize = 1.9f; // 380 / 200
-            shareCamera.aspect = 700f / 380f;
+            shareCamera.orthographicSize = 2.5f; // 500 / 200
+            shareCamera.aspect = 700f / 500f;
             shareCamera.clearFlags = CameraClearFlags.SolidColor;
             shareCamera.backgroundColor = new Color(0.071f, 0.078f, 0.110f); // #12141C
             shareCamera.cullingMask = 1 << shareLayer;
@@ -197,7 +220,7 @@ namespace MergeGame.UI
 
             var canvasRT = shareCardRoot.GetComponent<RectTransform>();
             canvasRT.position = new Vector3(200, 200, 0);
-            canvasRT.sizeDelta = new Vector2(700, 380);
+            canvasRT.sizeDelta = new Vector2(700, 500);
             canvasRT.localScale = Vector3.one * 0.01f; // scale down to fit camera
 
             var scaler = shareCardRoot.AddComponent<CanvasScaler>();
@@ -283,21 +306,65 @@ namespace MergeGame.UI
             scoreText.color = OC.cyan;
             scoreText.alignment = TextAlignmentOptions.Center;
 
-            // Ball row — directly after score, no spacer
-            var ballRowGO = new GameObject("BallRow");
-            ballRowGO.layer = shareLayer;
-            ballRowGO.transform.SetParent(content.transform, false);
-            ballRowGO.AddComponent<RectTransform>();
-            var brHLG = ballRowGO.AddComponent<HorizontalLayoutGroup>();
-            brHLG.childAlignment = TextAnchor.MiddleCenter;
-            brHLG.spacing = 8;
-            brHLG.childControlWidth = false;
-            brHLG.childControlHeight = false;
-            brHLG.childForceExpandWidth = false;
-            ballRowGO.AddComponent<LayoutElement>().preferredHeight = 60;
-            ballRow = ballRowGO.transform;
+            // Ball rows container — two rows
+            var ballRowsContainer = new GameObject("BallRows");
+            ballRowsContainer.layer = shareLayer;
+            ballRowsContainer.transform.SetParent(content.transform, false);
+            ballRowsContainer.AddComponent<RectTransform>();
+            var brcVLG = ballRowsContainer.AddComponent<VerticalLayoutGroup>();
+            brcVLG.spacing = 0;
+            brcVLG.childAlignment = TextAnchor.MiddleCenter;
+            brcVLG.childControlWidth = true;
+            brcVLG.childControlHeight = false;
+            brcVLG.childForceExpandWidth = true;
+            brcVLG.childForceExpandHeight = false;
 
-            // Footer — directly after balls
+            // Row 1: tiers 10-5
+            var ballRow1GO = new GameObject("BallRow1");
+            ballRow1GO.layer = shareLayer;
+            ballRow1GO.transform.SetParent(ballRowsContainer.transform, false);
+            ballRow1GO.AddComponent<RectTransform>();
+            var br1HLG = ballRow1GO.AddComponent<HorizontalLayoutGroup>();
+            br1HLG.childAlignment = TextAnchor.MiddleCenter;
+            br1HLG.spacing = 8;
+            br1HLG.childControlWidth = false;
+            br1HLG.childControlHeight = false;
+            br1HLG.childForceExpandWidth = false;
+            ballRow1GO.AddComponent<LayoutElement>().preferredHeight = 70;
+            ballRow = ballRow1GO.transform;
+
+            // Row 2: tiers 5-0
+            var ballRow2GO = new GameObject("BallRow2");
+            ballRow2GO.layer = shareLayer;
+            ballRow2GO.transform.SetParent(ballRowsContainer.transform, false);
+            ballRow2GO.AddComponent<RectTransform>();
+            var br2HLG = ballRow2GO.AddComponent<HorizontalLayoutGroup>();
+            br2HLG.childAlignment = TextAnchor.MiddleCenter;
+            br2HLG.spacing = 8;
+            br2HLG.childControlWidth = false;
+            br2HLG.childControlHeight = false;
+            br2HLG.childForceExpandWidth = false;
+            ballRow2GO.AddComponent<LayoutElement>().preferredHeight = 50;
+            shareBallRow2 = ballRow2GO.transform;
+
+            // Chain label
+            var chainGO = CreateShareTMP(content.transform, shareLayer, "Chain", 18);
+            shareChainLabel = chainGO.GetComponent<TextMeshProUGUI>();
+            shareChainLabel.text = "";
+            shareChainLabel.font = OvertoneUI.PressStart2P;
+            shareChainLabel.fontSize = 10;
+            shareChainLabel.color = OC.muted;
+            shareChainLabel.characterSpacing = 1;
+            shareChainLabel.alignment = TextAlignmentOptions.Center;
+
+            // Flex spacer — pushes footer to bottom
+            var flexGO = new GameObject("Flex");
+            flexGO.layer = shareLayer;
+            flexGO.transform.SetParent(content.transform, false);
+            flexGO.AddComponent<RectTransform>();
+            flexGO.AddComponent<LayoutElement>().flexibleHeight = 1;
+
+            // Footer — pinned to bottom
             var footerGO = CreateShareTMP(content.transform, shareLayer, "Footer", 24);
             footerText = footerGO.GetComponent<TextMeshProUGUI>();
             footerText.text = "overtone.app";

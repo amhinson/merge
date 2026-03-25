@@ -16,7 +16,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { device_uuid, display_name, score, game_date, day_number, merge_counts } =
+    const { device_uuid, display_name, score, game_date, day_number, merge_counts, longest_chain } =
       await req.json();
 
     if (!device_uuid || !game_date || score == null) {
@@ -60,6 +60,7 @@ serve(async (req) => {
       score,
       day_number: day_number || 1,
       merge_counts: merge_counts || [],
+      longest_chain: longest_chain || 0,
     });
 
     if (scoreError) {

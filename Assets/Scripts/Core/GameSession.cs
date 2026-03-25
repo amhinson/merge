@@ -44,6 +44,7 @@ namespace MergeGame.Core
         public static int     TodayDayNumber { get; set; }
         public static string  TodayDateStr   { get; set; }
         public static int[]   MergeCounts    { get; set; }  // index = ball tier 0-10, value = merge count
+        public static int     LongestChain   { get; set; }
         public static bool    IsPractice     { get; set; }
         public static bool    IsFirstLaunch  { get; private set; }
 
@@ -111,6 +112,7 @@ namespace MergeGame.Core
             if (MergeTracker.Instance == null) return;
             for (int i = 0; i < 11; i++)
                 MergeCounts[i] = MergeTracker.Instance.GetTierCreationCount(i);
+            LongestChain = MergeTracker.Instance.LongestChain;
 
             // Persist to PlayerPrefs for sharing in subsequent sessions
             SaveMergeCounts();

@@ -18,6 +18,8 @@ namespace MergeGame.UI
         private TextMeshProUGUI rankLabel;
         private TextMeshProUGUI rankSubLabel;
         private Transform mergeRow;
+        private Transform mergeRow2;
+        private TextMeshProUGUI chainLabel;
         private CanvasGroup contentCG;
         private RectTransform contentPanel;
         private GameObject rankWrapper;
@@ -479,7 +481,7 @@ namespace MergeGame.UI
         {
             var card = OvertoneUI.CreateUIObject("MergeCard", parent);
             var cardLE = card.AddComponent<LayoutElement>();
-            cardLE.preferredHeight = 90; cardLE.minHeight = 70;
+            cardLE.preferredHeight = 155; cardLE.minHeight = 135;
 
             // Border
             var borderGO = OvertoneUI.CreateUIObject("Border", card.transform);
@@ -511,18 +513,49 @@ namespace MergeGame.UI
             mlRT.anchoredPosition = new Vector2(14, -10);
             mlRT.sizeDelta = new Vector2(-28, 12);
 
-            // Horizontal ball row
-            var rowGO = OvertoneUI.CreateUIObject("BallRow", card.transform);
-            var rowRT = rowGO.GetComponent<RectTransform>();
-            rowRT.anchorMin = new Vector2(0, 0); rowRT.anchorMax = new Vector2(1, 1);
-            rowRT.offsetMin = new Vector2(8, 6); rowRT.offsetMax = new Vector2(-8, -26);
-            var rowHLG = rowGO.AddComponent<HorizontalLayoutGroup>();
-            rowHLG.spacing = 4;
-            rowHLG.childAlignment = TextAnchor.MiddleCenter;
-            rowHLG.childControlWidth = false;
-            rowHLG.childControlHeight = false;
-            rowHLG.childForceExpandWidth = false;
-            mergeRow = rowGO.transform;
+            // Two-row vertical container for balls
+            var rowsContainer = OvertoneUI.CreateUIObject("BallRows", card.transform);
+            var rcRT = rowsContainer.GetComponent<RectTransform>();
+            rcRT.anchorMin = new Vector2(0, 0); rcRT.anchorMax = new Vector2(1, 1);
+            rcRT.offsetMin = new Vector2(8, 28); rcRT.offsetMax = new Vector2(-8, -26);
+            var rcVLG = rowsContainer.AddComponent<VerticalLayoutGroup>();
+            rcVLG.spacing = 2;
+            rcVLG.childAlignment = TextAnchor.MiddleCenter;
+            rcVLG.childControlWidth = true;
+            rcVLG.childControlHeight = true;
+            rcVLG.childForceExpandWidth = true;
+            rcVLG.childForceExpandHeight = true;
+
+            // Row 1: tiers 10-5 (6 largest)
+            var row1GO = OvertoneUI.CreateUIObject("BallRow1", rowsContainer.transform);
+            var row1HLG = row1GO.AddComponent<HorizontalLayoutGroup>();
+            row1HLG.spacing = 4;
+            row1HLG.childAlignment = TextAnchor.MiddleCenter;
+            row1HLG.childControlWidth = false;
+            row1HLG.childControlHeight = false;
+            row1HLG.childForceExpandWidth = false;
+            mergeRow = row1GO.transform;
+
+            // Row 2: tiers 4-0 (5 smallest)
+            var row2GO = OvertoneUI.CreateUIObject("BallRow2", rowsContainer.transform);
+            var row2HLG = row2GO.AddComponent<HorizontalLayoutGroup>();
+            row2HLG.spacing = 4;
+            row2HLG.childAlignment = TextAnchor.MiddleCenter;
+            row2HLG.childControlWidth = false;
+            row2HLG.childControlHeight = false;
+            row2HLG.childForceExpandWidth = false;
+            mergeRow2 = row2GO.transform;
+
+            // Chain label (inside card, bottom-right)
+            chainLabel = OvertoneUI.CreateLabel(card.transform, "",
+                OvertoneUI.PressStart2P, 7, OC.muted, "ChainLabel");
+            chainLabel.characterSpacing = 1;
+            chainLabel.alignment = TextAlignmentOptions.Right;
+            var clRT = chainLabel.GetComponent<RectTransform>();
+            clRT.anchorMin = new Vector2(0, 0); clRT.anchorMax = new Vector2(1, 0);
+            clRT.pivot = new Vector2(1, 0);
+            clRT.anchoredPosition = new Vector2(-14, 8);
+            clRT.sizeDelta = new Vector2(-28, 14);
         }
 
         private void PopulateMergeRow()
@@ -531,21 +564,27 @@ namespace MergeGame.UI
 
             foreach (Transform child in mergeRow)
                 Destroy(child.gameObject);
+            if (mergeRow2 != null)
+                foreach (Transform child in mergeRow2)
+                    Destroy(child.gameObject);
 
             int[] counts = GameSession.MergeCounts ?? new int[11];
 
-            // Tier 10 = level 1 (largest) down to tier 0 = level 11 (smallest)
+            // Row 1: tiers 10-5 (6 largest), Row 2: tiers 4-0 (5 smallest)
             for (int tier = 10; tier >= 0; tier--)
             {
+                Transform targetRow = tier >= 6 ? mergeRow : mergeRow2;
+                if (targetRow == null) targetRow = mergeRow;
+
                 int count = tier < counts.Length ? counts[tier] : 0;
                 Color ballColor = Visual.NeonBallRenderer.GetBallColor(tier);
 
                 float baseSize = BaseSizes[tier];
-                float gridSize = Mathf.Max(16f, baseSize * 0.38f);
+                float gridSize = Mathf.Max(20f, baseSize * 0.55f);
 
-                var cell = OvertoneUI.CreateUIObject($"Ball{tier}", mergeRow);
+                var cell = OvertoneUI.CreateUIObject($"Ball{tier}", targetRow);
                 var cellRT = cell.GetComponent<RectTransform>();
-                cellRT.sizeDelta = new Vector2(gridSize + 2, gridSize + 12);
+                cellRT.sizeDelta = new Vector2(gridSize + 4, gridSize + 14);
 
                 if (count == 0)
                 {
@@ -583,15 +622,23 @@ namespace MergeGame.UI
                     countRT.anchorMax = new Vector2(0.5f, 0);
                     countRT.pivot = new Vector2(0.5f, 0);
                     countRT.anchoredPosition = Vector2.zero;
-                    countRT.sizeDelta = new Vector2(gridSize + 2, 10);
+                    countRT.sizeDelta = new Vector2(gridSize + 4, 12);
                     var countTMP = countGO.AddComponent<TextMeshProUGUI>();
-                    countTMP.text = $"\u00D7{count}";
+                    countTMP.text = $"{count}";
                     countTMP.font = OvertoneUI.PressStart2P;
-                    countTMP.fontSize = 6;
+                    countTMP.fontSize = 7;
                     countTMP.color = ballColor;
                     countTMP.alignment = TextAlignmentOptions.Center;
                     countTMP.raycastTarget = false;
                 }
+            }
+
+            // Chain label
+            if (chainLabel != null)
+            {
+                int chain = GameSession.LongestChain;
+                chainLabel.text = chain >= 2 ? $"BEST CHAIN x{chain}" : "";
+                Debug.Log($"[ResultOverlay] LongestChain={chain}, label='{chainLabel.text}', active={chainLabel.gameObject.activeInHierarchy}");
             }
         }
 
