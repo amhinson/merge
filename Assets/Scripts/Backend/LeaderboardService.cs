@@ -101,6 +101,10 @@ namespace MergeGame.Backend
             string json = JsonUtility.ToJson(request);
             SupabaseClient.Instance.CallFunction("submit-score", json, (success, response) =>
             {
+                // If submission failed after retries, queue for next launch
+                if (!success && OfflineScoreQueue.Instance != null)
+                    OfflineScoreQueue.Instance.Enqueue(json);
+
                 callback?.Invoke(success);
             });
         }

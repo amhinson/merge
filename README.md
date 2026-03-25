@@ -1,6 +1,5 @@
 AUDIT
 
-- No rate limiting on any edge function — registration, score submission, name updates can all be spammed.
 - No offline score queue — if network drops at game over, the scored attempt is lost. Should queue and retry.
 - Privacy policy required — App Store requires one. You collect device UUID + display name + scores. Minimal, but needs to be documented.
 - Hardcoded launch date in 2 files (DailySeedManager.cs, NewLeaderboardScreen.cs) — fragile if release date shifts. Can this be on the server somehow?

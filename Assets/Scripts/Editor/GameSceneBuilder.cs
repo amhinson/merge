@@ -89,6 +89,7 @@ namespace MergeGame.Editor
             managers.AddComponent<AchievementManager>();
             managers.AddComponent<SupabaseClient>();
             managers.AddComponent<LeaderboardService>();
+            managers.AddComponent<OfflineScoreQueue>();
             managers.AddComponent<ShareManager>();
             managers.AddComponent<MergeParticles>();
 

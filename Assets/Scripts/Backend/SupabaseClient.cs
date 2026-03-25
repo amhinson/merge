@@ -61,29 +61,50 @@ namespace MergeGame.Backend
             StartCoroutine(CallFunctionGetCoroutine(functionName, queryParams, callback));
         }
 
+        private const int MaxRetries = 3;
+        private static readonly float[] RetryDelays = { 1f, 2f, 4f }; // exponential backoff
+
         private IEnumerator CallFunctionCoroutine(string functionName, string jsonBody, Action<bool, string> callback)
         {
             string url = $"{FunctionsUrl}/{functionName}";
             Debug.Log($"Supabase POST {functionName}: {jsonBody}");
-            byte[] bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
 
-            using (var request = new UnityWebRequest(url, "POST"))
+            bool success = false;
+            string response = "";
+
+            for (int attempt = 0; attempt <= MaxRetries; attempt++)
             {
-                request.uploadHandler = new UploadHandlerRaw(bodyBytes);
-                request.downloadHandler = new DownloadHandlerBuffer();
-                request.SetRequestHeader("Content-Type", "application/json");
-                request.SetRequestHeader("apikey", supabaseKey);
-                request.timeout = 30;
+                if (attempt > 0)
+                {
+                    float delay = attempt <= RetryDelays.Length ? RetryDelays[attempt - 1] : 4f;
+                    Debug.Log($"Supabase {functionName}: retry {attempt}/{MaxRetries} in {delay}s");
+                    yield return new WaitForSeconds(delay);
+                }
 
-                yield return request.SendWebRequest();
+                byte[] bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
+                using (var request = new UnityWebRequest(url, "POST"))
+                {
+                    request.uploadHandler = new UploadHandlerRaw(bodyBytes);
+                    request.downloadHandler = new DownloadHandlerBuffer();
+                    request.SetRequestHeader("Content-Type", "application/json");
+                    request.SetRequestHeader("apikey", supabaseKey);
+                    request.timeout = 15;
 
-                bool success = request.result == UnityWebRequest.Result.Success;
-                string response = request.downloadHandler?.text ?? "";
+                    yield return request.SendWebRequest();
 
-                Debug.Log($"Supabase {functionName} → {request.responseCode} {(success ? "OK" : request.error)} — {response}");
+                    success = request.result == UnityWebRequest.Result.Success;
+                    response = request.downloadHandler?.text ?? "";
 
-                callback?.Invoke(success, response);
+                    Debug.Log($"Supabase {functionName} → {request.responseCode} {(success ? "OK" : request.error)} — {response}");
+
+                    if (success) break;
+
+                    // Don't retry on 4xx client errors (bad request, conflict, rate limited)
+                    if (request.responseCode >= 400 && request.responseCode < 500) break;
+                }
             }
+
+            callback?.Invoke(success, response);
         }
 
         private IEnumerator CallFunctionGetCoroutine(string functionName, string queryParams, Action<bool, string> callback)
