@@ -61,6 +61,8 @@ namespace MergeGame.UI
             AddSpacer(content.transform, 20);
             BuildControlsSection(content.transform);
             AddSpacer(content.transform, 20);
+            BuildGameCenterRow(content.transform);
+            AddSpacer(content.transform, 20);
             BuildComingSoon(content.transform);
 
             // Save button (pinned to bottom)
@@ -303,6 +305,74 @@ namespace MergeGame.UI
             var btn = toggleGO.AddComponent<Button>();
             btn.targetGraphic = toggleTrack;
             btn.onClick.AddListener(OnToggleHaptic);
+        }
+
+        private void BuildGameCenterRow(Transform parent)
+        {
+#if !UNITY_IOS
+            return;
+#else
+            var row = OvertoneUI.CreateUIObject("GameCenterRow", parent);
+            var rowLE = row.AddComponent<LayoutElement>();
+            rowLE.preferredHeight = 56; rowLE.minHeight = 56;
+
+            // Border + fill
+            var rBdr = OvertoneUI.CreateUIObject("Border", row.transform);
+            OvertoneUI.StretchFill(rBdr.GetComponent<RectTransform>());
+            rBdr.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            rBdr.GetComponent<Image>().type = Image.Type.Sliced;
+            rBdr.GetComponent<Image>().color = OC.border;
+            rBdr.GetComponent<Image>().raycastTarget = false;
+            var rFill = OvertoneUI.CreateUIObject("Fill", row.transform);
+            var rfRT = rFill.GetComponent<RectTransform>();
+            rfRT.anchorMin = Vector2.zero; rfRT.anchorMax = Vector2.one;
+            rfRT.offsetMin = new Vector2(1, 1); rfRT.offsetMax = new Vector2(-1, -1);
+            rFill.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            rFill.GetComponent<Image>().type = Image.Type.Sliced;
+            rFill.GetComponent<Image>().color = OC.surface;
+            rFill.GetComponent<Image>().raycastTarget = false;
+
+            // Title + subtitle
+            var titleTMP = OvertoneUI.CreateLabel(row.transform, "Game Center",
+                OvertoneUI.DMMono, 14, OC.white, "GCTitle");
+            var ttRT = titleTMP.GetComponent<RectTransform>();
+            ttRT.anchorMin = new Vector2(0, 0.5f); ttRT.anchorMax = new Vector2(0.8f, 1);
+            ttRT.offsetMin = new Vector2(14, 0); ttRT.offsetMax = new Vector2(0, -8);
+            titleTMP.alignment = TextAlignmentOptions.Left;
+            titleTMP.verticalAlignment = VerticalAlignmentOptions.Bottom;
+
+            var subTMP = OvertoneUI.CreateLabel(row.transform, "Achievements",
+                OvertoneUI.DMMono, 11, OC.muted, "GCSub");
+            var stRT = subTMP.GetComponent<RectTransform>();
+            stRT.anchorMin = new Vector2(0, 0); stRT.anchorMax = new Vector2(0.8f, 0.5f);
+            stRT.offsetMin = new Vector2(14, 8); stRT.offsetMax = Vector2.zero;
+            subTMP.alignment = TextAlignmentOptions.Left;
+            subTMP.verticalAlignment = VerticalAlignmentOptions.Top;
+
+            // Arrow (right side)
+            var arrowTMP = OvertoneUI.CreateLabel(row.transform, ">",
+                OvertoneUI.DMMono, 14, OC.muted, "Arrow");
+            var arRT = arrowTMP.GetComponent<RectTransform>();
+            arRT.anchorMin = new Vector2(1, 0); arRT.anchorMax = new Vector2(1, 1);
+            arRT.pivot = new Vector2(1, 0.5f);
+            arRT.anchoredPosition = new Vector2(-14, 0);
+            arRT.sizeDelta = new Vector2(20, 0);
+            arrowTMP.alignment = TextAlignmentOptions.Center;
+
+            // Tap target
+            var hitImg = row.AddComponent<Image>();
+            hitImg.color = Color.clear;
+            var btn = row.AddComponent<Button>();
+            btn.targetGraphic = hitImg;
+            btn.onClick.AddListener(() =>
+            {
+#if UNITY_IOS && !UNITY_EDITOR
+                Social.ShowAchievementsUI();
+#else
+                Debug.Log("GameCenter: Not available on this platform");
+#endif
+            });
+#endif
         }
 
         private void BuildComingSoon(Transform parent)

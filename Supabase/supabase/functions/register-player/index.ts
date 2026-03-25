@@ -79,7 +79,7 @@ serve(async (req) => {
     const generatedName = display_name || generateDefaultName();
 
     // Upsert — creates if new, does nothing if exists (preserves streaks)
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("players")
       .upsert(
         {
@@ -90,9 +90,7 @@ serve(async (req) => {
           onConflict: "device_uuid",
           ignoreDuplicates: true,
         }
-      )
-      .select("display_name")
-      .single();
+      );
 
     if (error) {
       return new Response(
@@ -101,8 +99,15 @@ serve(async (req) => {
       );
     }
 
+    // Fetch the player's current display_name (may differ from generatedName if they already existed)
+    const { data: player } = await supabase
+      .from("players")
+      .select("display_name")
+      .eq("device_uuid", device_uuid)
+      .single();
+
     return new Response(
-      JSON.stringify({ success: true, display_name: data.display_name }),
+      JSON.stringify({ success: true, display_name: player?.display_name ?? generatedName }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
