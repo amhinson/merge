@@ -1,10 +1,10 @@
-Onboarding should describe the one sequence per day thing.
 Better GameCenter icon.
 Save game so I can come back.
 Adjust scoring down even more.
 Make recap & share merge counts bigger. I want to reflect on my good game.
 Toast for practice game that it won't count towards the day score.
 Ask about production ready. Future-proof schema, security, auth, etc.
+Claude-specific project file setup.
 
 Music & SFX.
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
