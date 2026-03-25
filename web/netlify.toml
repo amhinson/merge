@@ -1,0 +1,8 @@
+[build]
+  publish = "."
+
+# Clean URLs: /privacy serves privacy.html
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200

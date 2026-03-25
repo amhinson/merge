@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overtone — A Daily Merge Game</title>
+  <meta name="description" content="Drop, merge, and climb the leaderboard. A new puzzle every day — everyone plays the same sequence.">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0F1117;
+      color: #fff;
+      font-family: 'DM Mono', 'SF Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 480px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 2rem;
+      letter-spacing: 3px;
+      margin-bottom: 0.5rem;
+    }
+    h1 span { color: #4DD9C0; }
+    .tagline {
+      color: rgba(255,255,255,0.22);
+      font-size: 0.75rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    .description {
+      color: rgba(255,255,255,0.55);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+    .badges {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .badge {
+      display: inline-block;
+      background: #161B24;
+      border: 1px solid #232838;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      color: #4DD9C0;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .badge:hover { border-color: #4DD9C0; }
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      text-align: left;
+    }
+    .feature {
+      background: #161B24;
+      border: 1px solid #232838;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .feature h3 {
+      color: #4DD9C0;
+      font-size: 0.7rem;
+      font-family: 'Press Start 2P', monospace;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+    .feature p {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    footer {
+      margin-top: 3rem;
+      color: rgba(255,255,255,0.15);
+      font-size: 0.75rem;
+    }
+    footer a {
+      color: rgba(255,255,255,0.3);
+      text-decoration: none;
+    }
+    footer a:hover { color: #4DD9C0; }
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DM+Mono:wght@400;500&display=swap');
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OVER<span>TONE</span></h1>
+    <p class="tagline">A Daily Merge Game</p>
+
+    <p class="description">
+      Drop balls, merge matching tones, and climb the leaderboard.
+      A new puzzle every day — everyone plays the same sequence.
+    </p>
+
+    <div class="features">
+      <div class="feature">
+        <h3>DAILY</h3>
+        <p>New puzzle every day. One scored attempt. Make it count.</p>
+      </div>
+      <div class="feature">
+        <h3>FAIR</h3>
+        <p>Same ball sequence for every player. Pure skill, no luck.</p>
+      </div>
+      <div class="feature">
+        <h3>COMBOS</h3>
+        <p>Chain merges for score multipliers up to 4x.</p>
+      </div>
+      <div class="feature">
+        <h3>COMPETE</h3>
+        <p>Daily leaderboard. See how you rank against everyone.</p>
+      </div>
+    </div>
+
+    <div class="badges">
+      <a href="#" class="badge">App Store — Coming Soon</a>
+    </div>
+
+    <footer>
+      <a href="/privacy">Privacy Policy</a>
+    </footer>
+  </div>
+</body>
+</html>
