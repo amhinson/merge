@@ -50,6 +50,20 @@ namespace MergeGame.Backend
         public int longest_chain;
     }
 
+    [Serializable]
+    public class ProfileRequest
+    {
+        public string device_uuid;
+        public string game_date;
+    }
+
+    [Serializable]
+    public class UpdateNameRequest
+    {
+        public string device_uuid;
+        public string display_name;
+    }
+
     public class LeaderboardService : MonoBehaviour
     {
         public static LeaderboardService Instance { get; private set; }
@@ -252,7 +266,8 @@ namespace MergeGame.Backend
                 return;
             }
 
-            string json = $"{{\"device_uuid\":\"{deviceUUID}\",\"game_date\":\"{gameDate}\"}}";
+            var profileReq = new ProfileRequest { device_uuid = deviceUUID, game_date = gameDate };
+            string json = JsonUtility.ToJson(profileReq);
             SupabaseClient.Instance.CallFunction("get-player-profile", json, (success, response) =>
             {
                 if (success && !string.IsNullOrEmpty(response))
@@ -287,7 +302,8 @@ namespace MergeGame.Backend
                 return;
             }
 
-            string json = $"{{\"device_uuid\":\"{identity.DeviceUUID}\",\"display_name\":\"{newName}\"}}";
+            var nameReq = new UpdateNameRequest { device_uuid = identity.DeviceUUID, display_name = newName };
+            string json = JsonUtility.ToJson(nameReq);
             SupabaseClient.Instance.CallFunction("update-display-name", json, (success, _) =>
             {
                 callback?.Invoke(success);

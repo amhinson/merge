@@ -43,9 +43,12 @@ namespace MergeGame.Core
             // Only send display_name if the player already has one (returning player).
             // New players get a name generated server-side.
             bool isNewPlayer = string.IsNullOrEmpty(DisplayName);
-            string json = isNewPlayer
-                ? $"{{\"device_uuid\":\"{DeviceUUID}\"}}"
-                : $"{{\"device_uuid\":\"{DeviceUUID}\",\"display_name\":\"{DisplayName}\"}}";
+            var request = new RegisterRequest
+            {
+                device_uuid = DeviceUUID,
+                display_name = isNewPlayer ? "" : DisplayName
+            };
+            string json = JsonUtility.ToJson(request);
 
             SupabaseClient.Instance.CallFunction("register-player", json, (success, response) =>
             {
@@ -79,6 +82,13 @@ namespace MergeGame.Core
                     Debug.LogWarning($"PlayerIdentity: Backend registration failed — {response}");
                 }
             });
+        }
+
+        [System.Serializable]
+        private class RegisterRequest
+        {
+            public string device_uuid;
+            public string display_name;
         }
 
         [System.Serializable]

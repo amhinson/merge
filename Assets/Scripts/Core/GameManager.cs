@@ -12,6 +12,14 @@ namespace MergeGame.Core
         GameOver
     }
 
+    [System.Serializable]
+    public class SyncStreakRequest
+    {
+        public string device_uuid;
+        public int current_streak;
+        public int longest_streak;
+    }
+
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
@@ -355,9 +363,13 @@ namespace MergeGame.Core
             if (SupabaseClient.Instance == null || PlayerIdentity.Instance == null) return;
             if (StreakManager.Instance == null) return;
 
-            string json = $"{{\"device_uuid\":\"{PlayerIdentity.Instance.DeviceUUID}\"," +
-                           $"\"current_streak\":{StreakManager.Instance.CurrentStreak}," +
-                           $"\"longest_streak\":{StreakManager.Instance.LongestStreak}}}";
+            var request = new SyncStreakRequest
+            {
+                device_uuid = PlayerIdentity.Instance.DeviceUUID,
+                current_streak = StreakManager.Instance.CurrentStreak,
+                longest_streak = StreakManager.Instance.LongestStreak
+            };
+            string json = JsonUtility.ToJson(request);
 
             // Best-effort sync
             SupabaseClient.Instance.CallFunction("sync-streak", json, null);
