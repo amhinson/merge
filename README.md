@@ -1,10 +1,4 @@
-AUDIT
-
-- Privacy policy required — App Store requires one. You collect device UUID + display name + scores. Minimal, but needs to be documented.
-
-Offline mode
-
-Change name to murge
+Change name to murge.
 
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
 Create Gamecenter achievement.

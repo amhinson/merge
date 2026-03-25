@@ -80,6 +80,9 @@ namespace MergeGame.Core
                 else
                 {
                     Debug.LogWarning($"PlayerIdentity: Backend registration failed — {response}");
+                    // Queue for retry when online
+                    if (Backend.OfflineSyncQueue.Instance != null)
+                        Backend.OfflineSyncQueue.Instance.Enqueue("register-player", json);
                 }
             });
         }

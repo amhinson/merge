@@ -38,7 +38,9 @@
       "Bash(git ls-tree:*)",
       "Bash(mv NeonBallRenderer.cs BallRenderer.cs)",
       "Bash(mv NeonBallRenderer.cs.meta BallRenderer.cs.meta)",
-      "Bash(find /Users/alex/projects/personal/merge -name Info.plist -o -name *.plist)"
+      "Bash(find /Users/alex/projects/personal/merge -name Info.plist -o -name *.plist)",
+      "Bash(find /Users/alex/projects/personal/merge/Assets/Scripts -name *Leaderboard* -o -name *leaderboard*)",
+      "Bash(ls:*)"
     ]
   }
 }

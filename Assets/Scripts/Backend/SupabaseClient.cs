@@ -29,6 +29,7 @@ namespace MergeGame.Backend
         private string FunctionsUrl => $"{supabaseUrl}/functions/v1";
 
         public bool IsProduction { get; private set; }
+        public string HealthUrl => $"{supabaseUrl}/functions/v1";
 
         private void Awake()
         {

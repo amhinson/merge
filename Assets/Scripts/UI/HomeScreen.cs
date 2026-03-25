@@ -503,7 +503,7 @@ namespace MergeGame.UI
                 // Empty state
                 var emptyGO = OvertoneUI.CreateUIObject("EmptyState", leaderboardRowContainer);
                 var emptyTMP = emptyGO.AddComponent<TextMeshProUGUI>();
-                emptyTMP.text = "No scores yet today";
+                emptyTMP.text = GameSession.IsOffline ? "You're offline" : "No scores yet today";
                 emptyTMP.font = OvertoneUI.DMMono;
                 emptyTMP.fontSize = 11;
                 emptyTMP.color = OC.muted;

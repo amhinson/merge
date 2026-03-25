@@ -80,6 +80,14 @@ namespace MergeGame.Core
             float minLoadTime = 1.5f;  // minimum loading screen duration
             float maxWaitTime = 5.0f;  // timeout — don't wait forever
 
+            // If offline, skip all network waits
+            if (!NetworkMonitor.QuickCheck())
+            {
+                GameSession.IsOffline = true;
+                maxWaitTime = 0f;
+                Debug.Log("[Preload] Offline — skipping network fetches");
+            }
+
             // === Synchronous pre-loads (fast, ~1-5ms each) ===
             float t0 = Time.realtimeSinceStartup;
 

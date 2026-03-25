@@ -50,6 +50,7 @@ namespace MergeGame.Core
         public static int     LongestChain   { get; set; }
         public static bool    IsPractice     { get; set; }
         public static bool    IsFirstLaunch  { get; private set; }
+        public static bool    IsOffline      { get; set; }
 
         // Result data from submit-score response
         public static int     ResultRank         { get; set; }

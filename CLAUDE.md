@@ -137,10 +137,13 @@ Point values in `Assets/ScriptableObjects/BallData_Tier[1-11].asset`. Combo mult
 
 Saved to PlayerPrefs after each drop settles + on app background. Includes: ball positions/tiers, score, sequence index, merge stats, shakes, attempt type. Discarded on day rollover or game over. Restored with balls frozen (kinematic → dynamic after 1 frame).
 
-## Network Resilience
+## Network Resilience & Offline Mode
 
+- `NetworkMonitor.cs` detects connectivity: instant check via `Application.internetReachability`, confirmed with HEAD ping to Supabase. Polls every 30s while offline, fires `OnConnectivityChanged` on transitions.
 - All POST calls retry up to 3 times with exponential backoff (1s, 2s, 4s). 4xx errors skip retry.
-- Failed score submissions are queued to PlayerPrefs (`OfflineScoreQueue`) and retried on next app launch.
+- `OfflineSyncQueue` persists failed calls (score submissions, registration) to PlayerPrefs and flushes when connectivity returns.
+- `GameSession.IsOffline` flag drives UI: "You're offline" in leaderboard, "offline — rank will update when connected" in results.
+- To test offline in editor: turn off WiFi. `Application.internetReachability` returns `NotReachable` immediately.
 - Launch date is defined once in `GameSession.LaunchDate` — referenced by DailySeedManager and NewLeaderboardScreen.
 
 ## Website (`web/`)
