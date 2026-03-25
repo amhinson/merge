@@ -1,8 +1,6 @@
-Adjust scoring down even more.
 Ask about production ready. Future-proof schema, security, auth, etc.
 Claude-specific project file setup.
 
-Music & SFX.
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
 Create Gamecenter achievement.
 Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.
