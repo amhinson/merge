@@ -193,8 +193,8 @@ namespace MergeGame.UI
         /// </summary>
         private Sprite GenerateUIBallSprite(int tier, int pixelSize)
         {
-            float uiRadius = pixelSize / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
-            var png = Visual.NeonBallRenderer.GenerateBallPNG(tier, Color.white, uiRadius, 0f);
+            float uiRadius = pixelSize / (2f * Visual.BallRenderer.PixelsPerUnit);
+            var png = Visual.BallRenderer.GenerateBallPNG(tier, Color.white, uiRadius, 0f);
             int expectedSize = pixelSize + 8; // padding
             var tex = new Texture2D(expectedSize, expectedSize, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;

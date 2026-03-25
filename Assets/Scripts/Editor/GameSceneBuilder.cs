@@ -1030,7 +1030,7 @@ namespace MergeGame.Editor
             {
                 var def = tierDefs[i];
                 string spritePath = $"Assets/Sprites/Ball_Tier{i + 1}.png";
-                byte[] png = NeonBallRenderer.GenerateBallPNG(i, TierColors[i], def.radius, 0f);
+                byte[] png = BallRenderer.GenerateBallPNG(i, TierColors[i], def.radius, 0f);
                 System.IO.File.WriteAllBytes(spritePath, png);
 
                 string dataPath = $"Assets/ScriptableObjects/BallData_Tier{i + 1}.asset";
@@ -1059,7 +1059,7 @@ namespace MergeGame.Editor
                 if (imp != null)
                 {
                     imp.textureType = TextureImporterType.Sprite;
-                    imp.spritePixelsPerUnit = NeonBallRenderer.PixelsPerUnit;
+                    imp.spritePixelsPerUnit = BallRenderer.PixelsPerUnit;
                     imp.filterMode = FilterMode.Bilinear;
                     imp.textureCompression = TextureImporterCompression.Uncompressed;
                     imp.spriteImportMode = SpriteImportMode.Single;

@@ -46,15 +46,15 @@ namespace MergeGame.Visual
             mpb = new MaterialPropertyBlock();
             spriteRenderer.GetPropertyBlock(mpb);
 
-            var ballColor = NeonBallRenderer.GetBallColor(tier);
-            var wc = tier < NeonBallRenderer.WaveConfig.Length
-                ? NeonBallRenderer.WaveConfig[tier]
+            var ballColor = BallRenderer.GetBallColor(tier);
+            var wc = tier < BallRenderer.WaveConfig.Length
+                ? BallRenderer.WaveConfig[tier]
                 : (3, 0, 0.80f);
 
-            float ballRadiusUV = NeonBallRenderer.GetBallRadiusUV(radius);
+            float ballRadiusUV = BallRenderer.GetBallRadiusUV(radius);
             // Convert fixed pixel widths to normalized ball coords
-            float lineWidthNorm = 2.5f / ((radius * 2f * NeonBallRenderer.PixelsPerUnit / 2f) - 2f);
-            float haloWidthNorm = 6.0f / ((radius * 2f * NeonBallRenderer.PixelsPerUnit / 2f) - 2f);
+            float lineWidthNorm = 2.5f / ((radius * 2f * BallRenderer.PixelsPerUnit / 2f) - 2f);
+            float haloWidthNorm = 6.0f / ((radius * 2f * BallRenderer.PixelsPerUnit / 2f) - 2f);
 
             mpb.SetColor(_WaveColor, new Color(ballColor.r, ballColor.g, ballColor.b, wc.Item3));
             mpb.SetFloat(_Freq, wc.Item1);
@@ -117,8 +117,8 @@ namespace MergeGame.Visual
         {
             if (bodyCache[tier] != null) return;
 
-            var color = NeonBallRenderer.GetBallColor(tier);
-            var pixels = NeonBallRenderer.GenerateStaticBallPixels(tier, color, radius, out int texSize);
+            var color = BallRenderer.GetBallColor(tier);
+            var pixels = BallRenderer.GenerateStaticBallPixels(tier, color, radius, out int texSize);
 
             var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
@@ -126,7 +126,7 @@ namespace MergeGame.Visual
             tex.Apply(false, true);
 
             bodyCache[tier] = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
-                new Vector2(0.5f, 0.5f), NeonBallRenderer.PixelsPerUnit);
+                new Vector2(0.5f, 0.5f), BallRenderer.PixelsPerUnit);
         }
 
         /// <summary>

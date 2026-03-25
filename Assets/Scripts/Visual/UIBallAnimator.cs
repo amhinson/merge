@@ -42,9 +42,9 @@ namespace MergeGame.Visual
         private static void BuildSprite(int tier, float radius)
         {
             uiCacheBuilt[tier] = true;
-            var color = NeonBallRenderer.GetBallColor(tier);
+            var color = BallRenderer.GetBallColor(tier);
             float phase = tier * 0.09f;
-            var pixels = NeonBallRenderer.GenerateBallPixels(tier, color, radius, phase, out int texSize);
+            var pixels = BallRenderer.GenerateBallPixels(tier, color, radius, phase, out int texSize);
 
             var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;

@@ -7,7 +7,7 @@ namespace MergeGame.Visual
     /// Each ball has: radial gradient body, circle stroke, and one of three wave styles
     /// (Thread/Dash/Dot) that scrolls slowly.
     /// </summary>
-    public static class NeonBallRenderer
+    public static class BallRenderer
     {
         public const int PixelsPerUnit = 128;
         private const int Padding = 6;

@@ -121,7 +121,7 @@ namespace MergeGame.UI
                     Transform targetRow = tier >= 6 ? ballRow : (shareBallRow2 ?? ballRow);
 
                     int count = tier < counts.Length ? counts[tier] : 0;
-                    Color ballColor = Visual.NeonBallRenderer.GetBallColor(tier);
+                    Color ballColor = Visual.BallRenderer.GetBallColor(tier);
                     float baseSize = BaseSizes[tier];
                     float gridSize = Mathf.Max(20f, baseSize * 0.55f);
                     float shareSize = gridSize * 1.5f;
@@ -143,8 +143,8 @@ namespace MergeGame.UI
                     ballRT.sizeDelta = new Vector2(shareSize, shareSize);
 
                     var ballImg = ballGO.AddComponent<Image>();
-                    float uiRadius = shareSize / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
-                    var pixels = Visual.NeonBallRenderer.GenerateBallPixels(
+                    float uiRadius = shareSize / (2f * Visual.BallRenderer.PixelsPerUnit);
+                    var pixels = Visual.BallRenderer.GenerateBallPixels(
                         tier, ballColor, uiRadius, 0f, out int texSize);
                     var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
                     tex.filterMode = FilterMode.Bilinear;

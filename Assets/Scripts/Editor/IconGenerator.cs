@@ -191,7 +191,7 @@ namespace MergeGame.Editor
             Debug.Log("Player Settings icons configured.");
         }
 
-        // ===== Circle drawing (same as NeonBallRenderer) =====
+        // ===== Circle drawing (same as BallRenderer) =====
 
         private static void MidpointCircle(int cx, int cy, int r, HashSet<long> pixels)
         {

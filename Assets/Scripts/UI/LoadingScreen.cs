@@ -72,9 +72,9 @@ namespace MergeGame.UI
 
             ballImage = ballGO.AddComponent<Image>();
             // Generate a ball sprite
-            float uiRadius = 40f / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
-            var pixels = Visual.NeonBallRenderer.GenerateBallPixels(
-                10, Visual.NeonBallRenderer.GetBallColor(10), uiRadius, 0f, out int texSize);
+            float uiRadius = 40f / (2f * Visual.BallRenderer.PixelsPerUnit);
+            var pixels = Visual.BallRenderer.GenerateBallPixels(
+                10, Visual.BallRenderer.GetBallColor(10), uiRadius, 0f, out int texSize);
             var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
             tex.SetPixels(pixels);
@@ -115,9 +115,9 @@ namespace MergeGame.UI
             if (Time.frameCount % 10 == 0)
             {
                 float phase = (pulseTimer * 0.05f) % 1f;
-                float uiRadius = 40f / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
-                var pixels = Visual.NeonBallRenderer.GenerateBallPixels(
-                    10, Visual.NeonBallRenderer.GetBallColor(10), uiRadius, phase, out int texSize);
+                float uiRadius = 40f / (2f * Visual.BallRenderer.PixelsPerUnit);
+                var pixels = Visual.BallRenderer.GenerateBallPixels(
+                    10, Visual.BallRenderer.GetBallColor(10), uiRadius, phase, out int texSize);
                 var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
                 tex.filterMode = FilterMode.Bilinear;
                 tex.SetPixels(pixels);

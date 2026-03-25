@@ -628,9 +628,9 @@ namespace MergeGame.UI
             rt.sizeDelta = new Vector2(forcedSize, forcedSize);
 
             var img = go.AddComponent<Image>();
-            float uiRadius = forcedSize / (2f * Visual.NeonBallRenderer.PixelsPerUnit);
-            var png = Visual.NeonBallRenderer.GenerateBallPNG(tierIndex, Color.white, uiRadius, 0f);
-            int expectedSize = Mathf.Max(8, Mathf.RoundToInt(uiRadius * 2f * Visual.NeonBallRenderer.PixelsPerUnit)) + 8;
+            float uiRadius = forcedSize / (2f * Visual.BallRenderer.PixelsPerUnit);
+            var png = Visual.BallRenderer.GenerateBallPNG(tierIndex, Color.white, uiRadius, 0f);
+            int expectedSize = Mathf.Max(8, Mathf.RoundToInt(uiRadius * 2f * Visual.BallRenderer.PixelsPerUnit)) + 8;
             var tex = new Texture2D(expectedSize, expectedSize, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
             tex.LoadImage(png);

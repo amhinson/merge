@@ -171,8 +171,8 @@ namespace MergeGame.Core
             for (int tier = 0; tier < 5; tier++)
             {
                 float radius = tier < 11 ? new float[] { 0.22f, 0.30f, 0.40f, 0.50f, 0.60f, 0.70f, 0.80f, 0.90f, 1.10f, 1.20f, 1.40f }[tier] : 0.5f;
-                var color = Visual.NeonBallRenderer.GetBallColor(tier);
-                Visual.NeonBallRenderer.GenerateBallPixels(tier, color, radius, 0f, out int _s);
+                var color = Visual.BallRenderer.GetBallColor(tier);
+                Visual.BallRenderer.GenerateBallPixels(tier, color, radius, 0f, out int _s);
                 yield return null; // spread across frames to avoid hitch
             }
             Debug.Log($"[Preload] Ball sprites: {(Time.realtimeSinceStartup - bakeStart) * 1000:F0}ms (5 tiers)");

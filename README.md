@@ -22,6 +22,6 @@ and just appear more humble, and that I just wanted to build this game for mysel
 Still not sold on the name or design. It should feel good to me, even if its simple. Make it genuine.
 Ball design doesn't inspire me. Waves seem stale. Colors a bit boring?
 
-Add username edit prompt after first merge?
+Add username edit prompt after first game?
 Wavelength react somehow to nearby?
 Note any top 3 finished on profile.
