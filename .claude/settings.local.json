@@ -31,7 +31,9 @@
       "Bash(sed -i '' 's/pointValue: 5$/pointValue: 3/' BallData_Tier4.asset)",
       "Bash(sed -i '' 's/pointValue: 7$/pointValue: 4/' BallData_Tier5.asset)",
       "Bash(sed -i '' 's/pointValue: 10$/pointValue: 5/' BallData_Tier6.asset)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(sed -i '' 's/color: {r: 0.11372549, g: 0.30588236, b: 0.84705883, a: 1}/color: {r: 0.23137255, g: 0.50980395, b: 0.96470588, a: 1}/' BallData_Tier3.asset)",
+      "Bash(sed -i '' 's/color: {r: 0.9372549, g: 0.26666668, b: 0.26666668, a: 1}/color: {r: 1, g: 0.41960785, b: 0.41960785, a: 1}/' BallData_Tier4.asset)"
     ]
   }
 }

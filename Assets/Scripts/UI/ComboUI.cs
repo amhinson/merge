@@ -42,7 +42,7 @@ namespace MergeGame.UI
             }
         }
 
-        private void OnMerge(int tier, int chainLength)
+        private void OnMerge(int tier, int chainLength, Vector3 worldPos)
         {
             if (chainLength < 2)
             {

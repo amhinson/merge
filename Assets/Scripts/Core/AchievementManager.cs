@@ -128,7 +128,7 @@ namespace MergeGame.Core
             }
         }
 
-        private void HandleMerge(int resultTier, int chainLength)
+        private void HandleMerge(int resultTier, int chainLength, Vector3 worldPos)
         {
             if (resultTier >= 4)
             {

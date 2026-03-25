@@ -40,7 +40,7 @@ namespace MergeGame.Core
         public float LongestIdleTime { get; private set; }
         private bool firstBallLanded;
 
-        public event System.Action<int, int> OnMerge; // mergedTier, chainLength
+        public event System.Action<int, int, Vector3> OnMerge; // mergedTier, chainLength, worldPosition
         public event System.Action<int> OnChainComplete; // finalChainLength
 
         private void Awake()
@@ -71,7 +71,7 @@ namespace MergeGame.Core
             tierCreationCounts = new int[11];
         }
 
-        public void RecordMerge(int resultTier)
+        public void RecordMerge(int resultTier, Vector3 worldPosition = default)
         {
             TotalMerges++;
 
@@ -104,7 +104,7 @@ namespace MergeGame.Core
                 LongestChain = currentChainLength;
 
             lastMergeTime = Time.time;
-            OnMerge?.Invoke(resultTier, currentChainLength);
+            OnMerge?.Invoke(resultTier, currentChainLength, worldPosition);
         }
 
         public void RecordDrop()

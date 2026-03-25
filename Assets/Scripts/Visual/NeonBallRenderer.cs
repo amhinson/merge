@@ -18,8 +18,8 @@ namespace MergeGame.Visual
         {
             HexColor("E879F9"), // tier 0 (Level 11, smallest): fuchsia
             HexColor("CBD5E1"), // tier 1 (Level 10): silver
-            HexColor("1D4ED8"), // tier 2 (Level 9): blue
-            HexColor("EF4444"), // tier 3 (Level 8): red
+            HexColor("3B82F6"), // tier 2 (Level 9): cobalt
+            HexColor("FF6B6B"), // tier 3 (Level 8): coral
             HexColor("38BDF8"), // tier 4 (Level 7): sky
             HexColor("F97316"), // tier 5 (Level 6): orange
             HexColor("A3E635"), // tier 6 (Level 5): lime
