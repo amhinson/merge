@@ -9,9 +9,9 @@ namespace MergeGame.Core
     /// Setup: Add the GameAnalytics prefab to the scene and configure
     /// game keys in its inspector. This class just fires events.
     /// </summary>
-    public class OvertoneAnalytics : MonoBehaviour
+    public class MurgeAnalytics : MonoBehaviour
     {
-        public static OvertoneAnalytics Instance { get; private set; }
+        public static MurgeAnalytics Instance { get; private set; }
 
         private bool isInitialized;
 

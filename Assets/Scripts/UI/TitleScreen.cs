@@ -65,7 +65,7 @@ namespace MergeGame.UI
             if (titleText != null)
             {
                 titleText.richText = true;
-                string source = "OVERTONE";
+                string source = "MURGE";
                 string colored = "";
                 int colorIdx = 0;
                 foreach (char c in source)

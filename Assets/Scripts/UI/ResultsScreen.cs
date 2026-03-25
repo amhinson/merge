@@ -37,7 +37,7 @@ namespace MergeGame.UI
             bool isScored, int rank, string percentile)
         {
             if (dayLabel != null)
-                dayLabel.text = $"Overtone #{dayNumber}";
+                dayLabel.text = $"{Core.GameSession.AppName} #{dayNumber}";
 
             if (scoreTickUp != null)
             {

@@ -1,4 +1,4 @@
-Shader "Overtone/WaveformBall"
+Shader "Murge/WaveformBall"
 {
     Properties
     {

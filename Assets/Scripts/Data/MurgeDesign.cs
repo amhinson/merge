@@ -3,7 +3,7 @@ using UnityEngine;
 namespace MergeGame.Data
 {
     /// <summary>
-    /// Overtone design system — colors, spacing, and font sizes.
+    /// Murge design system — colors, spacing, and font sizes.
     /// Single source of truth for all UI styling constants.
     /// </summary>
     public static class OC

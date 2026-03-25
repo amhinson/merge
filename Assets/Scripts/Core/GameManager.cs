@@ -92,8 +92,8 @@ namespace MergeGame.Core
             float t0 = Time.realtimeSinceStartup;
 
             // Force-load fonts
-            var _ = OvertoneUI.PressStart2P;
-            var __ = OvertoneUI.DMMono;
+            var _ = MurgeUI.PressStart2P;
+            var __ = MurgeUI.DMMono;
 
             Debug.Log($"[Preload] Fonts: {(Time.realtimeSinceStartup - t0) * 1000:F1}ms");
 
@@ -281,8 +281,8 @@ namespace MergeGame.Core
                 UI.PracticeToast.Instance.Show();
 
             // Analytics
-            if (OvertoneAnalytics.Instance != null)
-                OvertoneAnalytics.Instance.TrackPuzzleStarted();
+            if (MurgeAnalytics.Instance != null)
+                MurgeAnalytics.Instance.TrackPuzzleStarted();
 
             // Fetch initial leaderboard for live rank
             liveRankRefreshTimer = 0f;
@@ -304,10 +304,10 @@ namespace MergeGame.Core
             int highScore = scoreManager != null ? scoreManager.HighScore : 0;
 
             // Analytics
-            if (OvertoneAnalytics.Instance != null)
+            if (MurgeAnalytics.Instance != null)
             {
                 float duration = MergeTracker.Instance != null ? MergeTracker.Instance.RoundDuration : 0f;
-                OvertoneAnalytics.Instance.TrackPuzzleCompleted(finalScore, duration);
+                MurgeAnalytics.Instance.TrackPuzzleCompleted(finalScore, duration);
             }
 
             // Achievement tracking
@@ -328,8 +328,8 @@ namespace MergeGame.Core
                 if (StreakManager.Instance != null)
                 {
                     StreakManager.Instance.RecordScoredAttempt();
-                    if (OvertoneAnalytics.Instance != null)
-                        OvertoneAnalytics.Instance.TrackStreakUpdated(StreakManager.Instance.CurrentStreak);
+                    if (MurgeAnalytics.Instance != null)
+                        MurgeAnalytics.Instance.TrackStreakUpdated(StreakManager.Instance.CurrentStreak);
                 }
 
                 // Store score and merge counts in session BEFORE submitting
@@ -424,8 +424,8 @@ namespace MergeGame.Core
             ShakesRemaining--;
             OnShakesChanged?.Invoke(ShakesRemaining);
 
-            if (OvertoneAnalytics.Instance != null)
-                OvertoneAnalytics.Instance.TrackShakeUsed(ShakesRemaining);
+            if (MurgeAnalytics.Instance != null)
+                MurgeAnalytics.Instance.TrackShakeUsed(ShakesRemaining);
 
             if (HapticManager.Instance != null)
                 HapticManager.Instance.PlayGameOver(); // Medium haptic for shake

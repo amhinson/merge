@@ -279,7 +279,7 @@ namespace MergeGame.Visual
         }
 
         /// <summary>
-        /// Create the standard 9-slice RoundedRect sprite used by the Overtone design system.
+        /// Create the standard 9-slice RoundedRect sprite used by the Murge design system.
         /// 32x32 white, 8px corner radius. Tint via Image.color.
         /// Cached after first creation.
         /// </summary>

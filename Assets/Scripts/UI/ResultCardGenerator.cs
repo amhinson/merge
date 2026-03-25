@@ -20,7 +20,7 @@ namespace MergeGame.UI
         [SerializeField] private RenderTexture cardRenderTexture;
 
         [Header("Card Elements — Modular, repositionable")]
-        [SerializeField] private TextMeshProUGUI dayLabel;       // "Overtone #47"
+        [SerializeField] private TextMeshProUGUI dayLabel;       // "Murge #47"
         [SerializeField] private TextMeshProUGUI scoreLabel;     // Score in large type
         [SerializeField] private TextMeshProUGUI streakLabel;    // Current streak
         [SerializeField] private Transform topMergesContainer;   // Parent for merge ball icons
@@ -47,7 +47,7 @@ namespace MergeGame.UI
         public void PopulateCard(int dayNumber, int score, int streak, int[] topMergeTiers)
         {
             if (dayLabel != null)
-                dayLabel.text = $"Overtone #{dayNumber}";
+                dayLabel.text = $"{Core.GameSession.AppName} #{dayNumber}";
 
             if (scoreLabel != null)
                 scoreLabel.text = score.ToString();
@@ -146,7 +146,7 @@ namespace MergeGame.UI
 #if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
         private void ShareNative(Texture2D tex)
         {
-            string path = System.IO.Path.Combine(Application.temporaryCachePath, "overtone_result.png");
+            string path = System.IO.Path.Combine(Application.temporaryCachePath, "murge_result.png");
             System.IO.File.WriteAllBytes(path, tex.EncodeToPNG());
             // TODO: Use a native share plugin (e.g., NativeShare) for production
             Debug.Log($"Share: saved card to {path}");

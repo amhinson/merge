@@ -49,7 +49,7 @@ build_env() {
 
     local BUILD_DIR="$PROJECT_PATH/Build/iOS"
     local XCODE_PROJECT="$BUILD_DIR/Unity-iPhone.xcodeproj"
-    local ARCHIVE_PATH="$PROJECT_PATH/Build/Overtone-${env}.xcarchive"
+    local ARCHIVE_PATH="$PROJECT_PATH/Build/Murge-${env}.xcarchive"
     local IPA_DIR="$PROJECT_PATH/Build/IPA-${env}"
 
     # Clean

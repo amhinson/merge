@@ -266,8 +266,8 @@ namespace MergeGame.UI
         {
             if (ResultCardGenerator.Instance != null)
                 ResultCardGenerator.Instance.ShareCard();
-            if (Core.OvertoneAnalytics.Instance != null)
-                Core.OvertoneAnalytics.Instance.TrackShareCard();
+            if (Core.MurgeAnalytics.Instance != null)
+                Core.MurgeAnalytics.Instance.TrackShareCard();
         }
 
     }

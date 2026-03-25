@@ -40,17 +40,17 @@ namespace MergeGame.Editor
             string buildPath = "Build/iOS";
 
             // Set bundle ID based on environment
-            string bundleId = development ? "com.overtone.game.dev" : "com.overtone.game";
+            string bundleId = development ? "com.murge.game.dev" : "com.murge.game";
 #pragma warning disable CS0618
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, bundleId);
 #pragma warning restore CS0618
 
             // App metadata
-            PlayerSettings.productName = "Overtone";
-            PlayerSettings.companyName = "Overtone";
+            PlayerSettings.productName = "Murge";
+            PlayerSettings.companyName = "Murge";
             PlayerSettings.bundleVersion = "0.1.0";              // display version (CFBundleShortVersionString)
             PlayerSettings.iOS.buildNumber = buildNumber ?? "1";  // build number (CFBundleVersion)
-            PlayerSettings.iOS.applicationDisplayName = "Overtone";
+            PlayerSettings.iOS.applicationDisplayName = "Murge";
             PlayerSettings.iOS.appInBackgroundBehavior = iOSAppInBackgroundBehavior.Suspend;
 
             var options = new BuildPlayerOptions

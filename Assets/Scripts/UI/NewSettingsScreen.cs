@@ -46,7 +46,7 @@ namespace MergeGame.UI
             BuildHeader(transform);
 
             // Content area (between header and save button)
-            var content = OvertoneUI.CreateUIObject("Content", transform);
+            var content = MurgeUI.CreateUIObject("Content", transform);
             var cRT = content.GetComponent<RectTransform>();
             cRT.anchorMin = Vector2.zero;
             cRT.anchorMax = Vector2.one;
@@ -76,7 +76,7 @@ namespace MergeGame.UI
 
         private void BuildHeader(Transform parent)
         {
-            var header = OvertoneUI.CreateUIObject("Header", parent);
+            var header = MurgeUI.CreateUIObject("Header", parent);
             var hRT = header.GetComponent<RectTransform>();
             hRT.anchorMin = new Vector2(0, 1);
             hRT.anchorMax = new Vector2(1, 1);
@@ -85,26 +85,26 @@ namespace MergeGame.UI
             hRT.sizeDelta = new Vector2(0, 40);
 
             // Back button
-            var backGO = OvertoneUI.CreateUIObject("BackBtn", header.transform);
+            var backGO = MurgeUI.CreateUIObject("BackBtn", header.transform);
             var backRT = backGO.GetComponent<RectTransform>();
             backRT.anchorMin = new Vector2(0, 0); backRT.anchorMax = new Vector2(0, 1);
             backRT.pivot = new Vector2(0, 0.5f);
             backRT.anchoredPosition = new Vector2(24, 0);
             backRT.sizeDelta = new Vector2(42, 0);
             // Border
-            var bdr = OvertoneUI.CreateUIObject("Border", backGO.transform);
-            OvertoneUI.StretchFill(bdr.GetComponent<RectTransform>());
+            var bdr = MurgeUI.CreateUIObject("Border", backGO.transform);
+            MurgeUI.StretchFill(bdr.GetComponent<RectTransform>());
             var bdrImg = bdr.AddComponent<Image>();
-            bdrImg.sprite = OvertoneUI.SmoothRoundedRect;
+            bdrImg.sprite = MurgeUI.SmoothRoundedRect;
             bdrImg.type = Image.Type.Sliced;
             bdrImg.color = OC.border;
             bdrImg.raycastTarget = false;
             // Fill
-            var fill = OvertoneUI.CreateUIObject("Fill", backGO.transform);
+            var fill = MurgeUI.CreateUIObject("Fill", backGO.transform);
             var fRT = fill.GetComponent<RectTransform>();
             fRT.anchorMin = Vector2.zero; fRT.anchorMax = Vector2.one;
             fRT.offsetMin = new Vector2(1.5f, 1.5f); fRT.offsetMax = new Vector2(-1.5f, -1.5f);
-            fill.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            fill.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
             fill.GetComponent<Image>().type = Image.Type.Sliced;
             fill.GetComponent<Image>().color = OC.bg;
             fill.GetComponent<Image>().raycastTarget = false;
@@ -113,14 +113,14 @@ namespace MergeGame.UI
             backGO.AddComponent<Button>().targetGraphic = bdrImg;
             backGO.GetComponent<Button>().onClick.AddListener(OnBackClicked);
             // Arrow
-            var arrow = OvertoneUI.CreateLabel(backGO.transform, "<",
-                OvertoneUI.DMMono, 14, new Color(1, 1, 1, 0.3f), "Arrow");
+            var arrow = MurgeUI.CreateLabel(backGO.transform, "<",
+                MurgeUI.DMMono, 14, new Color(1, 1, 1, 0.3f), "Arrow");
             arrow.alignment = TextAlignmentOptions.Center;
-            OvertoneUI.StretchFill(arrow.GetComponent<RectTransform>());
+            MurgeUI.StretchFill(arrow.GetComponent<RectTransform>());
 
             // Title
-            var title = OvertoneUI.CreateLabel(header.transform, "SETTINGS",
-                OvertoneUI.PressStart2P, 11, OC.white, "Title");
+            var title = MurgeUI.CreateLabel(header.transform, "SETTINGS",
+                MurgeUI.PressStart2P, 11, OC.white, "Title");
             title.characterSpacing = 2;
             title.alignment = TextAlignmentOptions.Left;
             title.verticalAlignment = VerticalAlignmentOptions.Middle;
@@ -132,38 +132,38 @@ namespace MergeGame.UI
         private void BuildUsernameSection(Transform parent)
         {
             // Section label
-            var label = OvertoneUI.CreateLabel(parent, "USERNAME",
-                OvertoneUI.PressStart2P, 7, OC.dim, "UsernameLabel");
+            var label = MurgeUI.CreateLabel(parent, "USERNAME",
+                MurgeUI.PressStart2P, 7, OC.dim, "UsernameLabel");
             label.characterSpacing = 1;
             label.gameObject.AddComponent<LayoutElement>().preferredHeight = 14;
 
             AddSpacer(parent, 8);
 
             // Input row
-            var row = OvertoneUI.CreateUIObject("UsernameField", parent);
+            var row = MurgeUI.CreateUIObject("UsernameField", parent);
             var rowLE = row.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 42; rowLE.minHeight = 42;
 
             // Border
-            var rowBdr = OvertoneUI.CreateUIObject("Border", row.transform);
-            OvertoneUI.StretchFill(rowBdr.GetComponent<RectTransform>());
-            rowBdr.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            var rowBdr = MurgeUI.CreateUIObject("Border", row.transform);
+            MurgeUI.StretchFill(rowBdr.GetComponent<RectTransform>());
+            rowBdr.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
             rowBdr.GetComponent<Image>().type = Image.Type.Sliced;
             rowBdr.GetComponent<Image>().color = OC.border;
             rowBdr.GetComponent<Image>().raycastTarget = false;
             // Fill
-            var rowFill = OvertoneUI.CreateUIObject("Fill", row.transform);
+            var rowFill = MurgeUI.CreateUIObject("Fill", row.transform);
             var rfRT = rowFill.GetComponent<RectTransform>();
             rfRT.anchorMin = Vector2.zero; rfRT.anchorMax = Vector2.one;
             rfRT.offsetMin = new Vector2(1, 1); rfRT.offsetMax = new Vector2(-1, -1);
-            rowFill.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            rowFill.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
             rowFill.GetComponent<Image>().type = Image.Type.Sliced;
             rowFill.GetComponent<Image>().color = OC.surface;
             rowFill.GetComponent<Image>().raycastTarget = false;
 
             // @ symbol — vertically centered in the row
-            var atTMP = OvertoneUI.CreateLabel(row.transform, "@",
-                OvertoneUI.DMMono, 14, OC.cyan, "AtSign");
+            var atTMP = MurgeUI.CreateLabel(row.transform, "@",
+                MurgeUI.DMMono, 14, OC.cyan, "AtSign");
             var atRT = atTMP.GetComponent<RectTransform>();
             atRT.anchorMin = new Vector2(0, 0); atRT.anchorMax = new Vector2(0, 1);
             atRT.pivot = new Vector2(0, 0.5f);
@@ -174,7 +174,7 @@ namespace MergeGame.UI
             atTMP.margin = Vector4.zero; // no extra margin
 
             // Input field area — vertically centered like @
-            var inputArea = OvertoneUI.CreateUIObject("InputArea", row.transform);
+            var inputArea = MurgeUI.CreateUIObject("InputArea", row.transform);
             var iaRT = inputArea.GetComponent<RectTransform>();
             iaRT.anchorMin = new Vector2(0, 0.5f); iaRT.anchorMax = new Vector2(1, 0.5f);
             iaRT.pivot = new Vector2(0, 0.5f);
@@ -182,23 +182,23 @@ namespace MergeGame.UI
             iaRT.sizeDelta = new Vector2(-84, 24); // -84 = -34 left - 50 right, height = font line
 
             // Text area for TMP_InputField
-            var textArea = OvertoneUI.CreateUIObject("TextArea", inputArea.transform);
-            OvertoneUI.StretchFill(textArea.GetComponent<RectTransform>());
+            var textArea = MurgeUI.CreateUIObject("TextArea", inputArea.transform);
+            MurgeUI.StretchFill(textArea.GetComponent<RectTransform>());
             textArea.AddComponent<RectMask2D>();
 
-            var textGO = OvertoneUI.CreateUIObject("Text", textArea.transform);
-            OvertoneUI.StretchFill(textGO.GetComponent<RectTransform>());
+            var textGO = MurgeUI.CreateUIObject("Text", textArea.transform);
+            MurgeUI.StretchFill(textGO.GetComponent<RectTransform>());
             var textTMP = textGO.AddComponent<TextMeshProUGUI>();
-            textTMP.font = OvertoneUI.DMMono;
+            textTMP.font = MurgeUI.DMMono;
             textTMP.fontSize = 14;
             textTMP.color = OC.white;
             textTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
 
-            var placeholderGO = OvertoneUI.CreateUIObject("Placeholder", textArea.transform);
-            OvertoneUI.StretchFill(placeholderGO.GetComponent<RectTransform>());
+            var placeholderGO = MurgeUI.CreateUIObject("Placeholder", textArea.transform);
+            MurgeUI.StretchFill(placeholderGO.GetComponent<RectTransform>());
             var phTMP = placeholderGO.AddComponent<TextMeshProUGUI>();
             phTMP.text = "enter name...";
-            phTMP.font = OvertoneUI.DMMono;
+            phTMP.font = MurgeUI.DMMono;
             phTMP.fontSize = 14;
             phTMP.color = OC.dim;
             phTMP.fontStyle = FontStyles.Italic;
@@ -215,8 +215,8 @@ namespace MergeGame.UI
             nameInput.onValueChanged.AddListener((_) => UpdateCharCount());
 
             // Char counter
-            charCountLabel = OvertoneUI.CreateLabel(row.transform, "0/16",
-                OvertoneUI.PressStart2P, 7, OC.dim, "CharCount");
+            charCountLabel = MurgeUI.CreateLabel(row.transform, "0/16",
+                MurgeUI.PressStart2P, 7, OC.dim, "CharCount");
             var ccRT = charCountLabel.GetComponent<RectTransform>();
             ccRT.anchorMin = new Vector2(1, 0); ccRT.anchorMax = new Vector2(1, 1);
             ccRT.pivot = new Vector2(1, 0.5f);
@@ -228,45 +228,45 @@ namespace MergeGame.UI
 
         private void BuildControlsSection(Transform parent)
         {
-            var label = OvertoneUI.CreateLabel(parent, "CONTROLS",
-                OvertoneUI.PressStart2P, 7, OC.dim, "ControlsLabel");
+            var label = MurgeUI.CreateLabel(parent, "CONTROLS",
+                MurgeUI.PressStart2P, 7, OC.dim, "ControlsLabel");
             label.characterSpacing = 1;
             label.gameObject.AddComponent<LayoutElement>().preferredHeight = 14;
 
             AddSpacer(parent, 8);
 
             // Haptic row
-            var row = OvertoneUI.CreateUIObject("HapticRow", parent);
+            var row = MurgeUI.CreateUIObject("HapticRow", parent);
             var rowLE = row.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 56; rowLE.minHeight = 56;
 
             // Border + fill
-            var rBdr = OvertoneUI.CreateUIObject("Border", row.transform);
-            OvertoneUI.StretchFill(rBdr.GetComponent<RectTransform>());
-            rBdr.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            var rBdr = MurgeUI.CreateUIObject("Border", row.transform);
+            MurgeUI.StretchFill(rBdr.GetComponent<RectTransform>());
+            rBdr.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
             rBdr.GetComponent<Image>().type = Image.Type.Sliced;
             rBdr.GetComponent<Image>().color = OC.border;
             rBdr.GetComponent<Image>().raycastTarget = false;
-            var rFill = OvertoneUI.CreateUIObject("Fill", row.transform);
+            var rFill = MurgeUI.CreateUIObject("Fill", row.transform);
             var rfRT = rFill.GetComponent<RectTransform>();
             rfRT.anchorMin = Vector2.zero; rfRT.anchorMax = Vector2.one;
             rfRT.offsetMin = new Vector2(1, 1); rfRT.offsetMax = new Vector2(-1, -1);
-            rFill.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            rFill.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
             rFill.GetComponent<Image>().type = Image.Type.Sliced;
             rFill.GetComponent<Image>().color = OC.surface;
             rFill.GetComponent<Image>().raycastTarget = false;
 
             // Title + subtitle (left)
-            var titleTMP = OvertoneUI.CreateLabel(row.transform, "Haptic feedback",
-                OvertoneUI.DMMono, 14, OC.white, "HapticTitle");
+            var titleTMP = MurgeUI.CreateLabel(row.transform, "Haptic feedback",
+                MurgeUI.DMMono, 14, OC.white, "HapticTitle");
             var ttRT = titleTMP.GetComponent<RectTransform>();
             ttRT.anchorMin = new Vector2(0, 0.5f); ttRT.anchorMax = new Vector2(0.7f, 1);
             ttRT.offsetMin = new Vector2(14, 0); ttRT.offsetMax = new Vector2(0, -8);
             titleTMP.alignment = TextAlignmentOptions.Left;
             titleTMP.verticalAlignment = VerticalAlignmentOptions.Bottom;
 
-            var subTMP = OvertoneUI.CreateLabel(row.transform, "Vibrate on merge",
-                OvertoneUI.DMMono, 11, OC.muted, "HapticSub");
+            var subTMP = MurgeUI.CreateLabel(row.transform, "Vibrate on merge",
+                MurgeUI.DMMono, 11, OC.muted, "HapticSub");
             var stRT = subTMP.GetComponent<RectTransform>();
             stRT.anchorMin = new Vector2(0, 0); stRT.anchorMax = new Vector2(0.7f, 0.5f);
             stRT.offsetMin = new Vector2(14, 8); stRT.offsetMax = Vector2.zero;
@@ -279,36 +279,36 @@ namespace MergeGame.UI
             AddSpacer(parent, 8);
 
             // SFX row
-            var sfxRow = OvertoneUI.CreateUIObject("SfxRow", parent);
+            var sfxRow = MurgeUI.CreateUIObject("SfxRow", parent);
             var sfxRowLE = sfxRow.AddComponent<LayoutElement>();
             sfxRowLE.preferredHeight = 56; sfxRowLE.minHeight = 56;
 
             // Border + fill
-            var sfxBdr = OvertoneUI.CreateUIObject("Border", sfxRow.transform);
-            OvertoneUI.StretchFill(sfxBdr.GetComponent<RectTransform>());
-            sfxBdr.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            var sfxBdr = MurgeUI.CreateUIObject("Border", sfxRow.transform);
+            MurgeUI.StretchFill(sfxBdr.GetComponent<RectTransform>());
+            sfxBdr.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
             sfxBdr.GetComponent<Image>().type = Image.Type.Sliced;
             sfxBdr.GetComponent<Image>().color = OC.border;
             sfxBdr.GetComponent<Image>().raycastTarget = false;
-            var sfxFill = OvertoneUI.CreateUIObject("Fill", sfxRow.transform);
+            var sfxFill = MurgeUI.CreateUIObject("Fill", sfxRow.transform);
             var sfRT = sfxFill.GetComponent<RectTransform>();
             sfRT.anchorMin = Vector2.zero; sfRT.anchorMax = Vector2.one;
             sfRT.offsetMin = new Vector2(1, 1); sfRT.offsetMax = new Vector2(-1, -1);
-            sfxFill.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            sfxFill.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
             sfxFill.GetComponent<Image>().type = Image.Type.Sliced;
             sfxFill.GetComponent<Image>().color = OC.surface;
             sfxFill.GetComponent<Image>().raycastTarget = false;
 
-            var sfxTitle = OvertoneUI.CreateLabel(sfxRow.transform, "Sound effects",
-                OvertoneUI.DMMono, 14, OC.white, "SfxTitle");
+            var sfxTitle = MurgeUI.CreateLabel(sfxRow.transform, "Sound effects",
+                MurgeUI.DMMono, 14, OC.white, "SfxTitle");
             var sfxTtRT = sfxTitle.GetComponent<RectTransform>();
             sfxTtRT.anchorMin = new Vector2(0, 0.5f); sfxTtRT.anchorMax = new Vector2(0.7f, 1);
             sfxTtRT.offsetMin = new Vector2(14, 0); sfxTtRT.offsetMax = new Vector2(0, -8);
             sfxTitle.alignment = TextAlignmentOptions.Left;
             sfxTitle.verticalAlignment = VerticalAlignmentOptions.Bottom;
 
-            var sfxSub = OvertoneUI.CreateLabel(sfxRow.transform, "Merge sounds",
-                OvertoneUI.DMMono, 11, OC.muted, "SfxSub");
+            var sfxSub = MurgeUI.CreateLabel(sfxRow.transform, "Merge sounds",
+                MurgeUI.DMMono, 11, OC.muted, "SfxSub");
             var sfxStRT = sfxSub.GetComponent<RectTransform>();
             sfxStRT.anchorMin = new Vector2(0, 0); sfxStRT.anchorMax = new Vector2(0.7f, 0.5f);
             sfxStRT.offsetMin = new Vector2(14, 8); sfxStRT.offsetMax = Vector2.zero;
@@ -320,7 +320,7 @@ namespace MergeGame.UI
 
         private void BuildToggle(Transform parent)
         {
-            var toggleGO = OvertoneUI.CreateUIObject("Toggle", parent);
+            var toggleGO = MurgeUI.CreateUIObject("Toggle", parent);
             var tgRT = toggleGO.GetComponent<RectTransform>();
             tgRT.anchorMin = new Vector2(1, 0.5f); tgRT.anchorMax = new Vector2(1, 0.5f);
             tgRT.pivot = new Vector2(1, 0.5f);
@@ -334,7 +334,7 @@ namespace MergeGame.UI
             toggleTrack.color = OC.cyan;
 
             // Thumb — smooth circle
-            var thumbGO = OvertoneUI.CreateUIObject("Thumb", toggleGO.transform);
+            var thumbGO = MurgeUI.CreateUIObject("Thumb", toggleGO.transform);
             toggleThumb = thumbGO.GetComponent<RectTransform>();
             toggleThumb.anchorMin = new Vector2(0, 0.5f);
             toggleThumb.anchorMax = new Vector2(0, 0.5f);
@@ -355,7 +355,7 @@ namespace MergeGame.UI
 
         private void BuildSfxToggle(Transform parent)
         {
-            var toggleGO = OvertoneUI.CreateUIObject("SfxToggle", parent);
+            var toggleGO = MurgeUI.CreateUIObject("SfxToggle", parent);
             var tgRT = toggleGO.GetComponent<RectTransform>();
             tgRT.anchorMin = new Vector2(1, 0.5f); tgRT.anchorMax = new Vector2(1, 0.5f);
             tgRT.pivot = new Vector2(1, 0.5f);
@@ -367,7 +367,7 @@ namespace MergeGame.UI
             sfxToggleTrack.type = Image.Type.Sliced;
             sfxToggleTrack.color = sfxOn ? OC.cyan : OC.border;
 
-            var thumbGO = OvertoneUI.CreateUIObject("Thumb", toggleGO.transform);
+            var thumbGO = MurgeUI.CreateUIObject("Thumb", toggleGO.transform);
             sfxToggleThumb = thumbGO.GetComponent<RectTransform>();
             sfxToggleThumb.anchorMin = new Vector2(0, 0.5f);
             sfxToggleThumb.anchorMax = new Vector2(0, 0.5f);
@@ -390,37 +390,37 @@ namespace MergeGame.UI
 #if !UNITY_IOS
             return;
 #else
-            var row = OvertoneUI.CreateUIObject("GameCenterRow", parent);
+            var row = MurgeUI.CreateUIObject("GameCenterRow", parent);
             var rowLE = row.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 56; rowLE.minHeight = 56;
 
             // Border + fill
-            var rBdr = OvertoneUI.CreateUIObject("Border", row.transform);
-            OvertoneUI.StretchFill(rBdr.GetComponent<RectTransform>());
-            rBdr.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            var rBdr = MurgeUI.CreateUIObject("Border", row.transform);
+            MurgeUI.StretchFill(rBdr.GetComponent<RectTransform>());
+            rBdr.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
             rBdr.GetComponent<Image>().type = Image.Type.Sliced;
             rBdr.GetComponent<Image>().color = OC.border;
             rBdr.GetComponent<Image>().raycastTarget = false;
-            var rFill = OvertoneUI.CreateUIObject("Fill", row.transform);
+            var rFill = MurgeUI.CreateUIObject("Fill", row.transform);
             var rfRT = rFill.GetComponent<RectTransform>();
             rfRT.anchorMin = Vector2.zero; rfRT.anchorMax = Vector2.one;
             rfRT.offsetMin = new Vector2(1, 1); rfRT.offsetMax = new Vector2(-1, -1);
-            rFill.AddComponent<Image>().sprite = OvertoneUI.SmoothRoundedRect;
+            rFill.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
             rFill.GetComponent<Image>().type = Image.Type.Sliced;
             rFill.GetComponent<Image>().color = OC.surface;
             rFill.GetComponent<Image>().raycastTarget = false;
 
             // Title + subtitle
-            var titleTMP = OvertoneUI.CreateLabel(row.transform, "Game Center",
-                OvertoneUI.DMMono, 14, OC.white, "GCTitle");
+            var titleTMP = MurgeUI.CreateLabel(row.transform, "Game Center",
+                MurgeUI.DMMono, 14, OC.white, "GCTitle");
             var ttRT = titleTMP.GetComponent<RectTransform>();
             ttRT.anchorMin = new Vector2(0, 0.5f); ttRT.anchorMax = new Vector2(0.8f, 1);
             ttRT.offsetMin = new Vector2(14, 0); ttRT.offsetMax = new Vector2(0, -8);
             titleTMP.alignment = TextAlignmentOptions.Left;
             titleTMP.verticalAlignment = VerticalAlignmentOptions.Bottom;
 
-            var subTMP = OvertoneUI.CreateLabel(row.transform, "Achievements",
-                OvertoneUI.DMMono, 11, OC.muted, "GCSub");
+            var subTMP = MurgeUI.CreateLabel(row.transform, "Achievements",
+                MurgeUI.DMMono, 11, OC.muted, "GCSub");
             var stRT = subTMP.GetComponent<RectTransform>();
             stRT.anchorMin = new Vector2(0, 0); stRT.anchorMax = new Vector2(0.8f, 0.5f);
             stRT.offsetMin = new Vector2(14, 8); stRT.offsetMax = Vector2.zero;
@@ -428,8 +428,8 @@ namespace MergeGame.UI
             subTMP.verticalAlignment = VerticalAlignmentOptions.Top;
 
             // Arrow (right side)
-            var arrowTMP = OvertoneUI.CreateLabel(row.transform, ">",
-                OvertoneUI.DMMono, 14, OC.muted, "Arrow");
+            var arrowTMP = MurgeUI.CreateLabel(row.transform, ">",
+                MurgeUI.DMMono, 14, OC.muted, "Arrow");
             var arRT = arrowTMP.GetComponent<RectTransform>();
             arRT.anchorMin = new Vector2(1, 0); arRT.anchorMax = new Vector2(1, 1);
             arRT.pivot = new Vector2(1, 0.5f);
@@ -455,40 +455,40 @@ namespace MergeGame.UI
 
         private void BuildComingSoon(Transform parent)
         {
-            var card = OvertoneUI.CreateUIObject("ComingSoon", parent);
+            var card = MurgeUI.CreateUIObject("ComingSoon", parent);
             var cLE = card.AddComponent<LayoutElement>();
             cLE.preferredHeight = 44; cLE.minHeight = 44;
 
             // Transparent bg with subtle border (approximating dashed with low-opacity solid)
-            var bdr = OvertoneUI.CreateUIObject("Border", card.transform);
-            OvertoneUI.StretchFill(bdr.GetComponent<RectTransform>());
+            var bdr = MurgeUI.CreateUIObject("Border", card.transform);
+            MurgeUI.StretchFill(bdr.GetComponent<RectTransform>());
             var bdrImg = bdr.AddComponent<Image>();
-            bdrImg.sprite = OvertoneUI.SmoothRoundedRect;
+            bdrImg.sprite = MurgeUI.SmoothRoundedRect;
             bdrImg.type = Image.Type.Sliced;
             bdrImg.color = OC.A(OC.border, 0.4f); // subtle, ~40% opacity
             bdrImg.raycastTarget = false;
             // Transparent fill inset
-            var cFill = OvertoneUI.CreateUIObject("Fill", card.transform);
+            var cFill = MurgeUI.CreateUIObject("Fill", card.transform);
             var cfRT = cFill.GetComponent<RectTransform>();
             cfRT.anchorMin = Vector2.zero; cfRT.anchorMax = Vector2.one;
             cfRT.offsetMin = new Vector2(1, 1); cfRT.offsetMax = new Vector2(-1, -1);
             var cfImg = cFill.AddComponent<Image>();
-            cfImg.sprite = OvertoneUI.SmoothRoundedRect;
+            cfImg.sprite = MurgeUI.SmoothRoundedRect;
             cfImg.type = Image.Type.Sliced;
             cfImg.color = OC.bg; // matches screen bg = transparent look
             cfImg.raycastTarget = false;
 
-            var tmp = OvertoneUI.CreateLabel(card.transform, "MORE SETTINGS\nCOMING SOON",
-                OvertoneUI.PressStart2P, 7, OC.dim, "Text");
+            var tmp = MurgeUI.CreateLabel(card.transform, "MORE SETTINGS\nCOMING SOON",
+                MurgeUI.PressStart2P, 7, OC.dim, "Text");
             tmp.characterSpacing = 1;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.lineSpacing = 12;
-            OvertoneUI.StretchFill(tmp.GetComponent<RectTransform>());
+            MurgeUI.StretchFill(tmp.GetComponent<RectTransform>());
         }
 
         private void BuildSaveButton(Transform parent)
         {
-            var wrapper = OvertoneUI.CreateUIObject("SaveWrapper", parent);
+            var wrapper = MurgeUI.CreateUIObject("SaveWrapper", parent);
             var wRT = wrapper.GetComponent<RectTransform>();
             wRT.anchorMin = new Vector2(0, 0);
             wRT.anchorMax = new Vector2(1, 0);
@@ -496,8 +496,8 @@ namespace MergeGame.UI
             wRT.anchoredPosition = new Vector2(0, 30 + OS.safeAreaBottom);
             wRT.sizeDelta = new Vector2(-48, 44); // -48 = 24px padding each side
 
-            var (saveGO, saveTMP) = OvertoneUI.CreatePrimaryButton(wrapper.transform, "SAVE", 44, "SaveButton");
-            OvertoneUI.StretchFill(saveGO.GetComponent<RectTransform>());
+            var (saveGO, saveTMP) = MurgeUI.CreatePrimaryButton(wrapper.transform, "SAVE", 44, "SaveButton");
+            MurgeUI.StretchFill(saveGO.GetComponent<RectTransform>());
             saveGO.GetComponent<Button>().onClick.AddListener(OnSaveClicked);
         }
 
@@ -625,8 +625,8 @@ namespace MergeGame.UI
             if (LeaderboardService.Instance != null)
                 LeaderboardService.Instance.UpdateDisplayName(newName);
 
-            if (Core.OvertoneAnalytics.Instance != null)
-                Core.OvertoneAnalytics.Instance.TrackNameChanged();
+            if (Core.MurgeAnalytics.Instance != null)
+                Core.MurgeAnalytics.Instance.TrackNameChanged();
 
             OnBackClicked();
         }
@@ -643,7 +643,7 @@ namespace MergeGame.UI
 
         private void AddSpacer(Transform parent, float height)
         {
-            var s = OvertoneUI.CreateUIObject("Spacer", parent);
+            var s = MurgeUI.CreateUIObject("Spacer", parent);
             var le = s.AddComponent<LayoutElement>();
             le.preferredHeight = height; le.minHeight = height;
         }

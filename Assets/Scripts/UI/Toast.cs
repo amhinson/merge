@@ -36,7 +36,7 @@ namespace MergeGame.UI
             if (canvas == null) return;
 
             // Container — anchored bottom-center, above safe area
-            var go = OvertoneUI.CreateUIObject("Toast", canvas.transform);
+            var go = MurgeUI.CreateUIObject("Toast", canvas.transform);
             var rt = go.GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(0.5f, 0);
             rt.anchorMax = new Vector2(0.5f, 0);
@@ -52,10 +52,10 @@ namespace MergeGame.UI
             bg.raycastTarget = false;
 
             // Label
-            var labelGO = OvertoneUI.CreateUIObject("Label", go.transform);
-            OvertoneUI.StretchFill(labelGO.GetComponent<RectTransform>());
+            var labelGO = MurgeUI.CreateUIObject("Label", go.transform);
+            MurgeUI.StretchFill(labelGO.GetComponent<RectTransform>());
             var tmp = labelGO.AddComponent<TextMeshProUGUI>();
-            tmp.font = OvertoneUI.PressStart2P;
+            tmp.font = MurgeUI.PressStart2P;
             tmp.fontSize = 7;
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;

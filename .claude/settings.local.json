@@ -40,7 +40,13 @@
       "Bash(mv NeonBallRenderer.cs.meta BallRenderer.cs.meta)",
       "Bash(find /Users/alex/projects/personal/merge -name Info.plist -o -name *.plist)",
       "Bash(find /Users/alex/projects/personal/merge/Assets/Scripts -name *Leaderboard* -o -name *leaderboard*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find /Users/alex/projects/personal/merge -maxdepth 1 -type f \\\\\\(-name *.json -o -name *.xml -o -name *.plist -o -name *.gradle -o -name Gemfile -o -name *.properties -o -name *.config -o -name *.cfg \\\\\\))",
+      "Bash(cd:*)",
+      "Bash(find . -name \"*.cs\" -exec sed -i '' 's/OvertoneUI/MurgeUI/g; s/OvertoneAnalytics/MurgeAnalytics/g; s/Overtone design/Murge design/g; s/Overtone design system/Murge design system/g; s/Overtone/Murge/g' {} +)",
+      "Bash(sed -i '' 's/OVERTONE logo/MURGE logo/; s/OVERTONE title/MURGE title/' UI/LoadingScreen.cs)",
+      "Bash(sed -i '' 's/\"\"OVERTONE\"\"/\"\"MURGE\"\"/' UI/TitleScreen.cs)",
+      "Bash(sed -i '' 's/OVERTONE title/MURGE title/' UI/ShareManager.cs)"
     ]
   }
 }

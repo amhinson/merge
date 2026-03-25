@@ -3,7 +3,7 @@ using UnityEngine;
 namespace MergeGame.Visual
 {
     /// <summary>
-    /// Generates waveform ball sprites matching the Overtone design.
+    /// Generates waveform ball sprites matching the Murge design.
     /// Each ball has: radial gradient body, circle stroke, and one of three wave styles
     /// (Thread/Dash/Dot) that scrolls slowly.
     /// </summary>

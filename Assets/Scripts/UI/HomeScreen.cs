@@ -73,9 +73,9 @@ namespace MergeGame.UI
             BuildSettingsButton();
 
             // Main vertical layout — childControlHeight true for flex spacers
-            var content = OvertoneUI.CreateUIObject("Content", transform);
+            var content = MurgeUI.CreateUIObject("Content", transform);
             contentRoot = content.GetComponent<RectTransform>();
-            OvertoneUI.StretchFill(contentRoot);
+            MurgeUI.StretchFill(contentRoot);
             var vlg = content.AddComponent<VerticalLayoutGroup>();
             vlg.childAlignment = TextAnchor.UpperCenter;
             vlg.childControlWidth = true;
@@ -106,7 +106,7 @@ namespace MergeGame.UI
             BuildLeaderboardCard(content.transform);
 
             // CTA container — fixed height, don't let layout stretch it
-            ctaContainer = OvertoneUI.CreateUIObject("CTABlock", content.transform).transform;
+            ctaContainer = MurgeUI.CreateUIObject("CTABlock", content.transform).transform;
             var ctaLE = ctaContainer.gameObject.AddComponent<LayoutElement>();
             ctaLE.flexibleHeight = 0;
             var ctaVLG = ctaContainer.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -133,7 +133,7 @@ namespace MergeGame.UI
         private void BuildSettingsButton()
         {
             // Absolute positioned top-right
-            var settingsGO = OvertoneUI.CreateUIObject("SettingsButton", transform);
+            var settingsGO = MurgeUI.CreateUIObject("SettingsButton", transform);
             var settingsRT = settingsGO.GetComponent<RectTransform>();
             settingsRT.anchorMin = new Vector2(1, 1);
             settingsRT.anchorMax = new Vector2(1, 1);
@@ -148,7 +148,7 @@ namespace MergeGame.UI
             bgImg.color = OC.border;
 
             // Gear icon — pixel-art sprite (TMP fonts don't have ⚙ glyph)
-            var gearGO = OvertoneUI.CreateUIObject("GearIcon", settingsGO.transform);
+            var gearGO = MurgeUI.CreateUIObject("GearIcon", settingsGO.transform);
             var gearRT = gearGO.GetComponent<RectTransform>();
             gearRT.anchorMin = new Vector2(0.5f, 0.5f);
             gearRT.anchorMax = new Vector2(0.5f, 0.5f);
@@ -172,13 +172,13 @@ namespace MergeGame.UI
 
         private void BuildLogoBlock(Transform parent)
         {
-            var block = OvertoneUI.CreateUIObject("LogoBlock", parent);
+            var block = MurgeUI.CreateUIObject("LogoBlock", parent);
             var blockLE = block.AddComponent<LayoutElement>();
             blockLE.minHeight = 100;
             blockLE.preferredHeight = 100;
 
             // Inner container with manual positioning (left-aligned)
-            var inner = OvertoneUI.CreateUIObject("LogoInner", block.transform);
+            var inner = MurgeUI.CreateUIObject("LogoInner", block.transform);
             var innerRT = inner.GetComponent<RectTransform>();
             innerRT.anchorMin = Vector2.zero;
             innerRT.anchorMax = Vector2.one;
@@ -193,38 +193,25 @@ namespace MergeGame.UI
             innerVLG.childForceExpandWidth = false;
             innerVLG.padding = new RectOffset(24, 24, (int)OS.safeAreaTop + 12, 0);
 
-            // OVER (line 1)
-            var overGO = OvertoneUI.CreateUIObject("TitleOver", inner.transform);
-            overGO.GetComponent<RectTransform>().sizeDelta = new Vector2(200, 28);
-            var overTMP = overGO.AddComponent<TextMeshProUGUI>();
-            overTMP.text = "OVER";
-            overTMP.font = OvertoneUI.PressStart2P;
-            overTMP.fontSize = OFont.title;
-            overTMP.color = OC.white;
-            overTMP.characterSpacing = 2;
-            overTMP.textWrappingMode = TextWrappingModes.NoWrap;
-            overTMP.overflowMode = TextOverflowModes.Overflow;
-            overTMP.raycastTarget = false;
-
-            // TONE (line 2)
-            var toneGO = OvertoneUI.CreateUIObject("TitleTone", inner.transform);
-            toneGO.GetComponent<RectTransform>().sizeDelta = new Vector2(200, 28);
-            var toneTMP = toneGO.AddComponent<TextMeshProUGUI>();
-            toneTMP.text = "TONE";
-            toneTMP.font = OvertoneUI.PressStart2P;
-            toneTMP.fontSize = OFont.title;
-            toneTMP.color = OC.cyan;
-            toneTMP.characterSpacing = 2;
-            toneTMP.textWrappingMode = TextWrappingModes.NoWrap;
-            toneTMP.overflowMode = TextOverflowModes.Overflow;
-            toneTMP.raycastTarget = false;
+            // Title
+            var titleGO = MurgeUI.CreateUIObject("Title", inner.transform);
+            titleGO.GetComponent<RectTransform>().sizeDelta = new Vector2(200, 28);
+            var titleTMP = titleGO.AddComponent<TextMeshProUGUI>();
+            titleTMP.text = GameSession.AppName;
+            titleTMP.font = MurgeUI.PressStart2P;
+            titleTMP.fontSize = OFont.title;
+            titleTMP.color = OC.cyan;
+            titleTMP.characterSpacing = 2;
+            titleTMP.textWrappingMode = TextWrappingModes.NoWrap;
+            titleTMP.overflowMode = TextOverflowModes.Overflow;
+            titleTMP.raycastTarget = false;
 
             // Tagline
-            var tagGO = OvertoneUI.CreateUIObject("Tagline", inner.transform);
+            var tagGO = MurgeUI.CreateUIObject("Tagline", inner.transform);
             tagGO.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 16);
             var tagTMP = tagGO.AddComponent<TextMeshProUGUI>();
             tagTMP.text = "A DAILY MERGE GAME";
-            tagTMP.font = OvertoneUI.DMMono;
+            tagTMP.font = MurgeUI.DMMono;
             tagTMP.fontSize = 10;
             tagTMP.color = OC.muted;
             tagTMP.characterSpacing = 5;
@@ -234,7 +221,7 @@ namespace MergeGame.UI
 
         private void BuildBallCluster(Transform parent)
         {
-            var cluster = OvertoneUI.CreateUIObject("BallCluster", parent);
+            var cluster = MurgeUI.CreateUIObject("BallCluster", parent);
             var hlg = cluster.AddComponent<HorizontalLayoutGroup>();
             hlg.childAlignment = TextAnchor.MiddleCenter;
             hlg.spacing = 16;
@@ -251,7 +238,7 @@ namespace MergeGame.UI
 
             for (int i = 0; i < 3; i++)
             {
-                var ballGO = OvertoneUI.CreateUIObject($"ClusterBall{i}", cluster.transform);
+                var ballGO = MurgeUI.CreateUIObject($"ClusterBall{i}", cluster.transform);
                 var ballRT = ballGO.GetComponent<RectTransform>();
                 ballRT.sizeDelta = new Vector2(sizes[i], sizes[i]);
 
@@ -279,7 +266,7 @@ namespace MergeGame.UI
 
         private void BuildPuzzleRow(Transform parent)
         {
-            var row = OvertoneUI.CreateUIObject("PuzzleRow", parent);
+            var row = MurgeUI.CreateUIObject("PuzzleRow", parent);
             var rowLE = row.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 24;
             rowLE.minHeight = 24;
@@ -288,7 +275,7 @@ namespace MergeGame.UI
             var rowRT = row.GetComponent<RectTransform>();
 
             // Puzzle number (left)
-            var dayGO = OvertoneUI.CreateUIObject("PuzzleNumber", row.transform);
+            var dayGO = MurgeUI.CreateUIObject("PuzzleNumber", row.transform);
             var dayRT = dayGO.GetComponent<RectTransform>();
             dayRT.anchorMin = new Vector2(0, 0);
             dayRT.anchorMax = new Vector2(0, 1);
@@ -296,7 +283,7 @@ namespace MergeGame.UI
             dayRT.anchoredPosition = new Vector2(24, 0);
             dayRT.sizeDelta = new Vector2(60, 0);
             dayNumberLabel = dayGO.AddComponent<TextMeshProUGUI>();
-            dayNumberLabel.font = OvertoneUI.PressStart2P;
+            dayNumberLabel.font = MurgeUI.PressStart2P;
             dayNumberLabel.fontSize = OFont.caption;
             dayNumberLabel.color = OC.cyan;
             dayNumberLabel.characterSpacing = 1;
@@ -306,7 +293,7 @@ namespace MergeGame.UI
             dayNumberLabel.raycastTarget = false;
 
             // Date (right)
-            var dateGO = OvertoneUI.CreateUIObject("DateLabel", row.transform);
+            var dateGO = MurgeUI.CreateUIObject("DateLabel", row.transform);
             var dateRT = dateGO.GetComponent<RectTransform>();
             dateRT.anchorMin = new Vector2(1, 0);
             dateRT.anchorMax = new Vector2(1, 1);
@@ -314,7 +301,7 @@ namespace MergeGame.UI
             dateRT.anchoredPosition = new Vector2(-24, 0);
             dateRT.sizeDelta = new Vector2(80, 0);
             dateLabel = dateGO.AddComponent<TextMeshProUGUI>();
-            dateLabel.font = OvertoneUI.DMMono;
+            dateLabel.font = MurgeUI.DMMono;
             dateLabel.fontSize = OFont.bodyXs;
             dateLabel.color = OC.muted;
             dateLabel.characterSpacing = 1;
@@ -324,7 +311,7 @@ namespace MergeGame.UI
             dateLabel.raycastTarget = false;
 
             // Thin line between them
-            var lineGO = OvertoneUI.CreateUIObject("Line", row.transform);
+            var lineGO = MurgeUI.CreateUIObject("Line", row.transform);
             var lineRT = lineGO.GetComponent<RectTransform>();
             lineRT.anchorMin = new Vector2(0, 0.5f);
             lineRT.anchorMax = new Vector2(1, 0.5f);
@@ -342,7 +329,7 @@ namespace MergeGame.UI
             AddSpacer(parent, 8);
 
             // Fixed-height container — height updates dynamically when rows are populated
-            var wrapper = OvertoneUI.CreateUIObject("LeaderboardWrapper", parent);
+            var wrapper = MurgeUI.CreateUIObject("LeaderboardWrapper", parent);
             var wrapperLE = wrapper.AddComponent<LayoutElement>();
             wrapperLE.preferredHeight = 60; // header + empty state, updated when rows arrive
             wrapperLE.minHeight = 40;
@@ -350,12 +337,12 @@ namespace MergeGame.UI
             leaderboardWrapper = wrapper;
 
             // Card background (manual anchoring, inset 24px from edges)
-            var card = OvertoneUI.CreateUIObject("LeaderboardCard", wrapper.transform);
+            var card = MurgeUI.CreateUIObject("LeaderboardCard", wrapper.transform);
             var cardRT = card.GetComponent<RectTransform>();
             cardRT.anchorMin = Vector2.zero; cardRT.anchorMax = Vector2.one;
             cardRT.offsetMin = new Vector2(24, 0); cardRT.offsetMax = new Vector2(-24, 0);
             // Card border (rendered FIRST, slightly larger, behind the fill)
-            var cardOutline = OvertoneUI.CreateUIObject("Border", card.transform);
+            var cardOutline = MurgeUI.CreateUIObject("Border", card.transform);
             var coRT = cardOutline.GetComponent<RectTransform>();
             coRT.anchorMin = Vector2.zero; coRT.anchorMax = Vector2.one;
             coRT.offsetMin = new Vector2(-1, -1); coRT.offsetMax = new Vector2(1, 1);
@@ -365,7 +352,7 @@ namespace MergeGame.UI
             coImg.color = OC.border;
             coImg.raycastTarget = false;
             // Card fill (on top of border, exact card size)
-            var cardFill = OvertoneUI.CreateUIObject("Fill", card.transform);
+            var cardFill = MurgeUI.CreateUIObject("Fill", card.transform);
             var cfRT = cardFill.GetComponent<RectTransform>();
             cfRT.anchorMin = Vector2.zero; cfRT.anchorMax = Vector2.one;
             cfRT.offsetMin = Vector2.zero; cfRT.offsetMax = Vector2.zero;
@@ -376,7 +363,7 @@ namespace MergeGame.UI
             cardBg.raycastTarget = false;
 
             // Header: "TODAY'S TOP" (left) + "ALL →" (right), 24px tall at top
-            var headerLabelGO = OvertoneUI.CreateUIObject("HeaderLabel", card.transform);
+            var headerLabelGO = MurgeUI.CreateUIObject("HeaderLabel", card.transform);
             var hlRT = headerLabelGO.GetComponent<RectTransform>();
             hlRT.anchorMin = new Vector2(0, 1); hlRT.anchorMax = new Vector2(0.6f, 1);
             hlRT.pivot = new Vector2(0, 1);
@@ -384,7 +371,7 @@ namespace MergeGame.UI
             hlRT.sizeDelta = new Vector2(0, 24);
             var headerLabel = headerLabelGO.AddComponent<TextMeshProUGUI>();
             headerLabel.text = "TODAY'S TOP";
-            headerLabel.font = OvertoneUI.PressStart2P;
+            headerLabel.font = MurgeUI.PressStart2P;
             headerLabel.fontSize = OFont.labelXs;
             headerLabel.color = OC.muted;
             headerLabel.alignment = TextAlignmentOptions.Left;
@@ -392,7 +379,7 @@ namespace MergeGame.UI
             headerLabel.textWrappingMode = TextWrappingModes.NoWrap;
             headerLabel.raycastTarget = false;
 
-            var allBtnGO = OvertoneUI.CreateUIObject("AllButton", card.transform);
+            var allBtnGO = MurgeUI.CreateUIObject("AllButton", card.transform);
             var abRT = allBtnGO.GetComponent<RectTransform>();
             abRT.anchorMin = new Vector2(0.6f, 1); abRT.anchorMax = new Vector2(1, 1);
             abRT.pivot = new Vector2(1, 1);
@@ -400,7 +387,7 @@ namespace MergeGame.UI
             abRT.sizeDelta = new Vector2(0, 24);
             var allTMP = allBtnGO.AddComponent<TextMeshProUGUI>();
             allTMP.text = "ALL >";
-            allTMP.font = OvertoneUI.PressStart2P;
+            allTMP.font = MurgeUI.PressStart2P;
             allTMP.fontSize = OFont.labelXs;
             allTMP.color = OC.cyan;
             allTMP.textWrappingMode = TextWrappingModes.NoWrap;
@@ -414,7 +401,7 @@ namespace MergeGame.UI
             });
 
             // Divider line at y=-24 from top
-            var divGO = OvertoneUI.CreateUIObject("Divider", card.transform);
+            var divGO = MurgeUI.CreateUIObject("Divider", card.transform);
             var divRT = divGO.GetComponent<RectTransform>();
             divRT.anchorMin = new Vector2(0, 1); divRT.anchorMax = new Vector2(1, 1);
             divRT.pivot = new Vector2(0.5f, 1);
@@ -423,7 +410,7 @@ namespace MergeGame.UI
             divGO.AddComponent<Image>().color = OC.border;
 
             // Row container — VLG below the header (starts at y=-25)
-            var rowContainer = OvertoneUI.CreateUIObject("Rows", card.transform);
+            var rowContainer = MurgeUI.CreateUIObject("Rows", card.transform);
             var rcRT = rowContainer.GetComponent<RectTransform>();
             rcRT.anchorMin = new Vector2(0, 0); rcRT.anchorMax = new Vector2(1, 1);
             rcRT.offsetMin = new Vector2(0, 0); rcRT.offsetMax = new Vector2(0, -25);
@@ -436,10 +423,10 @@ namespace MergeGame.UI
             leaderboardRowContainer = rowContainer.transform;
 
             // Loading indicator
-            loadingIndicator = OvertoneUI.CreateUIObject("Loading", rowContainer.transform);
+            loadingIndicator = MurgeUI.CreateUIObject("Loading", rowContainer.transform);
             var loadingTMP = loadingIndicator.AddComponent<TextMeshProUGUI>();
             loadingTMP.text = "...";
-            loadingTMP.font = OvertoneUI.DMMono;
+            loadingTMP.font = MurgeUI.DMMono;
             loadingTMP.fontSize = OFont.body;
             loadingTMP.color = OC.muted;
             loadingTMP.alignment = TextAlignmentOptions.Center;
@@ -501,10 +488,10 @@ namespace MergeGame.UI
             if (entries == null || entries.Count == 0)
             {
                 // Empty state
-                var emptyGO = OvertoneUI.CreateUIObject("EmptyState", leaderboardRowContainer);
+                var emptyGO = MurgeUI.CreateUIObject("EmptyState", leaderboardRowContainer);
                 var emptyTMP = emptyGO.AddComponent<TextMeshProUGUI>();
                 emptyTMP.text = GameSession.IsOffline ? "You're offline" : "No scores yet today";
-                emptyTMP.font = OvertoneUI.DMMono;
+                emptyTMP.font = MurgeUI.DMMono;
                 emptyTMP.fontSize = 11;
                 emptyTMP.color = OC.muted;
                 emptyTMP.alignment = TextAlignmentOptions.Center;
@@ -525,7 +512,7 @@ namespace MergeGame.UI
                     // Divider between rows (not before first)
                     if (i > 0)
                     {
-                        var div = OvertoneUI.CreateUIObject($"Div{i}", leaderboardRowContainer);
+                        var div = MurgeUI.CreateUIObject($"Div{i}", leaderboardRowContainer);
                         div.AddComponent<Image>().color = OC.border;
                         div.GetComponent<Image>().raycastTarget = false;
                         var divLE = div.AddComponent<LayoutElement>();
@@ -564,7 +551,7 @@ namespace MergeGame.UI
             if (hasPlayed && !playerInTop3)
             {
                 // Divider above your rank
-                var yourDiv = OvertoneUI.CreateUIObject("YourDiv", leaderboardRowContainer);
+                var yourDiv = MurgeUI.CreateUIObject("YourDiv", leaderboardRowContainer);
                 yourDiv.AddComponent<Image>().color = OC.border;
                 yourDiv.GetComponent<Image>().raycastTarget = false;
                 var ydLE = yourDiv.AddComponent<LayoutElement>();
@@ -607,7 +594,7 @@ namespace MergeGame.UI
             Color bgColor, string name, bool usePixelFontForRank = false,
             Color? rankColor = null)
         {
-            var row = OvertoneUI.CreateUIObject(name, parent);
+            var row = MurgeUI.CreateUIObject(name, parent);
             var rowLE = row.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 38;
             rowLE.minHeight = 38;
@@ -619,7 +606,7 @@ namespace MergeGame.UI
             rowBg.raycastTarget = false;
 
             // Rank (left, 32pt wide)
-            var rankGO = OvertoneUI.CreateUIObject("Rank", row.transform);
+            var rankGO = MurgeUI.CreateUIObject("Rank", row.transform);
             var rankRT = rankGO.GetComponent<RectTransform>();
             rankRT.anchorMin = new Vector2(0, 0); rankRT.anchorMax = new Vector2(0, 1);
             rankRT.pivot = new Vector2(0, 0.5f);
@@ -627,7 +614,7 @@ namespace MergeGame.UI
             rankRT.sizeDelta = new Vector2(32, 0);
             var rankTMP = rankGO.AddComponent<TextMeshProUGUI>();
             rankTMP.text = rankText;
-            rankTMP.font = usePixelFontForRank ? OvertoneUI.PressStart2P : OvertoneUI.DMMono;
+            rankTMP.font = usePixelFontForRank ? MurgeUI.PressStart2P : MurgeUI.DMMono;
             rankTMP.fontSize = rankFontSize;
             rankTMP.color = rankColor ?? (usePixelFontForRank ? nameColor : OC.dim);
             rankTMP.alignment = TextAlignmentOptions.Left;
@@ -636,13 +623,13 @@ namespace MergeGame.UI
             rankTMP.raycastTarget = false;
 
             // Name (center, flex)
-            var nameGO = OvertoneUI.CreateUIObject("Name", row.transform);
+            var nameGO = MurgeUI.CreateUIObject("Name", row.transform);
             var nameRT = nameGO.GetComponent<RectTransform>();
             nameRT.anchorMin = new Vector2(0, 0); nameRT.anchorMax = new Vector2(1, 1);
             nameRT.offsetMin = new Vector2(44, 0); nameRT.offsetMax = new Vector2(-90, 0);
             var nameTMP = nameGO.AddComponent<TextMeshProUGUI>();
             nameTMP.text = nameText;
-            nameTMP.font = OvertoneUI.DMMono;
+            nameTMP.font = MurgeUI.DMMono;
             nameTMP.fontSize = 13;
             nameTMP.color = nameColor;
             nameTMP.alignment = TextAlignmentOptions.Left;
@@ -652,7 +639,7 @@ namespace MergeGame.UI
             nameTMP.raycastTarget = false;
 
             // Score (right, 80pt)
-            var scoreGO = OvertoneUI.CreateUIObject("Score", row.transform);
+            var scoreGO = MurgeUI.CreateUIObject("Score", row.transform);
             var scoreRT = scoreGO.GetComponent<RectTransform>();
             scoreRT.anchorMin = new Vector2(1, 0); scoreRT.anchorMax = new Vector2(1, 1);
             scoreRT.pivot = new Vector2(1, 0.5f);
@@ -660,7 +647,7 @@ namespace MergeGame.UI
             scoreRT.sizeDelta = new Vector2(80, 0);
             var scoreTMP = scoreGO.AddComponent<TextMeshProUGUI>();
             scoreTMP.text = scoreText;
-            scoreTMP.font = OvertoneUI.DMMono;
+            scoreTMP.font = MurgeUI.DMMono;
             scoreTMP.fontSize = 13;
             scoreTMP.color = scoreColor;
             scoreTMP.alignment = TextAlignmentOptions.Right;
@@ -675,7 +662,7 @@ namespace MergeGame.UI
 
         private void AddFlex(Transform parent, float weight)
         {
-            var flex = OvertoneUI.CreateUIObject("Flex", parent);
+            var flex = MurgeUI.CreateUIObject("Flex", parent);
             var le = flex.AddComponent<LayoutElement>();
             le.flexibleHeight = weight;
             le.minHeight = 0;
@@ -683,7 +670,7 @@ namespace MergeGame.UI
 
         private void AddSpacer(Transform parent, float height)
         {
-            var spacer = OvertoneUI.CreateUIObject("Spacer", parent);
+            var spacer = MurgeUI.CreateUIObject("Spacer", parent);
             var le = spacer.AddComponent<LayoutElement>();
             le.preferredHeight = height;
             le.minHeight = height;

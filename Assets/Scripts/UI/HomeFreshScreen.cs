@@ -14,12 +14,12 @@ namespace MergeGame.UI
     {
         protected override void BuildCTABlock(Transform parent)
         {
-            var (playGO, playLabel) = OvertoneUI.CreatePrimaryButton(parent, "PLAY", 44, "PlayButton");
+            var (playGO, playLabel) = MurgeUI.CreatePrimaryButton(parent, "PLAY", 44, "PlayButton");
             playGO.GetComponent<LayoutElement>().flexibleHeight = 0;
             playGO.GetComponent<Button>().onClick.AddListener(OnPlayClicked);
 
-            var hint = OvertoneUI.CreateLabel(parent, "1 scored play per day",
-                OvertoneUI.DMMono, OFont.caption, OC.dim, "HintLabel");
+            var hint = MurgeUI.CreateLabel(parent, "1 scored play per day",
+                MurgeUI.DMMono, OFont.caption, OC.dim, "HintLabel");
             hint.alignment = TextAlignmentOptions.Center;
             hint.characterSpacing = 1;
             hint.gameObject.AddComponent<LayoutElement>().preferredHeight = 16;

@@ -69,7 +69,7 @@ namespace MergeGame.UI
             shareCardRoot.SetActive(false);
 
             // Save to file
-            string path = Application.persistentDataPath + "/overtone_share.png";
+            string path = Application.persistentDataPath + "/murge_share.png";
             System.IO.File.WriteAllBytes(path, screenshot.EncodeToPNG());
             Destroy(screenshot);
 
@@ -81,7 +81,7 @@ namespace MergeGame.UI
             {
                 new NativeShare()
                     .AddFile(path)
-                    .SetText($"Overtone #{GameSession.TodayDayNumber} — {GameSession.TodayScore:N0} pts")
+                    .SetText($"{GameSession.AppName} #{GameSession.TodayDayNumber} — {GameSession.TodayScore:N0} pts")
                     .Share();
             }
             catch (System.Exception e)
@@ -169,7 +169,7 @@ namespace MergeGame.UI
                         countRT.sizeDelta = new Vector2(shareSize + 4, 14);
                         var countTMP = countGO.AddComponent<TextMeshProUGUI>();
                         countTMP.text = $"{count}";
-                        countTMP.font = OvertoneUI.PressStart2P;
+                        countTMP.font = MurgeUI.PressStart2P;
                         countTMP.fontSize = 10;
                         countTMP.color = ballColor;
                         countTMP.alignment = TextAlignmentOptions.Center;
@@ -271,14 +271,13 @@ namespace MergeGame.UI
             // Top spacer
             AddShareSpacer(content.transform, shareLayer, 12);
 
-            // OVERTONE title
+            // MURGE title
             var titleGO = CreateShareTMP(content.transform, shareLayer, "Title", 40);
             var titleTMP = titleGO.GetComponent<TextMeshProUGUI>();
-            string cyanHex = ColorUtility.ToHtmlStringRGB(OC.cyan);
-            titleTMP.text = $"OVER<color=#{cyanHex}>TONE</color>";
-            titleTMP.font = OvertoneUI.PressStart2P;
+            titleTMP.text = Core.GameSession.AppName;
+            titleTMP.font = MurgeUI.PressStart2P;
             titleTMP.fontSize = 36;
-            titleTMP.color = OC.white;
+            titleTMP.color = OC.cyan;
             titleTMP.characterSpacing = 3;
             titleTMP.alignment = TextAlignmentOptions.Center;
             titleTMP.richText = true;
@@ -289,7 +288,7 @@ namespace MergeGame.UI
             var dateGO = CreateShareTMP(content.transform, shareLayer, "DateLine", 24);
             dateLine = dateGO.GetComponent<TextMeshProUGUI>();
             dateLine.text = "#1  ·  MAR 23";
-            dateLine.font = OvertoneUI.DMMono;
+            dateLine.font = MurgeUI.DMMono;
             dateLine.fontSize = 18;
             dateLine.color = OC.A(OC.white, 0.55f);
             dateLine.characterSpacing = 2;
@@ -301,7 +300,7 @@ namespace MergeGame.UI
             var scoreGO = CreateShareTMP(content.transform, shareLayer, "Score", 60);
             scoreText = scoreGO.GetComponent<TextMeshProUGUI>();
             scoreText.text = "0";
-            scoreText.font = OvertoneUI.DMMono;
+            scoreText.font = MurgeUI.DMMono;
             scoreText.fontSize = 56;
             scoreText.color = OC.cyan;
             scoreText.alignment = TextAlignmentOptions.Center;
@@ -351,7 +350,7 @@ namespace MergeGame.UI
             var chainGO = CreateShareTMP(content.transform, shareLayer, "Chain", 18);
             shareChainLabel = chainGO.GetComponent<TextMeshProUGUI>();
             shareChainLabel.text = "";
-            shareChainLabel.font = OvertoneUI.PressStart2P;
+            shareChainLabel.font = MurgeUI.PressStart2P;
             shareChainLabel.fontSize = 10;
             shareChainLabel.color = OC.muted;
             shareChainLabel.characterSpacing = 1;
@@ -367,8 +366,8 @@ namespace MergeGame.UI
             // Footer — pinned to bottom
             var footerGO = CreateShareTMP(content.transform, shareLayer, "Footer", 24);
             footerText = footerGO.GetComponent<TextMeshProUGUI>();
-            footerText.text = "overtone.app";
-            footerText.font = OvertoneUI.DMMono;
+            footerText.text = Core.GameSession.AppDomain;
+            footerText.font = MurgeUI.DMMono;
             footerText.fontSize = 16;
             footerText.color = OC.A(OC.white, 0.40f);
             footerText.characterSpacing = 2;

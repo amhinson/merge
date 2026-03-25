@@ -85,7 +85,7 @@ namespace MergeGame.UI
 
             // Background pill
             var bgImg = toastGO.AddComponent<Image>();
-            bgImg.sprite = OvertoneUI.SmoothRoundedRect;
+            bgImg.sprite = MurgeUI.SmoothRoundedRect;
             bgImg.type = Image.Type.Sliced;
             bgImg.color = new Color(OC.amber.r, OC.amber.g, OC.amber.b, 0.15f);
             bgImg.raycastTarget = false;
@@ -101,7 +101,7 @@ namespace MergeGame.UI
 
             var tmp = textGO.AddComponent<TextMeshProUGUI>();
             tmp.text = "PRACTICE — score won't count";
-            tmp.font = OvertoneUI.PressStart2P;
+            tmp.font = MurgeUI.PressStart2P;
             tmp.fontSize = 6;
             tmp.color = OC.amber;
             tmp.alignment = TextAlignmentOptions.Center;

@@ -94,7 +94,7 @@ namespace MergeGame.Editor
             managers.AddComponent<ShareManager>();
             managers.AddComponent<MergeParticles>();
             managers.AddComponent<GameAnalyticsSDK.GameAnalytics>();
-            managers.AddComponent<OvertoneAnalytics>();
+            managers.AddComponent<MurgeAnalytics>();
 
             // Debug overlay removed from production builds
 
@@ -192,7 +192,7 @@ namespace MergeGame.Editor
             var settingsCG = settingsPanel.AddComponent<CanvasGroup>();
 
             // ===== NEW SPEC SCREENS =====
-            // These self-build their UI on OnEnable via OvertoneUI factory methods.
+            // These self-build their UI on OnEnable via MurgeUI factory methods.
             var onboardingPanel = CreateNewScreenPanel(safeArea.transform, "OnboardingScreen", tierConfig);
             onboardingPanel.AddComponent<OnboardingScreen>();
             SetProperty(onboardingPanel.GetComponent<OnboardingScreen>(), "tierConfig", tierConfig);
@@ -295,7 +295,7 @@ namespace MergeGame.Editor
             bg.color = BgColor;
 
             // Title
-            var title = CreateText(panel.transform, "Title", "OVERTONE", 64, TextColor);
+            var title = CreateText(panel.transform, "Title", "MURGE", 64, TextColor);
             SetAnchors(title.rectTransform, 0.05f, 0.72f, 0.95f, 0.82f);
 
             // Tagline (directly below title)
@@ -605,7 +605,7 @@ namespace MergeGame.Editor
             var quitBtnGO = new GameObject("YesBtn");
             quitBtnGO.transform.SetParent(btnRow.transform, false);
             var quitBtnImg = quitBtnGO.AddComponent<Image>();
-            quitBtnImg.sprite = OvertoneUI.SmoothRoundedRect;
+            quitBtnImg.sprite = MurgeUI.SmoothRoundedRect;
             quitBtnImg.type = Image.Type.Sliced;
             quitBtnImg.color = HexColor("E8587A"); // pink/danger
             var yesBtn = quitBtnGO.AddComponent<Button>();
@@ -617,7 +617,7 @@ namespace MergeGame.Editor
             qsRT.anchorMin = Vector2.zero; qsRT.anchorMax = Vector2.one;
             qsRT.offsetMin = Vector2.zero; qsRT.offsetMax = Vector2.zero;
             var qsImg = quitScanGO.AddComponent<Image>();
-            qsImg.sprite = OvertoneUI.GetScanlineSprite();
+            qsImg.sprite = MurgeUI.GetScanlineSprite();
             qsImg.type = Image.Type.Simple;
             qsImg.color = new Color(0, 0, 0, 0.22f);
             qsImg.raycastTarget = false;
@@ -635,7 +635,7 @@ namespace MergeGame.Editor
             cancelBtnGO.transform.SetParent(btnRow.transform, false);
             // Border background
             var cancelBtnImg = cancelBtnGO.AddComponent<Image>();
-            cancelBtnImg.sprite = OvertoneUI.SmoothRoundedRect;
+            cancelBtnImg.sprite = MurgeUI.SmoothRoundedRect;
             cancelBtnImg.type = Image.Type.Sliced;
             cancelBtnImg.color = HexColor("232838"); // OC.border
             // Inner fill (inset to create border effect)
@@ -645,7 +645,7 @@ namespace MergeGame.Editor
             ciRT.anchorMin = Vector2.zero; ciRT.anchorMax = Vector2.one;
             ciRT.offsetMin = new Vector2(1.5f, 1.5f); ciRT.offsetMax = new Vector2(-1.5f, -1.5f);
             var ciImg = cancelInner.AddComponent<Image>();
-            ciImg.sprite = OvertoneUI.SmoothRoundedRect;
+            ciImg.sprite = MurgeUI.SmoothRoundedRect;
             ciImg.type = Image.Type.Sliced;
             ciImg.color = HexColor("0F1117"); // OC.bg
             ciImg.raycastTarget = false;
@@ -680,7 +680,7 @@ namespace MergeGame.Editor
             var homeBtn = CreateIconButton(panel.transform, "HomeBtn", 0.02f, 0.90f, 0.14f, 0.98f);
 
             // Day label
-            var dayLabel = CreateText(panel.transform, "DayLabel", "Overtone #1", 24, MutedText);
+            var dayLabel = CreateText(panel.transform, "DayLabel", "Murge #1", 24, MutedText);
             SetAnchors(dayLabel.rectTransform, 0.1f, 0.78f, 0.9f, 0.83f);
 
             // Score (large, with tick-up)

@@ -2,13 +2,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
+using MergeGame.Core;
 using MergeGame.Data;
 
 namespace MergeGame.UI
 {
     /// <summary>
     /// Simple loading screen shown on app startup.
-    /// Displays the OVERTONE logo and a pulsing animated ball.
+    /// Displays the MURGE logo and a pulsing animated ball.
     /// Auto-hides once the game is ready.
     /// </summary>
     public class LoadingScreen : MonoBehaviour
@@ -42,8 +43,8 @@ namespace MergeGame.UI
             if (canvas != null)
                 transform.SetAsLastSibling();
 
-            // OVERTONE title (centered upper area)
-            var titleGO = OvertoneUI.CreateUIObject("Title", transform);
+            // MURGE title (centered upper area)
+            var titleGO = MurgeUI.CreateUIObject("Title", transform);
             var titleRT = titleGO.GetComponent<RectTransform>();
             titleRT.anchorMin = new Vector2(0.5f, 0.5f);
             titleRT.anchorMax = new Vector2(0.5f, 0.5f);
@@ -52,17 +53,17 @@ namespace MergeGame.UI
             titleRT.sizeDelta = new Vector2(300, 30);
             var titleTMP = titleGO.AddComponent<TextMeshProUGUI>();
             string cyanHex = ColorUtility.ToHtmlStringRGB(OC.cyan);
-            titleTMP.text = $"OVER<color=#{cyanHex}>TONE</color>";
-            titleTMP.font = OvertoneUI.PressStart2P;
+            titleTMP.text = GameSession.AppName;
+            titleTMP.font = MurgeUI.PressStart2P;
             titleTMP.fontSize = 20;
-            titleTMP.color = OC.white;
+            titleTMP.color = OC.cyan;
             titleTMP.characterSpacing = 3;
             titleTMP.alignment = TextAlignmentOptions.Center;
             titleTMP.richText = true;
             titleTMP.raycastTarget = false;
 
             // Animated ball (centered)
-            var ballGO = OvertoneUI.CreateUIObject("Ball", transform);
+            var ballGO = MurgeUI.CreateUIObject("Ball", transform);
             var ballRT = ballGO.GetComponent<RectTransform>();
             ballRT.anchorMin = new Vector2(0.5f, 0.5f);
             ballRT.anchorMax = new Vector2(0.5f, 0.5f);
@@ -85,7 +86,7 @@ namespace MergeGame.UI
             ballImage.color = Color.white;
 
             // Subtitle
-            var subGO = OvertoneUI.CreateUIObject("Sub", transform);
+            var subGO = MurgeUI.CreateUIObject("Sub", transform);
             var subRT = subGO.GetComponent<RectTransform>();
             subRT.anchorMin = new Vector2(0.5f, 0.5f);
             subRT.anchorMax = new Vector2(0.5f, 0.5f);
@@ -94,7 +95,7 @@ namespace MergeGame.UI
             subRT.sizeDelta = new Vector2(200, 16);
             var subTMP = subGO.AddComponent<TextMeshProUGUI>();
             subTMP.text = "A DAILY MERGE GAME";
-            subTMP.font = OvertoneUI.DMMono;
+            subTMP.font = MurgeUI.DMMono;
             subTMP.fontSize = 8;
             subTMP.color = OC.muted;
             subTMP.characterSpacing = 3;

@@ -40,6 +40,12 @@ namespace MergeGame.Core
         /// <summary>Day 1 of the daily puzzle. Single source of truth — do not duplicate.</summary>
         public static readonly System.DateTime LaunchDate = new System.DateTime(2026, 3, 20);
 
+        // App identity — single source of truth for display strings
+        public const string AppName = "MURGE";
+        public const string AppNameStyled = "MURGE"; // for rich text (no split needed)
+        public const string AppDomain = "murgegame.com";
+        public const string AppEmail = "murgegame@gmail.com";
+
         public static string  DeviceUUID     { get; private set; }
         public static Player  CurrentPlayer  { get; set; }
         public static int     TodayScore     { get; set; }

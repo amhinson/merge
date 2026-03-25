@@ -1,4 +1,4 @@
-# Overtone — Daily Merge Game
+# Murge — Daily Merge Game
 
 A daily puzzle-merge game built in Unity 6 (6000.3.11f1) with Supabase backend. Currently targeting iOS, with Android and web builds planned. Players drop balls, merge matching tiers, and compete on a daily leaderboard. Same seeded sequence for all players each day.
 
@@ -31,8 +31,8 @@ The gameplay screen is built at **editor time** by `GameSceneBuilder.cs`. After 
 
 - `MergeGame.Core` — Game logic (GameManager, BallController, DropController, DailySeedManager, ScoreManager, MergeTracker, etc.)
 - `MergeGame.UI` — All screens and HUD components (procedurally built, no prefabs)
-- `MergeGame.Backend` — SupabaseClient, LeaderboardService, OfflineScoreQueue
-- `MergeGame.Data` — ScriptableObjects and design tokens (BallData, PhysicsConfig, OvertoneDesign)
+- `MergeGame.Backend` — SupabaseClient, LeaderboardService, OfflineSyncQueue
+- `MergeGame.Data` — ScriptableObjects and design tokens (BallData, PhysicsConfig, MurgeDesign)
 - `MergeGame.Visual` — BallRenderer, WaveformAnimator, MergeParticles, PixelUIGenerator
 - `MergeGame.Audio` — AudioManager (procedural SFX)
 - `MergeGame.Editor` — GameSceneBuilder, BuildScript
@@ -61,10 +61,10 @@ Playing → Drop ball → Merge same tiers → Score with combo multiplier → G
 
 ## Design System
 
-### Constants (OvertoneDesign.cs)
+### Constants (MurgeDesign.cs)
 
 - Colors: `OC.cyan` (#4DD9C0), `OC.bg` (#0F1117), `OC.surface` (#161B24), `OC.border` (#232838), `OC.muted` (white 22%), `OC.amber`, `OC.pink`
-- Fonts: `OvertoneUI.PressStart2P` (headings/buttons), `OvertoneUI.DMMono` (body text)
+- Fonts: `MurgeUI.PressStart2P` (headings/buttons), `MurgeUI.DMMono` (body text)
 - Button height: **44px** everywhere (home, settings, onboarding, modals)
 - Primary buttons: `CreatePrimaryButton()` — cyan fill, scanlines, PressStart2P 11pt
 - Ghost buttons: outline border + bg fill, PressStart2P 9pt, OC.muted text
@@ -108,7 +108,7 @@ Point values in `Assets/ScriptableObjects/BallData_Tier[1-11].asset`. Combo mult
 
 ### Dev vs Prod
 
-`SupabaseClient.cs` auto-selects credentials: Editor/Development builds → dev project, Release builds → prod project. Bundle IDs: `com.overtone.game.dev` / `com.overtone.game`.
+`SupabaseClient.cs` auto-selects credentials: Editor/Development builds → dev project, Release builds → prod project. Bundle IDs: `com.murge.game.dev` / `com.murge.game`.
 
 ## Key Files Reference
 
@@ -122,8 +122,8 @@ Point values in `Assets/ScriptableObjects/BallData_Tier[1-11].asset`. Combo mult
 | `Core/ScoreManager.cs`         | Score + combo multiplier                                         |
 | `Core/GameSession.cs`          | Static session state, LaunchDate, merge counts                   |
 | `Core/MergeTracker.cs`         | Chain tracking, merge stats                                      |
-| `Backend/OfflineScoreQueue.cs` | Persists failed score submissions for retry                      |
-| `UI/OvertoneUI.cs`             | Shared UI helpers (buttons, labels, sprites)                     |
+| `Backend/OfflineSyncQueue.cs`  | Persists failed network calls for retry                          |
+| `UI/MurgeUI.cs`             | Shared UI helpers (buttons, labels, sprites)                     |
 | `UI/HomeScreen.cs`             | Base class for home screens (logo, leaderboard, settings button) |
 | `UI/ResultOverlayScreen.cs`    | End-game results with merge card                                 |
 | `UI/ShareManager.cs`           | Share card rendering (700x500 offscreen camera)                  |
@@ -156,7 +156,7 @@ Static site hosted on Netlify. Deploy: `cd web && ./deploy.sh`
 
 ## Analytics (GameAnalytics)
 
-SDK: `com.gameanalytics.sdk` via OpenUPM. Wrapper: `OvertoneAnalytics.cs`. All events fail silently.
+SDK: `com.gameanalytics.sdk` via OpenUPM. Wrapper: `MurgeAnalytics.cs`. All events fail silently.
 
 | Event                     | GA Type           | When                                  |
 | ------------------------- | ----------------- | ------------------------------------- |
@@ -172,7 +172,7 @@ SDK: `com.gameanalytics.sdk` via OpenUPM. Wrapper: `OvertoneAnalytics.cs`. All e
 | `onboarding:complete`     | Design            | Onboarding finished                   |
 | `gameplay:shake_used`     | Design            | Shake button used (value = remaining) |
 
-**Setup**: Add the GameAnalytics prefab to the scene and configure game keys in its inspector. `OvertoneAnalytics` is added to the Managers object by GameSceneBuilder.
+**Setup**: Add the GameAnalytics prefab to the scene and configure game keys in its inspector. `MurgeAnalytics` is added to the Managers object by GameSceneBuilder.
 
 ## Conventions
 

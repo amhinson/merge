@@ -102,7 +102,7 @@ namespace MergeGame.Visual
 
             if (sharedMaterial == null)
             {
-                var shader = Shader.Find("Overtone/WaveformBall");
+                var shader = Shader.Find("Murge/WaveformBall");
                 if (shader != null)
                     sharedMaterial = new Material(shader);
                 else
