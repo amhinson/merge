@@ -1,5 +1,14 @@
-Ask about production ready. Future-proof schema, security, auth, etc.
-Claude-specific project file setup.
+AUDIT
+
+- Client controls game_date — the submit-score function trusts the client-provided date. Server should validate it matches the current server date. But I don't want to use UTC, so take this into account.
+- No rate limiting on any edge function — registration, score submission, name updates can all be spammed.
+- No offline score queue — if network drops at game over, the scored attempt is lost. Should queue and retry.
+- Privacy policy required — App Store requires one. You collect device UUID + display name + scores. Minimal, but needs to be documented.
+- Hardcoded launch date in 2 files (DailySeedManager.cs, NewLeaderboardScreen.cs) — fragile if release date shifts. Can this be on the server somehow?
+- No retry logic on network calls — single attempt, 30s timeout, silent failure.
+- JSON built via string interpolation in some places — works due to sanitization but fragile. Should standardize to JsonUtility.ToJson().
+
+Basic Analytics
 
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
 Create Gamecenter achievement.
