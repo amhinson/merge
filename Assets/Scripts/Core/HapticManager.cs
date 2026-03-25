@@ -56,11 +56,14 @@ namespace MergeGame.Core
                 DoLight();
         }
 
-        /// <summary>Light tap on merge, medium for high tiers.</summary>
-        public void PlayMerge(int tier, int chainIndex)
+        /// <summary>Escalating haptic on merge — scales with chain combo.</summary>
+        public void PlayMerge(int tier, int chainLength)
         {
-            if (tier < 2) return;
-            if (tier >= 8)
+            if (tier < 2 && chainLength < 2) return;
+
+            if (chainLength >= 4)
+                DoHeavy();
+            else if (chainLength >= 2 || tier >= 8)
                 DoMedium();
             else
                 DoLight();
