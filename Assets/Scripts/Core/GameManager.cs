@@ -187,6 +187,8 @@ namespace MergeGame.Core
             // === Navigate ===
             if (GameSession.IsFirstLaunch && ScreenManager.Instance != null)
                 ScreenManager.Instance.ShowImmediate(UI.Screen.Onboarding);
+            else if (GameStateSaver.HasSavedGame())
+                ResumeGame();
             else
                 SetState(GameState.Menu);
 
@@ -236,6 +238,7 @@ namespace MergeGame.Core
 
         private void OnEnterPlaying()
         {
+            GameStateSaver.Clear();
             ClearAllBalls();
             ShakesRemaining = maxShakes;
             OnShakesChanged?.Invoke(ShakesRemaining);
@@ -267,6 +270,7 @@ namespace MergeGame.Core
 
         private void OnEnterGameOver()
         {
+            GameStateSaver.Clear();
             if (dropController != null) dropController.SetActive(false);
             if (scoreManager != null) scoreManager.SaveHighScore();
             if (audioManager != null) audioManager.PlayGameOver();
@@ -427,6 +431,150 @@ namespace MergeGame.Core
         {
             if (scoreManager == null || LeaderboardService.Instance == null) return -1;
             return LeaderboardService.Instance.GetApproximateLiveRank(scoreManager.CurrentScore);
+        }
+
+        // ───── Save / Resume ─────
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused && CurrentState == GameState.Playing)
+                GameStateSaver.Save();
+        }
+
+        /// <summary>Trigger a save once all balls have settled after a drop.</summary>
+        public void ScheduleSaveAfterSettle()
+        {
+            if (CurrentState != GameState.Playing) return;
+            StartCoroutine(WaitForSettleThenSave());
+        }
+
+        private System.Collections.IEnumerator WaitForSettleThenSave()
+        {
+            // Wait minimum time for merges to happen
+            yield return new WaitForSeconds(0.6f);
+
+            // Poll until settled
+            float timeout = 5f;
+            float waited = 0f;
+            while (!GameStateSaver.AreAllBallsSettled() && waited < timeout)
+            {
+                yield return new WaitForSeconds(0.1f);
+                waited += 0.1f;
+            }
+
+            if (CurrentState == GameState.Playing)
+                GameStateSaver.Save();
+        }
+
+        private void ResumeGame()
+        {
+            var state = GameStateSaver.Load();
+            if (state == null)
+            {
+                SetState(GameState.Menu);
+                return;
+            }
+
+            Debug.Log($"[GameManager] Resuming game: score={state.currentScore}, balls={state.balls.Length}");
+
+            CurrentState = GameState.Playing;
+
+            // Restore sequence
+            if (DailySeedManager.Instance != null)
+                DailySeedManager.Instance.RestoreSequence(state.sequenceIndex, (AttemptType)state.attemptType);
+
+            GameSession.IsPractice = state.attemptType == (int)AttemptType.Replay;
+
+            // Restore score
+            if (scoreManager != null) scoreManager.SetScore(state.currentScore);
+
+            // Restore shakes
+            ShakesRemaining = state.shakesRemaining;
+            OnShakesChanged?.Invoke(ShakesRemaining);
+
+            // Restore merge tracker
+            if (MergeTracker.Instance != null)
+                MergeTracker.Instance.RestoreState(
+                    state.longestChain, state.totalMerges,
+                    state.highestTier, state.tierCreationCounts);
+
+            // Restore balls on screen
+            if (dropController != null)
+            {
+                foreach (var bs in state.balls)
+                {
+                    GameObject newBall = Instantiate(
+                        dropController.BallPrefab,
+                        new Vector3(bs.x, bs.y, 0f),
+                        Quaternion.Euler(0, 0, bs.rotation)
+                    );
+
+                    var controller = newBall.GetComponent<BallController>();
+                    if (controller != null)
+                    {
+                        var ballData = GetTierConfig()?.GetTier(bs.tierIndex);
+                        if (ballData != null)
+                        {
+                            controller.Initialize(ballData, GetTierConfig(), GetPhysicsConfig(), skipSpawnAnimation: true);
+                            controller.RestoreState(bs.hasLanded, bs.timeAboveDeathLine);
+                        }
+                    }
+
+                    // Start kinematic, switch to dynamic next frame
+                    var rb = newBall.GetComponent<Rigidbody2D>();
+                    if (rb != null)
+                    {
+                        rb.bodyType = RigidbodyType2D.Kinematic;
+                        StartCoroutine(EnableDynamicNextFrame(rb));
+                    }
+                }
+
+                // Restore drop controller with current/next ball
+                var currentBall = GetTierConfig()?.GetTier(state.currentBallTier);
+                var nextBall = GetTierConfig()?.GetTier(state.nextBallTier);
+                if (currentBall != null && nextBall != null)
+                    dropController.RestoreAndActivate(currentBall, nextBall);
+            }
+
+            if (uiManager != null) uiManager.ShowPlaying();
+            // Override the score display after ShowPlaying resets it
+            if (scoreManager != null) scoreManager.SetScore(state.currentScore);
+
+            liveRankRefreshTimer = 0f;
+            if (DailySeedManager.Instance != null && LeaderboardService.Instance != null)
+                LeaderboardService.Instance.FetchLeaderboard(DailySeedManager.Instance.GameDate);
+        }
+
+        private System.Collections.IEnumerator EnableDynamicNextFrame(Rigidbody2D rb)
+        {
+            yield return null;
+            if (rb != null)
+            {
+                rb.bodyType = RigidbodyType2D.Dynamic;
+                rb.linearVelocity = Vector2.zero;
+            }
+        }
+
+        private Data.BallTierConfig GetTierConfig()
+        {
+            if (DailySeedManager.Instance != null)
+            {
+                var field = typeof(DailySeedManager).GetField("tierConfig",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                return field?.GetValue(DailySeedManager.Instance) as Data.BallTierConfig;
+            }
+            return null;
+        }
+
+        private Data.PhysicsConfig GetPhysicsConfig()
+        {
+            if (dropController != null)
+            {
+                var field = typeof(DropController).GetField("physicsConfig",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                return field?.GetValue(dropController) as Data.PhysicsConfig;
+            }
+            return null;
         }
 
         private void ClearAllBalls()

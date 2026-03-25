@@ -53,6 +53,18 @@ namespace MergeGame.Core
             Instance = this;
         }
 
+        /// <summary>Restore stats for save/resume.</summary>
+        public void RestoreState(int longest, int total, int highest, int[] tierCounts)
+        {
+            ResetForNewRound();
+            LongestChain = longest;
+            TotalMerges = total;
+            HighestTierCreated = highest;
+            if (tierCounts != null)
+                for (int i = 0; i < Mathf.Min(tierCounts.Length, tierCreationCounts.Length); i++)
+                    tierCreationCounts[i] = tierCounts[i];
+        }
+
         public void ResetForNewRound()
         {
             topMergeTiers.Clear();

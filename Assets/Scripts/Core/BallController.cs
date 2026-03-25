@@ -29,6 +29,15 @@ namespace MergeGame.Core
         public BallData BallData => ballData;
         public int TierIndex => ballData != null ? ballData.tierIndex : -1;
         public bool HasLanded => hasLanded;
+        public bool IsMerging => isMerging;
+        public float TimeAboveDeathLine => timeAboveDeathLine;
+
+        /// <summary>Restore state for save/resume.</summary>
+        public void RestoreState(bool landed, float deathLineTime)
+        {
+            hasLanded = landed;
+            timeAboveDeathLine = deathLineTime;
+        }
 
         public void Initialize(BallData data, BallTierConfig config, PhysicsConfig physics = null, bool skipSpawnAnimation = false)
         {

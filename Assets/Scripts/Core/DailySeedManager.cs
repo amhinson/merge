@@ -27,6 +27,7 @@ namespace MergeGame.Core
 
         public string GameDate => currentGameDate;
         public int DayNumber { get; private set; }
+        public int SequenceIndex => sequenceIndex;
         public AttemptType CurrentAttemptType { get; private set; }
 
         public event Action<AttemptType> OnAttemptTypeChanged;
@@ -66,6 +67,14 @@ namespace MergeGame.Core
             sequenceIndex = 0;
             CurrentAttemptType = HasCompletedScoredAttempt() ? AttemptType.Replay : AttemptType.Scored;
             OnAttemptTypeChanged?.Invoke(CurrentAttemptType);
+        }
+
+        /// <summary>Restore sequence state for save/resume.</summary>
+        public void RestoreSequence(int index, AttemptType attempt)
+        {
+            RefreshDay();
+            sequenceIndex = index;
+            CurrentAttemptType = attempt;
         }
 
         /// <summary>

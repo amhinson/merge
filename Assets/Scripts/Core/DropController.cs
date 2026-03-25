@@ -30,6 +30,8 @@ namespace MergeGame.Core
         [SerializeField] private LineRenderer guideLine;
 
         public GameObject BallPrefab => ballPrefab;
+        public int CurrentBallTier => currentBallData != null ? currentBallData.tierIndex : 0;
+        public int NextBallTier => nextBallData != null ? nextBallData.tierIndex : 0;
 
         private GameObject previewBall;
         private GameObject nextBallObj;
@@ -70,6 +72,43 @@ namespace MergeGame.Core
             }
             Instance = this;
             mainCamera = Camera.main;
+        }
+
+        /// <summary>Restore drop controller state for save/resume without advancing sequence.</summary>
+        public void RestoreAndActivate(BallData current, BallData next)
+        {
+            isActive = true;
+            if (physicsConfig != null)
+            {
+                dropY = physicsConfig.dropHeight;
+                cooldownDuration = physicsConfig.cooldownDuration;
+                leftWallX = -physicsConfig.containerWidth / 2f;
+                rightWallX = physicsConfig.containerWidth / 2f;
+            }
+
+            inCooldown = false;
+            cooldownTimer = 0f;
+
+            currentBallData = current;
+            nextBallData = next;
+            OnNextBallChanged?.Invoke(nextBallData);
+
+            // Spawn current dropper ball at center
+            previewBall = Instantiate(ballPrefab, new Vector3(0f, dropY, 0f), Quaternion.identity);
+            var controller = previewBall.GetComponent<BallController>();
+            if (controller != null)
+                controller.Initialize(currentBallData, tierConfig, physicsConfig, skipSpawnAnimation: true);
+
+            var rb = previewBall.GetComponent<Rigidbody2D>();
+            if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
+            var col = previewBall.GetComponent<CircleCollider2D>();
+            if (col != null) col.enabled = false;
+
+            // Spawn next ball preview
+            SpawnNextBallPreview();
+
+            if (guideLine != null)
+                guideLine.enabled = true;
         }
 
         public void SetActive(bool active)
@@ -330,6 +369,10 @@ namespace MergeGame.Core
             cooldownTimer = cooldownDuration;
 
             if (guideLine != null) guideLine.enabled = false;
+
+            // Schedule a save once balls settle
+            if (GameManager.Instance != null)
+                GameManager.Instance.ScheduleSaveAfterSettle();
         }
 
         private void DestroyPreview()

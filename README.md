@@ -1,4 +1,3 @@
-Better GameCenter icon.
 Save game so I can come back.
 Adjust scoring down even more.
 Make recap & share merge counts bigger. I want to reflect on my good game.

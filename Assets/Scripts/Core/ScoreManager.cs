@@ -32,6 +32,18 @@ namespace MergeGame.Core
             OnScoreChanged?.Invoke(CurrentScore);
         }
 
+        /// <summary>Restore score for save/resume.</summary>
+        public void SetScore(int score)
+        {
+            CurrentScore = score;
+            OnScoreChanged?.Invoke(CurrentScore);
+            if (CurrentScore > HighScore)
+            {
+                HighScore = CurrentScore;
+                OnHighScoreChanged?.Invoke(HighScore);
+            }
+        }
+
         public void AddScore(int points)
         {
             CurrentScore += points;
