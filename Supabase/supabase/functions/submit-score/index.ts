@@ -62,6 +62,22 @@ serve(async (req) => {
       });
     }
 
+    // Validate game_date is within ±1 day of server time
+    // This allows all timezones (UTC-12 to UTC+14) without requiring UTC on client
+    const submitted = new Date(game_date + "T00:00:00Z");
+    const now = new Date();
+    const diffMs = Math.abs(now.getTime() - submitted.getTime());
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    if (isNaN(submitted.getTime()) || diffDays > 1.5) {
+      return new Response(
+        JSON.stringify({ error: "Invalid game date" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
     const { error: playerError } = await supabase
       .from("players")
       .upsert(
