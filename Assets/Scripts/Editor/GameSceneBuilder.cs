@@ -550,7 +550,7 @@ namespace MergeGame.Editor
             mcRT.anchorMin = new Vector2(0.5f, 0.5f);
             mcRT.anchorMax = new Vector2(0.5f, 0.5f);
             mcRT.pivot = new Vector2(0.5f, 0.5f);
-            mcRT.sizeDelta = new Vector2(260, 140);
+            mcRT.sizeDelta = new Vector2(260, 160);
             var mcBg = modalCard.AddComponent<Image>();
             mcBg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
             mcBg.type = Image.Type.Sliced;
@@ -574,18 +574,21 @@ namespace MergeGame.Editor
             ctRT.offsetMin = new Vector2(16, 0); ctRT.offsetMax = new Vector2(-16, 0);
             confirmText.alignment = TextAlignmentOptions.Center;
 
-            // Button row
+            // Button row (fixed 44px height, pinned to bottom of card)
             var btnRow = new GameObject("ButtonRow");
             btnRow.transform.SetParent(modalCard.transform, false);
             var brRT = btnRow.AddComponent<RectTransform>();
-            brRT.anchorMin = new Vector2(0, 0.08f); brRT.anchorMax = new Vector2(1, 0.48f);
-            brRT.offsetMin = new Vector2(16, 0); brRT.offsetMax = new Vector2(-16, 0);
+            brRT.anchorMin = new Vector2(0, 0); brRT.anchorMax = new Vector2(1, 0);
+            brRT.pivot = new Vector2(0.5f, 0);
+            brRT.anchoredPosition = new Vector2(0, 16);
+            brRT.sizeDelta = new Vector2(-32, 44); // 16px padding each side, 44px height
             var brHLG = btnRow.AddComponent<HorizontalLayoutGroup>();
             brHLG.spacing = 8;
             brHLG.childAlignment = TextAnchor.MiddleCenter;
             brHLG.childControlWidth = true;
             brHLG.childControlHeight = true;
             brHLG.childForceExpandWidth = true;
+            brHLG.childForceExpandHeight = true;
 
             // QUIT button (primary pink with scanlines)
             var quitBtnGO = new GameObject("YesBtn");
@@ -609,21 +612,38 @@ namespace MergeGame.Editor
             qsImg.raycastTarget = false;
             quitBtnGO.AddComponent<RectMask2D>(); // clip scanlines to rounded shape
             // Label
-            var quitLabel = CreateText(quitBtnGO.transform, "Label", "QUIT", 9, HexColor("0F1117"));
+            var quitLabel = CreateText(quitBtnGO.transform, "Label", "QUIT", 11, HexColor("0F1117"));
             quitLabel.alignment = TextAlignmentOptions.Center;
+            quitLabel.characterSpacing = 2;
             var qlRT = quitLabel.rectTransform;
             qlRT.anchorMin = Vector2.zero; qlRT.anchorMax = Vector2.one;
             qlRT.offsetMin = Vector2.zero; qlRT.offsetMax = Vector2.zero;
 
-            // CANCEL button — no border, no background, just text
+            // CANCEL button — outline style matching skip buttons
             var cancelBtnGO = new GameObject("NoBtn");
             cancelBtnGO.transform.SetParent(btnRow.transform, false);
+            // Border background
             var cancelBtnImg = cancelBtnGO.AddComponent<Image>();
-            cancelBtnImg.color = Color.clear;
+            cancelBtnImg.sprite = OvertoneUI.SmoothRoundedRect;
+            cancelBtnImg.type = Image.Type.Sliced;
+            cancelBtnImg.color = HexColor("232838"); // OC.border
+            // Inner fill (inset to create border effect)
+            var cancelInner = new GameObject("Inner");
+            cancelInner.transform.SetParent(cancelBtnGO.transform, false);
+            var ciRT = cancelInner.AddComponent<RectTransform>();
+            ciRT.anchorMin = Vector2.zero; ciRT.anchorMax = Vector2.one;
+            ciRT.offsetMin = new Vector2(1.5f, 1.5f); ciRT.offsetMax = new Vector2(-1.5f, -1.5f);
+            var ciImg = cancelInner.AddComponent<Image>();
+            ciImg.sprite = OvertoneUI.SmoothRoundedRect;
+            ciImg.type = Image.Type.Sliced;
+            ciImg.color = HexColor("0F1117"); // OC.bg
+            ciImg.raycastTarget = false;
+            // Label
             var noBtn = cancelBtnGO.AddComponent<Button>();
             noBtn.targetGraphic = cancelBtnImg;
             var cancelLabel = CreateText(cancelBtnGO.transform, "Label", "CANCEL", 9, new Color(1, 1, 1, 0.22f));
             cancelLabel.alignment = TextAlignmentOptions.Center;
+            cancelLabel.characterSpacing = 1;
             var clRT = cancelLabel.rectTransform;
             clRT.anchorMin = Vector2.zero; clRT.anchorMax = Vector2.one;
             clRT.offsetMin = Vector2.zero; clRT.offsetMax = Vector2.zero;
@@ -841,7 +861,7 @@ namespace MergeGame.Editor
             obj.transform.SetParent(parent, false);
             obj.AddComponent<RectTransform>();
             var tmp = obj.AddComponent<TextMeshProUGUI>();
-            var font = Resources.Load<TMP_FontAsset>("Fonts/PressStart2P-Regular SDF")
+            var font = Resources.Load<TMP_FontAsset>("Fonts/PressStart2P SDF")
                     ?? Resources.Load<TMP_FontAsset>("Fonts/DMMono-Medium SDF");
             if (font != null) tmp.font = font;
             tmp.text = text;

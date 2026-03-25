@@ -449,7 +449,7 @@ namespace MergeGame.UI
             skipButton = skipGO;
 
             // Start button (hidden initially, full width)
-            var (startGO, startLabelTMP) = OvertoneUI.CreatePrimaryButton(row.transform, "LET'S PLAY", 28, "StartButton");
+            var (startGO, startLabelTMP) = OvertoneUI.CreatePrimaryButton(row.transform, "LET'S PLAY", 44, "StartButton");
             startGO.GetComponent<LayoutElement>().flexibleWidth = 1;
             startGO.GetComponent<Button>().onClick.AddListener(OnStartClicked);
             startButton = startGO;

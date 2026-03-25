@@ -346,9 +346,9 @@ namespace MergeGame.UI
             wRT.anchorMax = new Vector2(1, 0);
             wRT.pivot = new Vector2(0.5f, 0);
             wRT.anchoredPosition = new Vector2(0, 30 + OS.safeAreaBottom);
-            wRT.sizeDelta = new Vector2(-48, 34); // -48 = 24px padding each side
+            wRT.sizeDelta = new Vector2(-48, 44); // -48 = 24px padding each side
 
-            var (saveGO, saveTMP) = OvertoneUI.CreatePrimaryButton(wrapper.transform, "SAVE", 34, "SaveButton");
+            var (saveGO, saveTMP) = OvertoneUI.CreatePrimaryButton(wrapper.transform, "SAVE", 44, "SaveButton");
             OvertoneUI.StretchFill(saveGO.GetComponent<RectTransform>());
             saveGO.GetComponent<Button>().onClick.AddListener(OnSaveClicked);
         }
