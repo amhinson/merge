@@ -164,15 +164,24 @@ namespace MergeGame.Core
                 return;
             }
 
-            Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            float clampedX = Mathf.Clamp(
-                mouseWorld.x,
-                leftWallX + currentBallData.radius,
-                rightWallX - currentBallData.radius
-            );
+            // Move preview ball to cursor/touch position
+            bool isTouchDevice = Input.touchSupported && !Application.isEditor;
+            bool shouldTrack = isTouchDevice
+                ? Input.GetMouseButton(0) && !touchStartedOnUI  // Mobile: only while touching
+                : !touchStartedOnUI;                             // Desktop: follow cursor always
 
-            previewBall.transform.position = new Vector3(clampedX, dropY, 0f);
-            UpdateGuideLine(clampedX);
+            if (shouldTrack)
+            {
+                Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                float clampedX = Mathf.Clamp(
+                    mouseWorld.x,
+                    leftWallX + currentBallData.radius,
+                    rightWallX - currentBallData.radius
+                );
+
+                previewBall.transform.position = new Vector3(clampedX, dropY, 0f);
+                UpdateGuideLine(clampedX);
+            }
         }
 
         /// <summary>
