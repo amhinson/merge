@@ -193,7 +193,7 @@ namespace MergeGame.UI
                 if (rankSubLabel != null)
                     rankSubLabel.text = rank > 0 && total > 0
                         ? $"of {total} players today"
-                        : GameSession.IsOffline ? "offline — rank will update when connected" : "ranking...";
+                        : !Core.NetworkMonitor.IsOnline ? "offline — rank will update when connected" : "ranking...";
             }
 
             // Practice info — only for practice games
@@ -236,7 +236,7 @@ namespace MergeGame.UI
                 if (rankSubLabel != null)
                     rankSubLabel.text = rank > 0 && totalPlayers > 0
                         ? $"of {totalPlayers} players today"
-                        : GameSession.IsOffline ? "offline — rank will update when connected" : "ranking...";
+                        : !Core.NetworkMonitor.IsOnline ? "offline — rank will update when connected" : "ranking...";
             });
         }
 

@@ -1,3 +1,13 @@
+App Store Screenshots
+Promotional Text
+Description
+Keywords
+Support URL
+Marketing URL
+Copyright
+
+Practice toast is too far down on device. But looks ok in Unity.
+
 Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.
 
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.

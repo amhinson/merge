@@ -46,7 +46,8 @@
       "Bash(find . -name \"*.cs\" -exec sed -i '' 's/OvertoneUI/MurgeUI/g; s/OvertoneAnalytics/MurgeAnalytics/g; s/Overtone design/Murge design/g; s/Overtone design system/Murge design system/g; s/Overtone/Murge/g' {} +)",
       "Bash(sed -i '' 's/OVERTONE logo/MURGE logo/; s/OVERTONE title/MURGE title/' UI/LoadingScreen.cs)",
       "Bash(sed -i '' 's/\"\"OVERTONE\"\"/\"\"MURGE\"\"/' UI/TitleScreen.cs)",
-      "Bash(sed -i '' 's/OVERTONE title/MURGE title/' UI/ShareManager.cs)"
+      "Bash(sed -i '' 's/OVERTONE title/MURGE title/' UI/ShareManager.cs)",
+      "Bash(./deploy.sh)"
     ]
   }
 }
