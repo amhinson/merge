@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, verifyApiKey } from "../_shared/auth.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -17,6 +18,9 @@ serve(async (req) => {
     );
 
     const { device_uuid, current_streak, longest_streak } = await req.json();
+
+    const rateLimited = await checkRateLimit(supabase, device_uuid || "", "sync-streak");
+    if (rateLimited) return rateLimited;
 
     if (!device_uuid) {
       return new Response(

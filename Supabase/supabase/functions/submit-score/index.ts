@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, verifyApiKey } from "../_shared/auth.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -35,6 +36,10 @@ serve(async (req) => {
         },
       );
     }
+
+    // Rate limit
+    const rateLimited = await checkRateLimit(supabase, device_uuid, "submit-score");
+    if (rateLimited) return rateLimited;
 
     // --- Score validation ---
     // Hard cap: no game should exceed 99,999 points
