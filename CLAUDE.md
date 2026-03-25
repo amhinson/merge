@@ -26,7 +26,7 @@ The gameplay screen is built at **editor time** by `GameSceneBuilder.cs`. After 
 ### Namespaces
 - `MergeGame.Core` — Game logic (GameManager, BallController, DropController, DailySeedManager, ScoreManager, MergeTracker, etc.)
 - `MergeGame.UI` — All screens and HUD components (procedurally built, no prefabs)
-- `MergeGame.Backend` — SupabaseClient, LeaderboardService
+- `MergeGame.Backend` — SupabaseClient, LeaderboardService, OfflineScoreQueue
 - `MergeGame.Data` — ScriptableObjects and design tokens (BallData, PhysicsConfig, OvertoneDesign)
 - `MergeGame.Visual` — BallRenderer, WaveformAnimator, MergeParticles, PixelUIGenerator
 - `MergeGame.Audio` — AudioManager (procedural SFX)
@@ -79,10 +79,18 @@ Point values in `Assets/ScriptableObjects/BallData_Tier[1-11].asset`. Combo mult
 ### Shared
 - `_shared/auth.ts` — CORS headers, API key verification
 - `_shared/profanity.ts` — obscenity-based content filter
+- `_shared/rate-limit.ts` — per-device rate limiting via `rate_limits` table
 
 ### Tables
 - `players` (device_uuid PK, display_name, streaks)
 - `daily_scores` (device_uuid + game_date unique, score, merge_counts, longest_chain)
+- `rate_limits` (device_uuid, function_name, created_at) — auto-cleaned by opportunistic purge
+
+### Server-side Validation (submit-score)
+- Score hard cap (99,999), must be non-negative integer
+- game_date must be within +/-1.5 days of server time (timezone tolerance)
+- longest_chain capped at 99
+- Rate limited: 5 requests per device per 60s
 
 ### Dev vs Prod
 `SupabaseClient.cs` auto-selects credentials: Editor/Development builds → dev project, Release builds → prod project. Bundle IDs: `com.overtone.game.dev` / `com.overtone.game`.
@@ -97,7 +105,9 @@ Point values in `Assets/ScriptableObjects/BallData_Tier[1-11].asset`. Combo mult
 | `Core/DailySeedManager.cs` | Seeded ball sequence, attempt type tracking |
 | `Core/GameStateSaver.cs` | Save/load game state to PlayerPrefs (JSON) |
 | `Core/ScoreManager.cs` | Score + combo multiplier |
+| `Core/GameSession.cs` | Static session state, LaunchDate, merge counts |
 | `Core/MergeTracker.cs` | Chain tracking, merge stats |
+| `Backend/OfflineScoreQueue.cs` | Persists failed score submissions for retry |
 | `UI/OvertoneUI.cs` | Shared UI helpers (buttons, labels, sprites) |
 | `UI/HomeScreen.cs` | Base class for home screens (logo, leaderboard, settings button) |
 | `UI/ResultOverlayScreen.cs` | End-game results with merge card |
@@ -111,6 +121,12 @@ Point values in `Assets/ScriptableObjects/BallData_Tier[1-11].asset`. Combo mult
 ## Game State Persistence
 
 Saved to PlayerPrefs after each drop settles + on app background. Includes: ball positions/tiers, score, sequence index, merge stats, shakes, attempt type. Discarded on day rollover or game over. Restored with balls frozen (kinematic → dynamic after 1 frame).
+
+## Network Resilience
+
+- All POST calls retry up to 3 times with exponential backoff (1s, 2s, 4s). 4xx errors skip retry.
+- Failed score submissions are queued to PlayerPrefs (`OfflineScoreQueue`) and retried on next app launch.
+- Launch date is defined once in `GameSession.LaunchDate` — referenced by DailySeedManager and NewLeaderboardScreen.
 
 ## Conventions
 - No emoji in code or UI unless explicitly requested

@@ -17,8 +17,7 @@ namespace MergeGame.Core
 
         [SerializeField] private BallTierConfig tierConfig;
 
-        // Hardcoded launch date — Day 1
-        private static readonly DateTime LaunchDate = new DateTime(2026, 3, 20);
+        private static DateTime LaunchDate => GameSession.LaunchDate;
 
         private string currentGameDate;
         private SeededRandom seededRng;

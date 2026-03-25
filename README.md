@@ -1,10 +1,9 @@
 AUDIT
 
-- No offline score queue — if network drops at game over, the scored attempt is lost. Should queue and retry.
 - Privacy policy required — App Store requires one. You collect device UUID + display name + scores. Minimal, but needs to be documented.
-- Hardcoded launch date in 2 files (DailySeedManager.cs, NewLeaderboardScreen.cs) — fragile if release date shifts. Can this be on the server somehow?
-- No retry logic on network calls — single attempt, 30s timeout, silent failure.
 - JSON built via string interpolation in some places — works due to sanitization but fragile. Should standardize to JsonUtility.ToJson().
+
+Offline mode
 
 Basic Analytics
 

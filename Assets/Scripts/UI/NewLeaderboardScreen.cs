@@ -28,7 +28,7 @@ namespace MergeGame.UI
         private bool allLoaded;
         private const int PageSize = 25;
 
-        private static readonly DateTime LaunchDate = new DateTime(2026, 3, 20);
+        private static DateTime LaunchDate => MergeGame.Core.GameSession.LaunchDate;
 
         private void OnEnable()
         {

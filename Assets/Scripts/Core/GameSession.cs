@@ -37,6 +37,9 @@ namespace MergeGame.Core
 
     public static class GameSession
     {
+        /// <summary>Day 1 of the daily puzzle. Single source of truth — do not duplicate.</summary>
+        public static readonly System.DateTime LaunchDate = new System.DateTime(2026, 3, 20);
+
         public static string  DeviceUUID     { get; private set; }
         public static Player  CurrentPlayer  { get; set; }
         public static int     TodayScore     { get; set; }
