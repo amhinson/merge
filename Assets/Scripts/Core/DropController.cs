@@ -57,6 +57,7 @@ namespace MergeGame.Core
         }
         private bool dropBlocked;
         private float dropBlockedCooldown;
+        private bool touchStartedOnUI;
 
         public event System.Action<BallData> OnNextBallChanged;
 
@@ -141,6 +142,28 @@ namespace MergeGame.Core
             // Don't move or drop the ball while UI modal is open
             if (DropBlocked) return;
 
+            // If the touch/click started over a UI element, ignore this entire touch
+            if (Input.GetMouseButtonDown(0) && IsPointerOverUI())
+            {
+                touchStartedOnUI = true;
+            }
+            if (Input.GetMouseButtonUp(0))
+            {
+                bool wasOnUI = touchStartedOnUI;
+                touchStartedOnUI = false;
+                if (!wasOnUI)
+                {
+                    Vector3 upWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                    float dropX = Mathf.Clamp(
+                        upWorld.x,
+                        leftWallX + currentBallData.radius,
+                        rightWallX - currentBallData.radius
+                    );
+                    DropBall(dropX);
+                }
+                return;
+            }
+
             Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             float clampedX = Mathf.Clamp(
                 mouseWorld.x,
@@ -150,11 +173,6 @@ namespace MergeGame.Core
 
             previewBall.transform.position = new Vector3(clampedX, dropY, 0f);
             UpdateGuideLine(clampedX);
-
-            if (Input.GetMouseButtonUp(0) && !IsPointerOverUI())
-            {
-                DropBall(clampedX);
-            }
         }
 
         /// <summary>

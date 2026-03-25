@@ -1,5 +1,3 @@
-Shake button text is too small.
-Shake button tap cause a drop.
 New ball should always rez in the center. Right now it does briefly, then jumps to the last drop spot.
 Ask about production ready. Future-proof schema, security, auth, etc.
 Escalating haptic for combos.
