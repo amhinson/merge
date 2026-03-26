@@ -8,8 +8,6 @@ Copyright
 
 Show streak on home screen.
 
-Make recap balls and numbers bigger.
-
 Check for new day when app comes from background. Maybe refresh data more often if app is open all day?
 
 Check Unity intro variations.

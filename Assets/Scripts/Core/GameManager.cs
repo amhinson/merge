@@ -65,6 +65,7 @@ namespace MergeGame.Core
 
             // Initialize session state
             GameSession.Init();
+            lastKnownDate = System.DateTime.Now.ToString("yyyy-MM-dd");
 
             // Pre-load everything during loading screen
             StartCoroutine(PreloadAndNavigate());
@@ -477,10 +478,82 @@ namespace MergeGame.Core
 
         // ───── Save / Resume ─────
 
+        private string lastKnownDate;
+        private float pausedAtTime;
+        private const float RefreshThreshold = 300f; // 5 minutes
+
         private void OnApplicationPause(bool paused)
         {
-            if (paused && CurrentState == GameState.Playing)
-                GameStateSaver.Save();
+            if (paused)
+            {
+                pausedAtTime = Time.realtimeSinceStartup;
+                if (CurrentState == GameState.Playing)
+                    GameStateSaver.Save();
+                return;
+            }
+
+            float backgroundDuration = Time.realtimeSinceStartup - pausedAtTime;
+            HandleAppResume(backgroundDuration);
+        }
+
+        private void HandleAppResume(float backgroundDuration)
+        {
+            string today = System.DateTime.Now.ToString("yyyy-MM-dd");
+
+            // Day rolled over while backgrounded — always handle regardless of duration
+            if (!string.IsNullOrEmpty(lastKnownDate) && lastKnownDate != today)
+            {
+                Debug.Log($"[GameManager] Day changed: {lastKnownDate} -> {today}");
+
+                // Clear any saved game from yesterday
+                GameStateSaver.Clear();
+
+                // Refresh daily seed
+                if (DailySeedManager.Instance != null)
+                    DailySeedManager.Instance.RefreshDay();
+
+                GameSession.RefreshDay();
+
+                // If on menu, refresh the home screen
+                if (CurrentState == GameState.Menu)
+                    SetState(GameState.Menu); // re-enters menu, refreshes UI
+
+                // If mid-game, the game is now stale — trigger game over
+                if (CurrentState == GameState.Playing)
+                {
+                    Debug.Log("[GameManager] Game stale after day rollover — ending");
+                    TriggerGameOver();
+                }
+            }
+
+            lastKnownDate = today;
+
+            // Refresh data if on menu and backgrounded long enough
+            if (CurrentState == GameState.Menu && backgroundDuration >= RefreshThreshold)
+                RefreshMenuData();
+        }
+
+        private void RefreshMenuData()
+        {
+            if (DailySeedManager.Instance == null) return;
+            string gameDate = DailySeedManager.Instance.GameDate;
+
+            if (LeaderboardService.Instance != null)
+                LeaderboardService.Instance.FetchLeaderboard(gameDate);
+
+            if (PlayerIdentity.Instance != null && LeaderboardService.Instance != null)
+            {
+                LeaderboardService.Instance.FetchPlayerProfile(
+                    PlayerIdentity.Instance.DeviceUUID, GameSession.TodayDateStr, (profile) =>
+                    {
+                        if (profile != null)
+                        {
+                            GameSession.TodayScore = profile.today_score;
+                            if (profile.day_number > 0)
+                                GameSession.TodayDayNumber = profile.day_number;
+                        }
+                    });
+            }
         }
 
         /// <summary>Trigger a save once all balls have settled after a drop.</summary>
