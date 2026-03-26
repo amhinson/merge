@@ -6,8 +6,6 @@ Support URL
 Marketing URL
 Copyright
 
-Padding above home title.
-
 Show streak on home screen.
 
 Incorporate "Daily Drop" somewhere if it's going to be in the App Store title.

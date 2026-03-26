@@ -11,7 +11,7 @@ namespace MergeGame.UI
     /// <summary>
     /// Shared base for HomeFresh and HomePlayed screens.
     /// Layout (top to bottom):
-    ///   - Logo block: OVER / TONE (stacked), A DAILY MERGE GAME, settings icon top-right
+    ///   - Logo block: MURGE, A DAILY DROP, settings icon top-right
     ///   - Flex spacer
     ///   - Ball cluster (3 balls centered)
     ///   - Flex spacer
@@ -174,8 +174,8 @@ namespace MergeGame.UI
         {
             var block = MurgeUI.CreateUIObject("LogoBlock", parent);
             var blockLE = block.AddComponent<LayoutElement>();
-            blockLE.minHeight = 100;
-            blockLE.preferredHeight = 100;
+            blockLE.minHeight = 70;
+            blockLE.preferredHeight = 70;
 
             // Inner container with manual positioning (left-aligned)
             var inner = MurgeUI.CreateUIObject("LogoInner", block.transform);
@@ -191,7 +191,7 @@ namespace MergeGame.UI
             innerVLG.childControlWidth = false;
             innerVLG.childControlHeight = false;
             innerVLG.childForceExpandWidth = false;
-            innerVLG.padding = new RectOffset(24, 24, (int)OS.safeAreaTop + 12, 0);
+            innerVLG.padding = new RectOffset(24, 24, (int)OS.safeAreaTop + 20, 0);
 
             // Title
             var titleGO = MurgeUI.CreateUIObject("Title", inner.transform);
@@ -210,9 +210,9 @@ namespace MergeGame.UI
             var tagGO = MurgeUI.CreateUIObject("Tagline", inner.transform);
             tagGO.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 16);
             var tagTMP = tagGO.AddComponent<TextMeshProUGUI>();
-            tagTMP.text = "A DAILY MERGE GAME";
+            tagTMP.text = "A DAILY DROP";
             tagTMP.font = MurgeUI.DMMono;
-            tagTMP.fontSize = 10;
+            tagTMP.fontSize = 15;
             tagTMP.color = OC.muted;
             tagTMP.characterSpacing = 5;
             tagTMP.textWrappingMode = TextWrappingModes.NoWrap;
@@ -438,7 +438,7 @@ namespace MergeGame.UI
         private void RefreshPuzzleRow()
         {
             if (dayNumberLabel != null)
-                dayNumberLabel.text = $"#{GameSession.TodayDayNumber}";
+                dayNumberLabel.text = $"DROP #{GameSession.TodayDayNumber}";
             if (dateLabel != null)
             {
                 var now = System.DateTime.Now;

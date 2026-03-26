@@ -49,7 +49,7 @@ namespace MergeGame.UI
             titleRT.anchorMin = new Vector2(0.5f, 0.5f);
             titleRT.anchorMax = new Vector2(0.5f, 0.5f);
             titleRT.pivot = new Vector2(0.5f, 0.5f);
-            titleRT.anchoredPosition = new Vector2(0, 50);
+            titleRT.anchoredPosition = new Vector2(0, 35);
             titleRT.sizeDelta = new Vector2(300, 30);
             var titleTMP = titleGO.AddComponent<TextMeshProUGUI>();
             string cyanHex = ColorUtility.ToHtmlStringRGB(OC.cyan);
@@ -68,7 +68,7 @@ namespace MergeGame.UI
             ballRT.anchorMin = new Vector2(0.5f, 0.5f);
             ballRT.anchorMax = new Vector2(0.5f, 0.5f);
             ballRT.pivot = new Vector2(0.5f, 0.5f);
-            ballRT.anchoredPosition = new Vector2(0, -20);
+            ballRT.anchoredPosition = new Vector2(0, -10);
             ballRT.sizeDelta = new Vector2(40, 40);
 
             ballImage = ballGO.AddComponent<Image>();
@@ -91,12 +91,12 @@ namespace MergeGame.UI
             subRT.anchorMin = new Vector2(0.5f, 0.5f);
             subRT.anchorMax = new Vector2(0.5f, 0.5f);
             subRT.pivot = new Vector2(0.5f, 0.5f);
-            subRT.anchoredPosition = new Vector2(0, -60);
+            subRT.anchoredPosition = new Vector2(0, -55);
             subRT.sizeDelta = new Vector2(200, 16);
             var subTMP = subGO.AddComponent<TextMeshProUGUI>();
-            subTMP.text = "A DAILY MERGE GAME";
+            subTMP.text = "A DAILY DROP";
             subTMP.font = MurgeUI.DMMono;
-            subTMP.fontSize = 8;
+            subTMP.fontSize = 12;
             subTMP.color = OC.muted;
             subTMP.characterSpacing = 3;
             subTMP.alignment = TextAlignmentOptions.Center;

@@ -55,14 +55,19 @@ namespace MergeGame.UI
             StartSequence();
         }
 
+        private Coroutine bobCoroutine;
+        private bool waitingForFinalTap;
+
         private void Update()
         {
             if (state != State.WaitingForDrop) return;
             if (Input.GetMouseButtonDown(0))
             {
                 state = State.Dropping;
-                if (animCoroutine != null) StopCoroutine(animCoroutine);
-                animCoroutine = StartCoroutine(DropAndMerge());
+                if (bobCoroutine != null) { StopCoroutine(bobCoroutine); bobCoroutine = null; }
+                if (!waitingForFinalTap)
+                    animCoroutine = StartCoroutine(DropAndMerge());
+                // else: the existing DropAndMerge coroutine handles it via the state change
             }
         }
 
@@ -73,8 +78,9 @@ namespace MergeGame.UI
             ClearArena();
             currentTier = 0;
             ctaShown = false;
+            waitingForFinalTap = false;
             state = State.WaitingForDrop;
-            headingLabel.text = "DROP";
+            headingLabel.text = "";
 
             // Tier-0 ball sitting at bottom
             sittingBall = CreateDemoBall(demoArena.transform, 0, new Vector2(0, FloorY), TierSizes[0]);
@@ -83,7 +89,7 @@ namespace MergeGame.UI
             dropperBall = CreateDemoBall(demoArena.transform, 0, new Vector2(0, DropperY), TierSizes[0]);
 
             if (animCoroutine != null) StopCoroutine(animCoroutine);
-            animCoroutine = StartCoroutine(BobDropper());
+            bobCoroutine = StartCoroutine(BobDropper());
 
             if (startButton != null) startButton.SetActive(false);
             if (ctaTagline != null) ctaTagline.SetActive(false);
@@ -101,9 +107,6 @@ namespace MergeGame.UI
             // Drop
             yield return DropBall(dropperBall, FloorY + oldSize);
 
-            // First merge: show heading
-            if (currentTier == 0)
-                headingLabel.text = "MERGE";
 
             // Absorb
             yield return AbsorbBalls(dropperBall, sittingBall, new Vector2(0, FloorY));
@@ -124,21 +127,53 @@ namespace MergeGame.UI
             yield return new WaitForSeconds(0.2f);
 
             // Score pop
-            if (currentTier == 0)
-            {
-                headingLabel.text = "SCORE";
-            }
             int points = nextTier < TierPoints.Length ? TierPoints[nextTier] : 25;
             yield return ShowScorePop(new Vector2(0, FloorY + newSize * 0.6f), $"+ {points}");
 
+
             currentTier = nextTier;
 
-            // === Final tier (11 / index 10) — arena fades, achievement unlocked ===
+            // === Max tier reached — spawn one more dropper for the final merge ===
             if (currentTier >= 10)
             {
+                yield return new WaitForSeconds(0.2f);
+
+                // Spawn a matching tier-10 dropper for the final merge
+                float maxSize = TierSizes[10];
+                dropperBall = CreateDemoBall(demoArena.transform, 10, new Vector2(0, DropperY), maxSize);
+                dropperBall.GetComponent<RectTransform>().localScale = Vector3.zero;
+                yield return ScaleObject(dropperBall, Vector3.zero, Vector3.one * 1.1f, 0.15f);
+                yield return ScaleObject(dropperBall, Vector3.one * 1.1f, Vector3.one, 0.08f);
+
+                // Wait for user to tap
+                waitingForFinalTap = true;
+                state = State.WaitingForDrop;
+                bobCoroutine = StartCoroutine(BobDropper());
+
+                // Wait until Update sets state to Dropping
+                while (state == State.WaitingForDrop)
+                    yield return null;
+
+                waitingForFinalTap = false;
+
+                // Final merge — both max-tier balls disappear
+                state = State.Animating;
+                yield return DropBall(dropperBall, FloorY + maxSize);
+                yield return AbsorbBalls(dropperBall, sittingBall, new Vector2(0, FloorY));
+
+                SpawnMergeParticles(demoArena.transform, new Vector2(0, FloorY));
+
+                Destroy(dropperBall);
+                Destroy(sittingBall);
+                dropperBall = null;
+                sittingBall = null;
+
+                // Score pop for final merge (double points like the real game)
+                yield return ShowScorePop(new Vector2(0, FloorY + maxSize * 0.6f), $"+ {TierPoints[10] * 2}");
+
                 state = State.Done;
 
-                // Achievement for completing full onboarding
+                // Achievement
                 if (AchievementManager.Instance != null)
                     AchievementManager.Instance.UnlockCompletedAllOfOnboarding();
 
@@ -157,7 +192,6 @@ namespace MergeGame.UI
                     arenaCanvasGroup.alpha = 0f;
                 }
 
-                // Ensure CTA is visible
                 if (!ctaShown) ShowCTA();
                 yield break;
             }
@@ -166,7 +200,6 @@ namespace MergeGame.UI
             if (currentTier >= 2 && !ctaShown)
             {
                 ShowCTA();
-                StartCoroutine(FadeHeadingDelayed(0.5f, 0.3f));
             }
 
             yield return new WaitForSeconds(0.2f);
@@ -179,7 +212,7 @@ namespace MergeGame.UI
             yield return ScaleObject(dropperBall, Vector3.one * 1.1f, Vector3.one, 0.08f);
 
             state = State.WaitingForDrop;
-            animCoroutine = StartCoroutine(BobDropper());
+            bobCoroutine = StartCoroutine(BobDropper());
         }
 
         private void ShowCTA()
@@ -239,16 +272,32 @@ namespace MergeGame.UI
             if (ball == null) yield break;
             var rt = ball.GetComponent<RectTransform>();
             float startY = rt.anchoredPosition.y;
-            float duration = 0.4f;
+
+            // Drop with gravity feel
+            float dropDuration = 0.55f;
             float elapsed = 0f;
-            while (elapsed < duration)
+            while (elapsed < dropDuration)
             {
                 elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                float eased = t * t;
+                float t = Mathf.Clamp01(elapsed / dropDuration);
+                float eased = t * t; // accelerating (gravity)
                 rt.anchoredPosition = new Vector2(0, Mathf.Lerp(startY, targetY, eased));
                 yield return null;
             }
+
+            // Small bounce
+            float bounceHeight = (startY - targetY) * 0.06f;
+            float bounceDuration = 0.1f;
+            elapsed = 0f;
+            while (elapsed < bounceDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / bounceDuration);
+                float bounce = Mathf.Sin(t * Mathf.PI) * bounceHeight;
+                rt.anchoredPosition = new Vector2(0, targetY + bounce);
+                yield return null;
+            }
+
             rt.anchoredPosition = new Vector2(0, targetY);
         }
 
@@ -468,9 +517,9 @@ namespace MergeGame.UI
             var taglineGO = MurgeUI.CreateUIObject("Tagline", inner.transform);
             taglineGO.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 16);
             var tagline = taglineGO.AddComponent<TextMeshProUGUI>();
-            tagline.text = "A DAILY MERGE GAME";
+            tagline.text = "A DAILY DROP";
             tagline.font = MurgeUI.DMMono;
-            tagline.fontSize = 10;
+            tagline.fontSize = 12;
             tagline.color = OC.muted;
             tagline.characterSpacing = 5;
             tagline.alignment = TextAlignmentOptions.Center;
@@ -583,7 +632,7 @@ namespace MergeGame.UI
 
             var tmp = MurgeUI.CreateLabel(ctaTagline.transform,
                 "new sequence every day\neveryone plays the same drop",
-                MurgeUI.DMMono, OFont.bodySm, OC.muted, "TaglineText");
+                MurgeUI.DMMono, OFont.body, OC.muted, "TaglineText");
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.lineSpacing = 8;
             MurgeUI.StretchFill(tmp.GetComponent<RectTransform>());
