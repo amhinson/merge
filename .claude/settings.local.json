@@ -50,7 +50,12 @@
       "Bash(./deploy.sh)",
       "Bash(./build-android.sh prod-apk:*)",
       "Bash(curl:*)",
-      "Bash(./install-android.sh prod:*)"
+      "Bash(./install-android.sh prod:*)",
+      "Bash(find /Users/alex/projects/personal/merge/Build/iOS -name LaunchScreen-iPhonePortrait*)",
+      "Bash(identify /Users/alex/projects/personal/merge/Build/iOS/LaunchScreen-iPhonePortrait.png)",
+      "Bash(xxd -l 64 /Users/alex/projects/personal/merge/Build/iOS/LaunchScreen-iPhonePortrait.png)",
+      "Bash(python3:*)",
+      "Bash(open /tmp/launch_check.png)"
     ]
   }
 }
