@@ -8,7 +8,23 @@ Copyright
 
 Practice toast is too far down on device. But looks ok in Unity.
 
+Username server validation message doesn't show in app.
+
+Show streak on home screen.
+
+Make recap balls and numbers bigger.
+
+Check for new day when app comes from background. Maybe refresh data more often if app is open all day?
+
+Are any of the APIs going to become expensive and/or slow if the app starts to get some traction? Can we optimize any?
+
 Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.
+
+Incorporate "Daily Drop" somewhere if it's going to be in the App Store title.
+
+Fix Android app icon.
+
+Google Play setup.
 
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
 Note any top 3 finished on profile.
@@ -17,6 +33,8 @@ Affirmations afterwards, and really give an honest recap based on the users hist
 Makes it a fun thing to look forward to after each game because it will always be unique.
 Can Supabase host a lightweight AI model to generate this?
 Maybe each day also has an AI generated funny Phish-adjacent phrase that is short, but lightly humorous.
+
+NBA Jam style "He's on fire!" type comments when something big happens.
 
 Recap push notification the next day. "You played 2nd out of 98 people!" "You were in the top 75% of all players yesterday"
 "Well, someone had to get last, right?"

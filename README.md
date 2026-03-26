@@ -67,6 +67,27 @@ Build number auto-increments from `.build-number`. Override: `BUILD_NUMBER=42 ./
 
 Bundle IDs: `com.murge.game` (prod), `com.murge.game.dev` (dev).
 
+### Android
+
+```bash
+./build-android.sh dev      # Development APK (for testing)
+./build-android.sh prod     # Release AAB (for Google Play)
+./build-android.sh all      # Both sequentially
+```
+
+**First-time keystore setup:**
+```bash
+./setup-keystore.sh         # Generates murge.keystore (back it up!)
+```
+
+Before prod builds, set passwords:
+```bash
+export MURGE_KEYSTORE_PASS=yourpass
+export MURGE_KEY_ALIAS_PASS=yourpass
+```
+
+Output: `Build/Android/murge-dev.apk` or `Build/Android/murge-prod.aab`.
+
 ### Supabase Edge Functions
 
 ```bash

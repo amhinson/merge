@@ -53,6 +53,13 @@ namespace MergeGame.Editor
             PlayerSettings.iOS.applicationDisplayName = "Murge";
             PlayerSettings.iOS.appInBackgroundBehavior = iOSAppInBackgroundBehavior.Suspend;
 
+            // Lock to portrait only
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+            PlayerSettings.allowedAutorotateToPortrait = true;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = false;
+            PlayerSettings.allowedAutorotateToLandscapeRight = false;
+
             var options = new BuildPlayerOptions
             {
                 scenes = new[] { "Assets/Scenes/GameScene.unity" },
@@ -80,6 +87,128 @@ namespace MergeGame.Editor
                     EditorApplication.Exit(1);
             }
         }
+        // ===== Android =====
+
+        [MenuItem("MergeGame/Build Android (Dev)", false, 40)]
+        public static void BuildAndroidDev()
+        {
+            BuildAndroidInternal(true);
+        }
+
+        [MenuItem("MergeGame/Build Android (Prod AAB)", false, 41)]
+        public static void BuildAndroidProd()
+        {
+            BuildAndroidInternal(false);
+        }
+
+        [MenuItem("MergeGame/Build Android (Prod APK)", false, 42)]
+        public static void BuildAndroidProdApk()
+        {
+            BuildAndroidInternal(false, null, forceApk: true);
+        }
+
+        /// <summary>
+        /// Called from command line: -executeMethod BuildScript.BuildAndroid
+        /// </summary>
+        public static void BuildAndroid()
+        {
+            bool isDev = false;
+            bool forceApk = false;
+            string buildNumber = null;
+            var args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "-development") isDev = true;
+                if (args[i] == "-forceApk") forceApk = true;
+                if (args[i] == "-buildNumber" && i + 1 < args.Length) buildNumber = args[i + 1];
+            }
+            BuildAndroidInternal(isDev, buildNumber, forceApk);
+        }
+
+        private static void BuildAndroidInternal(bool development, string buildNumber = null, bool forceApk = false)
+        {
+            string bundleId = development ? "com.murge.game.dev" : "com.murge.game";
+#pragma warning disable CS0618
+            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, bundleId);
+#pragma warning restore CS0618
+
+            PlayerSettings.productName = "Murge";
+            PlayerSettings.companyName = "Murge";
+            PlayerSettings.bundleVersion = "0.1.0";
+
+            int versionCode = 1;
+            if (buildNumber != null && int.TryParse(buildNumber, out int parsed))
+                versionCode = parsed;
+            PlayerSettings.Android.bundleVersionCode = versionCode;
+
+            // Lock to portrait only
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+            PlayerSettings.allowedAutorotateToPortrait = true;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = false;
+            PlayerSettings.allowedAutorotateToLandscapeRight = false;
+
+            // Keystore — only use if keystore exists AND passwords are available
+            string keystorePath = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(Application.dataPath), "murge.keystore");
+            string ksPass = System.Environment.GetEnvironmentVariable("MURGE_KEYSTORE_PASS");
+            string kaPass = System.Environment.GetEnvironmentVariable("MURGE_KEY_ALIAS_PASS");
+
+            if (!development && System.IO.File.Exists(keystorePath)
+                && !string.IsNullOrEmpty(ksPass) && !string.IsNullOrEmpty(kaPass))
+            {
+                PlayerSettings.Android.useCustomKeystore = true;
+                PlayerSettings.Android.keystoreName = keystorePath;
+                PlayerSettings.Android.keystorePass = ksPass;
+                PlayerSettings.Android.keyaliasPass = kaPass;
+                PlayerSettings.Android.keyaliasName = "murge";
+                Debug.Log("Android: Using custom keystore (signed release)");
+            }
+            else
+            {
+                PlayerSettings.Android.useCustomKeystore = false;
+                if (!development)
+                    Debug.Log("Android: No keystore/passwords — building unsigned (debug signed)");
+            }
+
+            // APK for dev (or if forced), AAB for prod
+            bool buildAAB = !development && !forceApk;
+            EditorUserBuildSettings.buildAppBundle = buildAAB;
+
+            string ext = buildAAB ? "aab" : "apk";
+            string buildPath = $"Build/Android/murge-{(development ? "dev" : "prod")}.{ext}";
+
+            // Ensure output directory exists
+            string dir = System.IO.Path.GetDirectoryName(buildPath);
+            if (!System.IO.Directory.Exists(dir))
+                System.IO.Directory.CreateDirectory(dir);
+
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[] { "Assets/Scenes/GameScene.unity" },
+                locationPathName = buildPath,
+                target = BuildTarget.Android,
+                options = development ? BuildOptions.Development : BuildOptions.None,
+            };
+
+            Debug.Log($"Building Android ({(development ? "DEV" : "PROD")}) bundle={bundleId} format={ext} to {buildPath}");
+
+            BuildReport report = BuildPipeline.BuildPlayer(options);
+
+            if (report.summary.result == BuildResult.Succeeded)
+            {
+                Debug.Log($"Android build succeeded: {report.summary.totalSize} bytes → {buildPath}");
+            }
+            else
+            {
+                Debug.LogError($"Android build failed: {report.summary.result}");
+                if (Application.isBatchMode)
+                    EditorApplication.Exit(1);
+            }
+        }
+
+        // ===== iOS Helpers =====
+
         private static void PatchXcodeProject(string buildPath)
         {
 #if UNITY_IOS

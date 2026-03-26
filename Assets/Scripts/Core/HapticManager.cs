@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace MergeGame.Core
 {
     /// <summary>
-    /// Haptic feedback using iOS UIImpactFeedbackGenerator for fine-grained control.
+    /// Haptic feedback. iOS uses UIImpactFeedbackGenerator, Android uses VibrationEffect.
     /// Light = barely there, Medium = noticeable, Heavy = strong.
     /// </summary>
     public class HapticManager : MonoBehaviour
@@ -23,6 +23,19 @@ namespace MergeGame.Core
         [DllImport("__Internal")] private static extern void _HapticMedium();
         [DllImport("__Internal")] private static extern void _HapticHeavy();
         [DllImport("__Internal")] private static extern void _HapticSelection();
+#endif
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        private static AndroidJavaClass _androidHaptic;
+        private static AndroidJavaClass AndroidHaptic
+        {
+            get
+            {
+                if (_androidHaptic == null)
+                    _androidHaptic = new AndroidJavaClass("com.murge.haptic.HapticPlugin");
+                return _androidHaptic;
+            }
+        }
 #endif
 
         private void Awake()
@@ -83,6 +96,8 @@ namespace MergeGame.Core
             if (!CanFire()) return;
 #if UNITY_IOS && !UNITY_EDITOR
             _HapticLight();
+#elif UNITY_ANDROID && !UNITY_EDITOR
+            try { AndroidHaptic.CallStatic("hapticLight"); } catch { }
 #endif
         }
 
@@ -91,6 +106,8 @@ namespace MergeGame.Core
             if (!CanFire()) return;
 #if UNITY_IOS && !UNITY_EDITOR
             _HapticMedium();
+#elif UNITY_ANDROID && !UNITY_EDITOR
+            try { AndroidHaptic.CallStatic("hapticMedium"); } catch { }
 #endif
         }
 
@@ -99,6 +116,8 @@ namespace MergeGame.Core
             if (!CanFire()) return;
 #if UNITY_IOS && !UNITY_EDITOR
             _HapticHeavy();
+#elif UNITY_ANDROID && !UNITY_EDITOR
+            try { AndroidHaptic.CallStatic("hapticHeavy"); } catch { }
 #endif
         }
 

@@ -47,7 +47,10 @@
       "Bash(sed -i '' 's/OVERTONE logo/MURGE logo/; s/OVERTONE title/MURGE title/' UI/LoadingScreen.cs)",
       "Bash(sed -i '' 's/\"\"OVERTONE\"\"/\"\"MURGE\"\"/' UI/TitleScreen.cs)",
       "Bash(sed -i '' 's/OVERTONE title/MURGE title/' UI/ShareManager.cs)",
-      "Bash(./deploy.sh)"
+      "Bash(./deploy.sh)",
+      "Bash(./build-android.sh prod-apk:*)",
+      "Bash(curl:*)",
+      "Bash(./install-android.sh prod:*)"
     ]
   }
 }

@@ -21,6 +21,16 @@ cd Supabase && ./deploy.sh prod   # deploy to prod project
 
 Build number auto-increments from `.build-number`. Override with `BUILD_NUMBER=42 ./build-ios.sh prod`.
 
+### Android
+
+```bash
+./build-android.sh dev      # dev APK
+./build-android.sh prod     # prod AAB (for Google Play)
+./build-android.sh all      # both sequentially
+```
+
+First-time setup: `./setup-keystore.sh` to generate signing keystore. Set `MURGE_KEYSTORE_PASS` and `MURGE_KEY_ALIAS_PASS` env vars before prod builds.
+
 ### Unity Scene
 
 The gameplay screen is built at **editor time** by `GameSceneBuilder.cs`. After modifying it, run: **MergeGame > Build Game Scene** in the Unity menu, then save the scene (Cmd+S). Other screens (Home, Settings, Onboarding, Results) self-build at runtime via `OnEnable`.

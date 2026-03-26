@@ -490,7 +490,7 @@ namespace MergeGame.UI
                 // Empty state
                 var emptyGO = MurgeUI.CreateUIObject("EmptyState", leaderboardRowContainer);
                 var emptyTMP = emptyGO.AddComponent<TextMeshProUGUI>();
-                emptyTMP.text = GameSession.IsOffline ? "You're offline" : "No scores yet today";
+                emptyTMP.text = !Core.NetworkMonitor.IsOnline ? "You're offline" : "No scores yet today";
                 emptyTMP.font = MurgeUI.DMMono;
                 emptyTMP.fontSize = 11;
                 emptyTMP.color = OC.muted;

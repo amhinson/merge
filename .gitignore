@@ -63,3 +63,5 @@ Supabase/supabase/.gitignore
 # Local Netlify folder
 .netlify
 Screenshots/
+*.keystore
+.utmp/

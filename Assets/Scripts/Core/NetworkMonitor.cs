@@ -91,7 +91,9 @@ namespace MergeGame.Core
                 request.timeout = (int)PingTimeout;
                 yield return request.SendWebRequest();
 
-                bool reachable = request.result == UnityWebRequest.Result.Success;
+                // Any HTTP response (even 401/404) means the server is reachable.
+                // Only ConnectionError or timeout means truly offline.
+                bool reachable = request.result != UnityWebRequest.Result.ConnectionError;
                 SetOnline(reachable);
             }
 
