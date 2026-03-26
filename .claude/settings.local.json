@@ -58,7 +58,14 @@
       "Bash(open /tmp/launch_check.png)",
       "Bash(for f:*)",
       "Bash(do sed:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(source ~/.zshrc)",
+      "Bash(./build-android.sh prod:*)",
+      "Bash(pip3 install:*)",
+      "Bash(./deploy-android.sh upload-only:*)",
+      "Bash(./deploy-android.sh)",
+      "Bash(./build-ios.sh prod:*)",
+      "Bash(fastlane ios:*)"
     ]
   }
 }

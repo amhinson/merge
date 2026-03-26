@@ -71,55 +71,22 @@ build_env() {
         -quit \
         -projectPath "$PROJECT_PATH" \
         $BUILD_OPTIONS \
-        -executeMethod BuildScript.BuildiOS \
+        -executeMethod MergeGame.Editor.BuildScript.BuildiOS \
         -buildNumber "$build_num" \
         -logFile "$PROJECT_PATH/Build/unity-build-${env}.log" \
         || { echo "Unity build failed ($env). Check Build/unity-build-${env}.log"; exit 1; }
 
     echo "Xcode project generated"
 
-    # Archive
+    # Archive, export, and upload via fastlane
     echo ""
-    echo "Archiving with Xcode..."
-    xcodebuild \
-        -project "$XCODE_PROJECT" \
-        -scheme "Unity-iPhone" \
-        -configuration Release \
-        -archivePath "$ARCHIVE_PATH" \
-        -allowProvisioningUpdates \
-        archive \
-        || { echo "Xcode archive failed ($env)"; exit 1; }
-
-    echo "Archive created"
-
-    # Export + upload
-    echo ""
-    echo "Exporting IPA and uploading to App Store Connect..."
-    mkdir -p "$IPA_DIR"
-
-    cat > "$PROJECT_PATH/Build/ExportOptions.plist" << 'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>app-store-connect</string>
-    <key>destination</key>
-    <string>upload</string>
-</dict>
-</plist>
-PLIST
-
-    xcodebuild \
-        -exportArchive \
-        -archivePath "$ARCHIVE_PATH" \
-        -exportPath "$IPA_DIR" \
-        -exportOptionsPlist "$PROJECT_PATH/Build/ExportOptions.plist" \
-        -allowProvisioningUpdates \
-        || { echo "IPA export failed ($env)"; exit 1; }
+    echo "Building and uploading via fastlane..."
+    cd "$PROJECT_PATH"
+    fastlane ios beta \
+        || { echo "Fastlane failed ($env)"; exit 1; }
 
     echo ""
-    echo "  $env build #$build_num uploaded to TestFlight"
+    echo "  $env build #$build_num — uploaded to TestFlight"
     echo "========================================"
     echo ""
 }

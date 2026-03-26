@@ -86,7 +86,7 @@ build_env() {
         -quit \
         -projectPath "$PROJECT_PATH" \
         $BUILD_OPTIONS \
-        -executeMethod BuildScript.BuildAndroid \
+        -executeMethod MergeGame.Editor.BuildScript.BuildAndroid \
         -buildNumber "$build_num" \
         -logFile "$PROJECT_PATH/Build/unity-build-android-${env}.log" \
         || { echo "Unity build failed ($env). Check Build/unity-build-android-${env}.log"; exit 1; }
