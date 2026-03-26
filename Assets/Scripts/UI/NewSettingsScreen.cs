@@ -704,6 +704,10 @@ namespace MergeGame.UI
                     if (Core.MurgeAnalytics.Instance != null)
                         Core.MurgeAnalytics.Instance.TrackNameChanged();
 
+                    // Refresh leaderboard cache so home screen shows the new name
+                    if (Backend.LeaderboardService.Instance != null && DailySeedManager.Instance != null)
+                        Backend.LeaderboardService.Instance.FetchLeaderboard(DailySeedManager.Instance.GameDate);
+
                     OnBackClicked();
                 });
             }

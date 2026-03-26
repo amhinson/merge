@@ -22,7 +22,7 @@ Recap push notification the next day. "You played 2nd out of 98 people!" "You we
 "Well, someone had to get last, right?"
 Configure recap update time. Make it seem informative, not pushy to play the next day.
 Use AI so it's unique each day.
-Can group segements. Top 10 get their own. Then remaining top 50%, then lower 40% and 10%, then last gets something unique and funny-ish.
+Can group segments. Top 10 get their own. Then remaining top 50%, then lower 40% and 10%, then last gets something unique and funny-ish.
 
 Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.
 

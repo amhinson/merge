@@ -891,6 +891,11 @@ namespace MergeGame.UI
                     {
                         PlayerPrefs.SetInt(NamePromptShownKey, 1);
                         PlayerPrefs.Save();
+
+                        // Refresh leaderboard cache so home screen shows the new name
+                        if (Backend.LeaderboardService.Instance != null && DailySeedManager.Instance != null)
+                            Backend.LeaderboardService.Instance.FetchLeaderboard(DailySeedManager.Instance.GameDate);
+
                         StartCoroutine(FadeOutNamePrompt());
                     }
                 });

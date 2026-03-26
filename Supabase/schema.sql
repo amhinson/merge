@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS players (
     display_name TEXT NOT NULL DEFAULT 'Player',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     current_streak INTEGER NOT NULL DEFAULT 0,
-    longest_streak INTEGER NOT NULL DEFAULT 0
+    longest_streak INTEGER NOT NULL DEFAULT 0,
+    name_changes_today INTEGER NOT NULL DEFAULT 0,
+    name_change_date DATE
 );
 
 -- Daily scores table

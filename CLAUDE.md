@@ -189,3 +189,4 @@ SDK: `com.gameanalytics.sdk` via OpenUPM. Wrapper: `MurgeAnalytics.cs`. All even
 - All UI screens build themselves procedurally — no scene-based UI
 - GameSceneBuilder changes require scene rebuild from Unity menu
 - iOS-only features guarded with `#if UNITY_IOS && !UNITY_EDITOR`
+- When making database changes, always update `Supabase/schema.sql` to match. Run the SQL in both dev and prod dashboards.
