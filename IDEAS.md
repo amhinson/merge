@@ -8,8 +8,6 @@ Copyright
 
 Show streak on home screen.
 
-Check Unity intro variations.
-
 Are any of the APIs going to become expensive and/or slow if the app starts to get some traction? Can we optimize any?
 
 Incorporate "Daily Drop" somewhere if it's going to be in the App Store title.

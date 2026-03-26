@@ -27,41 +27,29 @@ serve(async (req) => {
       );
     }
 
-    // Get the player's score for this date
-    const { data: playerScore } = await supabase
-      .from("daily_scores")
-      .select("score")
-      .eq("device_uuid", device_uuid)
-      .eq("game_date", game_date)
-      .single();
+    // Single query: get rank + total using window functions
+    const { data, error } = await supabase.rpc("get_player_rank", {
+      p_device_uuid: device_uuid,
+      p_game_date: game_date,
+    });
 
-    if (!playerScore) {
+    if (error) {
+      // Fallback if RPC doesn't exist yet — use old method
+      return await fallbackRank(supabase, device_uuid, game_date);
+    }
+
+    if (!data || data.length === 0) {
       return new Response(
         JSON.stringify({ rank: -1, total_players: 0, percentile: "" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Count how many players scored higher
-    const { count: higherCount } = await supabase
-      .from("daily_scores")
-      .select("id", { count: "exact", head: true })
-      .eq("game_date", game_date)
-      .gt("score", playerScore.score);
-
-    // Count total players for this date
-    const { count: totalPlayers } = await supabase
-      .from("daily_scores")
-      .select("id", { count: "exact", head: true })
-      .eq("game_date", game_date);
-
-    const rank = (higherCount || 0) + 1;
-    const total = totalPlayers || 1;
-    const percentileNum = Math.ceil((rank / total) * 100);
-    const percentile = `Top ${percentileNum}%`;
+    const { rank, total_players } = data[0];
+    const percentileNum = Math.ceil((rank / total_players) * 100);
 
     return new Response(
-      JSON.stringify({ rank, total_players: total, percentile }),
+      JSON.stringify({ rank, total_players, percentile: `Top ${percentileNum}%` }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
@@ -71,3 +59,40 @@ serve(async (req) => {
     );
   }
 });
+
+// Fallback using 3 queries (works without the DB function)
+async function fallbackRank(supabase: any, device_uuid: string, game_date: string) {
+  const { data: playerScore } = await supabase
+    .from("daily_scores")
+    .select("score")
+    .eq("device_uuid", device_uuid)
+    .eq("game_date", game_date)
+    .single();
+
+  if (!playerScore) {
+    return new Response(
+      JSON.stringify({ rank: -1, total_players: 0, percentile: "" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const { count: higherCount } = await supabase
+    .from("daily_scores")
+    .select("id", { count: "exact", head: true })
+    .eq("game_date", game_date)
+    .gt("score", playerScore.score);
+
+  const { count: totalPlayers } = await supabase
+    .from("daily_scores")
+    .select("id", { count: "exact", head: true })
+    .eq("game_date", game_date);
+
+  const rank = (higherCount || 0) + 1;
+  const total = totalPlayers || 1;
+  const percentileNum = Math.ceil((rank / total) * 100);
+
+  return new Response(
+    JSON.stringify({ rank, total_players: total, percentile: `Top ${percentileNum}%` }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}

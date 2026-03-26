@@ -1,5 +1,5 @@
 -- ============================================================
--- Supabase Schema for Overtone
+-- Supabase Schema for Murge
 -- Run this in the Supabase SQL Editor to set up tables and RLS
 -- ============================================================
 
@@ -19,10 +19,12 @@ CREATE TABLE IF NOT EXISTS players (
 CREATE TABLE IF NOT EXISTS daily_scores (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     device_uuid TEXT NOT NULL REFERENCES players(device_uuid),
+    display_name TEXT DEFAULT 'Player',
     game_date DATE NOT NULL,
     score INTEGER NOT NULL,
     day_number INTEGER NOT NULL DEFAULT 1,
     merge_counts INTEGER[] DEFAULT '{}',
+    longest_chain INTEGER NOT NULL DEFAULT 0,
     submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (device_uuid, game_date)
 );
@@ -33,6 +35,28 @@ CREATE INDEX IF NOT EXISTS idx_daily_scores_date_score
 
 CREATE INDEX IF NOT EXISTS idx_daily_scores_uuid_date
     ON daily_scores (device_uuid, game_date);
+
+-- ============================================================
+-- Functions
+-- ============================================================
+
+-- Single-query rank lookup using window functions
+-- Called by get-player-rank edge function via supabase.rpc()
+CREATE OR REPLACE FUNCTION get_player_rank(p_device_uuid TEXT, p_game_date DATE)
+RETURNS TABLE(rank BIGINT, total_players BIGINT) AS $$
+  SELECT
+    r.rank,
+    r.total_players
+  FROM (
+    SELECT
+      device_uuid,
+      RANK() OVER (ORDER BY score DESC) AS rank,
+      COUNT(*) OVER () AS total_players
+    FROM daily_scores
+    WHERE game_date = p_game_date
+  ) r
+  WHERE r.device_uuid = p_device_uuid;
+$$ LANGUAGE sql STABLE;
 
 -- ============================================================
 -- Row Level Security

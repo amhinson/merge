@@ -101,20 +101,17 @@ Point values in `Assets/ScriptableObjects/BallData_Tier[1-11].asset`. Combo mult
 
 - `_shared/auth.ts` — CORS headers, API key verification
 - `_shared/profanity.ts` — obscenity-based content filter
-- `_shared/rate-limit.ts` — per-device rate limiting via `rate_limits` table
 
 ### Tables
 
 - `players` (device_uuid PK, display_name, streaks)
 - `daily_scores` (device_uuid + game_date unique, score, merge_counts, longest_chain)
-- `rate_limits` (device_uuid, function_name, created_at) — auto-cleaned by opportunistic purge
-
 ### Server-side Validation (submit-score)
 
 - Score hard cap (99,999), must be non-negative integer
 - game_date must be within +/-1.5 days of server time (timezone tolerance)
 - longest_chain capped at 99
-- Rate limited: 5 requests per device per 60s
+- Rate limiting: use Supabase Pro built-in rate limiting when scaling up
 
 ### Dev vs Prod
 

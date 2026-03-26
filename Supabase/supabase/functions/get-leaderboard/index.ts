@@ -29,43 +29,38 @@ serve(async (req) => {
       );
     }
 
+    // Read display_name directly from daily_scores — no JOIN needed
     const { data, error } = await supabase
       .from("daily_scores")
-      .select(
-        `
-        device_uuid,
-        score,
-        players!inner(display_name)
-      `
-      )
+      .select("device_uuid, score, display_name")
       .eq("game_date", game_date)
       .order("score", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // Fallback: try with players join (for old rows without display_name)
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("daily_scores")
+        .select(`device_uuid, score, players!inner(display_name)`)
+        .eq("game_date", game_date)
+        .order("score", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (fallbackError) {
+        return new Response(
+          JSON.stringify({ error: fallbackError.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const entries = rankEntries(fallbackData || [], offset, device_uuid, true);
+      return new Response(JSON.stringify(entries), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Flatten with dense ranking — tied scores get the same rank
-    let currentRank = offset + 1;
-    let previousScore = -1;
-    const entries = (data || []).map((row: any, index: number) => {
-      if (row.score !== previousScore) {
-        currentRank = offset + index + 1;
-        previousScore = row.score;
-      }
-      return {
-        device_uuid: row.device_uuid,
-        display_name: row.players?.display_name || "Player",
-        score: row.score,
-        rank: currentRank,
-        is_current_player: row.device_uuid === device_uuid,
-      };
-    });
-
+    const entries = rankEntries(data || [], offset, device_uuid, false);
     return new Response(JSON.stringify(entries), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -77,3 +72,23 @@ serve(async (req) => {
     );
   }
 });
+
+function rankEntries(data: any[], offset: number, device_uuid: string, useJoin: boolean) {
+  let currentRank = offset + 1;
+  let previousScore = -1;
+  return data.map((row: any, index: number) => {
+    if (row.score !== previousScore) {
+      currentRank = offset + index + 1;
+      previousScore = row.score;
+    }
+    return {
+      device_uuid: row.device_uuid,
+      display_name: useJoin
+        ? (row.players?.display_name || "Player")
+        : (row.display_name || "Player"),
+      score: row.score,
+      rank: currentRank,
+      is_current_player: row.device_uuid === device_uuid,
+    };
+  });
+}

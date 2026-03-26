@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, verifyApiKey } from "../_shared/auth.ts";
-import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 const ADJECTIVES = [
   // Phish song references
@@ -77,8 +76,6 @@ serve(async (req) => {
       );
     }
 
-    const rateLimited = await checkRateLimit(supabase, device_uuid, "register-player");
-    if (rateLimited) return rateLimited;
 
     const generatedName = display_name || generateDefaultName();
 

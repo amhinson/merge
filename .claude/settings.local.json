@@ -55,7 +55,10 @@
       "Bash(identify /Users/alex/projects/personal/merge/Build/iOS/LaunchScreen-iPhonePortrait.png)",
       "Bash(xxd -l 64 /Users/alex/projects/personal/merge/Build/iOS/LaunchScreen-iPhonePortrait.png)",
       "Bash(python3:*)",
-      "Bash(open /tmp/launch_check.png)"
+      "Bash(open /tmp/launch_check.png)",
+      "Bash(for f:*)",
+      "Bash(do sed:*)",
+      "Bash(done)"
     ]
   }
 }
