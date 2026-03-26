@@ -230,58 +230,169 @@ namespace MergeGame.Visual
             return Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), s);
         }
 
-        public static Sprite CreateLightningIcon(int size, Color color)
+        public static Sprite CreateFireIcon(int size, Color outerColor)
         {
-            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            // Draw on a 16x16 pixel art grid, then scale to target size
+            const int grid = 16;
+            Texture2D tex = new Texture2D(grid, grid, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Point;
             ClearTexture(tex);
 
-            int s = size;
-            float cx = s / 2f;
+            // Colors: red-orange outer, orange mid, yellow inner
+            Color outer = outerColor;
+            Color mid = new Color(1f, 0.5f, 0.1f, 1f);
+            Color inner = new Color(1f, 0.92f, 0.25f, 1f);
+            Color tip = new Color(1f, 0.3f, 0.1f, 1f);
 
-            // Lightning bolt shape — defined as normalized polygon points (0-1 range)
-            // Zigzag shape: wide top, narrow middle, wide bottom kick
-            float[][] points = new float[][]
-            {
-                new float[] { 0.55f, 1.0f },   // top right
-                new float[] { 0.30f, 1.0f },   // top left
-                new float[] { 0.40f, 0.58f },  // mid left upper
-                new float[] { 0.25f, 0.58f },  // kick left
-                new float[] { 0.50f, 0.0f },   // bottom point
-                new float[] { 0.42f, 0.42f },  // mid right lower
-                new float[] { 0.60f, 0.42f },  // kick right
+            // Hand-drawn pixel art flame on 16x16 grid
+            // y=0 is bottom in Unity. Flame has wide base, forked tip, slight lean.
+            int[][] outerPixels = {
+                // base (y=2-3) — wide
+                new[] { 5, 2 }, new[] { 6, 2 }, new[] { 7, 2 }, new[] { 8, 2 }, new[] { 9, 2 }, new[] { 10, 2 },
+                new[] { 4, 3 }, new[] { 5, 3 }, new[] { 10, 3 }, new[] { 11, 3 },
+                // body (y=4-7) — wide oval
+                new[] { 4, 4 }, new[] { 11, 4 },
+                new[] { 3, 5 }, new[] { 11, 5 },
+                new[] { 3, 6 }, new[] { 11, 6 },
+                new[] { 3, 7 }, new[] { 10, 7 },
+                // narrow (y=8-9)
+                new[] { 4, 8 }, new[] { 10, 8 },
+                new[] { 4, 9 }, new[] { 10, 9 },
+                // fork (y=10-13) — splits into two tips
+                new[] { 4, 10 }, new[] { 9, 10 },
+                new[] { 5, 11 }, new[] { 9, 11 },
+                new[] { 5, 12 },
+                new[] { 6, 13 },
             };
 
-            // Rasterize the polygon using scanline fill
-            for (int py = 0; py < s; py++)
-            {
-                float ny = (float)py / s;
-                // Find x intersections at this y
-                var xIntersections = new System.Collections.Generic.List<float>();
-                int n = points.Length;
-                for (int i = 0; i < n; i++)
-                {
-                    int j = (i + 1) % n;
-                    float y0 = points[i][1], y1 = points[j][1];
-                    if ((ny >= Mathf.Min(y0, y1)) && (ny < Mathf.Max(y0, y1)))
-                    {
-                        float t = (ny - y0) / (y1 - y0);
-                        float x = Mathf.Lerp(points[i][0], points[j][0], t);
-                        xIntersections.Add(x);
-                    }
-                }
-                xIntersections.Sort();
-                for (int i = 0; i + 1 < xIntersections.Count; i += 2)
-                {
-                    int x0 = Mathf.Max(0, Mathf.FloorToInt(xIntersections[i] * s));
-                    int x1 = Mathf.Min(s - 1, Mathf.CeilToInt(xIntersections[i + 1] * s));
-                    for (int px = x0; px <= x1; px++)
-                        tex.SetPixel(px, py, color);
-                }
-            }
+            int[][] midPixels = {
+                new[] { 6, 3 }, new[] { 7, 3 }, new[] { 8, 3 }, new[] { 9, 3 },
+                new[] { 5, 4 }, new[] { 6, 4 }, new[] { 9, 4 }, new[] { 10, 4 },
+                new[] { 4, 5 }, new[] { 5, 5 }, new[] { 10, 5 },
+                new[] { 4, 6 }, new[] { 10, 6 },
+                new[] { 4, 7 }, new[] { 9, 7 },
+                new[] { 5, 8 }, new[] { 9, 8 },
+                new[] { 5, 9 }, new[] { 9, 9 },
+                new[] { 5, 10 }, new[] { 8, 10 },
+                new[] { 6, 11 }, new[] { 8, 11 },
+                new[] { 6, 12 }, new[] { 8, 12 },
+                new[] { 7, 13 },
+            };
+
+            int[][] innerPixels = {
+                new[] { 7, 4 }, new[] { 8, 4 },
+                new[] { 6, 5 }, new[] { 7, 5 }, new[] { 8, 5 }, new[] { 9, 5 },
+                new[] { 5, 6 }, new[] { 6, 6 }, new[] { 7, 6 }, new[] { 8, 6 }, new[] { 9, 6 },
+                new[] { 5, 7 }, new[] { 6, 7 }, new[] { 7, 7 }, new[] { 8, 7 },
+                new[] { 6, 8 }, new[] { 7, 8 }, new[] { 8, 8 },
+                new[] { 6, 9 }, new[] { 7, 9 }, new[] { 8, 9 },
+                new[] { 6, 10 }, new[] { 7, 10 },
+                new[] { 7, 11 },
+                new[] { 7, 12 },
+            };
+
+            // Right fork tip
+            int[][] tipPixels = {
+                new[] { 10, 10 },
+                new[] { 10, 11 },
+                new[] { 9, 12 },
+            };
+
+            foreach (var p in outerPixels) tex.SetPixel(p[0], p[1], outer);
+            foreach (var p in midPixels) tex.SetPixel(p[0], p[1], mid);
+            foreach (var p in innerPixels) tex.SetPixel(p[0], p[1], inner);
+            foreach (var p in tipPixels) tex.SetPixel(p[0], p[1], tip);
 
             tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), s);
+
+            // Scale up to target size
+            if (size != grid)
+            {
+                var rt = RenderTexture.GetTemporary(size, size, 0, RenderTextureFormat.ARGB32);
+                rt.filterMode = FilterMode.Point;
+                RenderTexture.active = rt;
+                Graphics.Blit(tex, rt);
+                var scaled = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                scaled.filterMode = FilterMode.Point;
+                scaled.ReadPixels(new Rect(0, 0, size, size), 0, 0);
+                scaled.Apply();
+                RenderTexture.active = null;
+                RenderTexture.ReleaseTemporary(rt);
+                tex = scaled;
+            }
+
+            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                new Vector2(0.5f, 0.5f), tex.width);
+        }
+
+        public static Sprite CreateLightningIcon(int size, Color color)
+        {
+            const int grid = 12;
+            Texture2D tex = new Texture2D(grid, grid, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            ClearTexture(tex);
+
+            // Bright core and slightly dimmer edge
+            Color bright = new Color(
+                Mathf.Min(1f, color.r * 1.3f),
+                Mathf.Min(1f, color.g * 1.2f),
+                color.b, 1f);
+
+            // Hand-drawn 12x12 pixel art lightning bolt
+            // y=0 is bottom. Classic zigzag: wide top → narrow mid → point bottom
+            int[][] boltPixels = {
+                // Top bar (y=10-11)
+                new[] { 3, 11 }, new[] { 4, 11 }, new[] { 5, 11 }, new[] { 6, 11 }, new[] { 7, 11 }, new[] { 8, 11 },
+                new[] { 4, 10 }, new[] { 5, 10 }, new[] { 6, 10 }, new[] { 7, 10 }, new[] { 8, 10 },
+                // Slant down-left (y=8-9)
+                new[] { 4, 9 }, new[] { 5, 9 }, new[] { 6, 9 }, new[] { 7, 9 },
+                new[] { 3, 8 }, new[] { 4, 8 }, new[] { 5, 8 }, new[] { 6, 8 },
+                // Middle kick-right (y=6-7)
+                new[] { 3, 7 }, new[] { 4, 7 }, new[] { 5, 7 }, new[] { 6, 7 }, new[] { 7, 7 }, new[] { 8, 7 },
+                new[] { 4, 6 }, new[] { 5, 6 }, new[] { 6, 6 }, new[] { 7, 6 },
+                // Slant down-left (y=4-5)
+                new[] { 4, 5 }, new[] { 5, 5 }, new[] { 6, 5 },
+                new[] { 4, 4 }, new[] { 5, 4 },
+                // Point (y=2-3)
+                new[] { 3, 3 }, new[] { 4, 3 },
+                new[] { 3, 2 },
+            };
+
+            // Bright center pixels
+            int[][] brightPixels = {
+                new[] { 5, 11 }, new[] { 6, 11 }, new[] { 7, 11 },
+                new[] { 5, 10 }, new[] { 6, 10 },
+                new[] { 5, 9 }, new[] { 6, 9 },
+                new[] { 4, 8 }, new[] { 5, 8 },
+                new[] { 5, 7 }, new[] { 6, 7 },
+                new[] { 5, 6 }, new[] { 6, 6 },
+                new[] { 5, 5 },
+                new[] { 4, 4 },
+                new[] { 4, 3 },
+            };
+
+            foreach (var p in boltPixels) tex.SetPixel(p[0], p[1], color);
+            foreach (var p in brightPixels) tex.SetPixel(p[0], p[1], bright);
+
+            tex.Apply();
+
+            if (size != grid)
+            {
+                var rt = RenderTexture.GetTemporary(size, size, 0, RenderTextureFormat.ARGB32);
+                rt.filterMode = FilterMode.Point;
+                RenderTexture.active = rt;
+                Graphics.Blit(tex, rt);
+                var scaled = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                scaled.filterMode = FilterMode.Point;
+                scaled.ReadPixels(new Rect(0, 0, size, size), 0, 0);
+                scaled.Apply();
+                RenderTexture.active = null;
+                RenderTexture.ReleaseTemporary(rt);
+                tex = scaled;
+            }
+
+            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                new Vector2(0.5f, 0.5f), tex.width);
         }
 
         public static Sprite CreateBackIcon(int size, Color color)

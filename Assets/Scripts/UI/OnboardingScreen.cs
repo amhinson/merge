@@ -118,11 +118,10 @@ namespace MergeGame.UI
             dropperBall = null;
             sittingBall = null;
 
-            // New merged ball scales in
+            // New merged ball scales in — matches MergeScaleCoroutine exactly
             sittingBall = CreateDemoBall(demoArena.transform, nextTier, new Vector2(0, FloorY), newSize);
-            sittingBall.GetComponent<RectTransform>().localScale = Vector3.one * (oldSize / newSize);
-            yield return ScaleObject(sittingBall, sittingBall.GetComponent<RectTransform>().localScale, Vector3.one * 1.1f, 0.15f);
-            yield return ScaleObject(sittingBall, Vector3.one * 1.1f, Vector3.one, 0.08f);
+            float scaleRatio = oldSize / newSize;
+            yield return MergeScaleIn(sittingBall, scaleRatio, 0.18f);
 
             yield return new WaitForSeconds(0.2f);
 
@@ -273,8 +272,7 @@ namespace MergeGame.UI
             var rt = ball.GetComponent<RectTransform>();
             float startY = rt.anchoredPosition.y;
 
-            // Drop with gravity feel
-            float dropDuration = 0.55f;
+            float dropDuration = 0.5f;
             float elapsed = 0f;
             while (elapsed < dropDuration)
             {
@@ -284,23 +282,13 @@ namespace MergeGame.UI
                 rt.anchoredPosition = new Vector2(0, Mathf.Lerp(startY, targetY, eased));
                 yield return null;
             }
-
-            // Small bounce
-            float bounceHeight = (startY - targetY) * 0.06f;
-            float bounceDuration = 0.1f;
-            elapsed = 0f;
-            while (elapsed < bounceDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / bounceDuration);
-                float bounce = Mathf.Sin(t * Mathf.PI) * bounceHeight;
-                rt.anchoredPosition = new Vector2(0, targetY + bounce);
-                yield return null;
-            }
-
             rt.anchoredPosition = new Vector2(0, targetY);
         }
 
+        /// <summary>
+        /// Absorb animation matching BallController.MergeCoroutine exactly:
+        /// 120ms, ease-in quadratic, shrink to 30%.
+        /// </summary>
         private IEnumerator AbsorbBalls(GameObject a, GameObject b, Vector2 mergePoint)
         {
             if (a == null || b == null) yield break;
@@ -311,13 +299,13 @@ namespace MergeGame.UI
             Vector3 scaleA = rtA.localScale;
             Vector3 scaleB = rtB.localScale;
 
-            float duration = 0.12f;
+            const float duration = 0.12f; // matches mergeAbsorbDuration
             float elapsed = 0f;
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
-                float eased = t * t;
+                float eased = t * t; // ease-in (accelerate into merge point)
                 if (rtA != null)
                 {
                     rtA.anchoredPosition = Vector2.Lerp(startA, mergePoint, eased);
@@ -391,9 +379,17 @@ namespace MergeGame.UI
             scorePop.SetActive(false);
         }
 
+        /// <summary>
+        /// Particle burst matching MergeParticles: 8 + tier count,
+        /// radial with random angle variation, 0.4s lifetime.
+        /// </summary>
         private void SpawnMergeParticles(Transform parent, Vector2 center)
         {
-            for (int i = 0; i < 6; i++)
+            int count = 8 + currentTier;
+            Color particleColor = Visual.BallRenderer.GetBallColor(
+                Mathf.Min(currentTier + 1, 10));
+
+            for (int i = 0; i < count; i++)
             {
                 var particle = MurgeUI.CreateUIObject($"Particle{i}", parent);
                 var prt = particle.GetComponent<RectTransform>();
@@ -404,21 +400,23 @@ namespace MergeGame.UI
                 prt.sizeDelta = new Vector2(4, 4);
 
                 var img = particle.AddComponent<Image>();
-                img.color = OC.cyan;
+                img.color = particleColor;
                 img.raycastTarget = false;
 
                 var cg = particle.AddComponent<CanvasGroup>();
-                StartCoroutine(AnimateParticle(prt, cg, i));
+                StartCoroutine(AnimateParticle(prt, cg, i, count));
             }
         }
 
-        private IEnumerator AnimateParticle(RectTransform prt, CanvasGroup cg, int index)
+        private IEnumerator AnimateParticle(RectTransform prt, CanvasGroup cg, int index, int total)
         {
-            float angle = index * (360f / 6f) * Mathf.Deg2Rad;
-            Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+            // Radial burst with random variation (matches MergeParticles)
+            float baseAngle = (360f / total) * index + Random.Range(-15f, 15f);
+            float rad = baseAngle * Mathf.Deg2Rad;
+            Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             Vector2 startPos = prt.anchoredPosition;
-            float speed = 60f;
-            float duration = 0.25f;
+            float speed = 80f * Random.Range(0.6f, 1.2f);
+            const float duration = 0.4f; // matches MergeParticles.particleLifetime
             float elapsed = 0f;
             while (elapsed < duration)
             {
@@ -429,6 +427,33 @@ namespace MergeGame.UI
                 yield return null;
             }
             Destroy(prt.gameObject);
+        }
+
+        /// <summary>
+        /// Scale-in matching BallController.MergeScaleCoroutine:
+        /// ease-out with back overshoot (s=1.4), from old size ratio to full.
+        /// </summary>
+        private IEnumerator MergeScaleIn(GameObject obj, float startRatio, float duration)
+        {
+            if (obj == null) yield break;
+            var rt = obj.GetComponent<RectTransform>();
+            Vector3 targetScale = Vector3.one;
+            rt.localScale = targetScale * startRatio;
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                if (obj == null) yield break;
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                // Back ease-out: overshoots ~10% then settles (matches real game)
+                float s = 1.4f;
+                float eased = 1f + (t - 1f) * (t - 1f) * ((s + 1f) * (t - 1f) + s);
+                rt.localScale = Vector3.LerpUnclamped(targetScale * startRatio, targetScale, eased);
+                yield return null;
+            }
+            if (obj != null)
+                rt.localScale = targetScale;
         }
 
         private IEnumerator ScaleObject(GameObject obj, Vector3 from, Vector3 to, float duration)
@@ -631,7 +656,7 @@ namespace MergeGame.UI
             tagRT.sizeDelta = new Vector2(0, 36);
 
             var tmp = MurgeUI.CreateLabel(ctaTagline.transform,
-                "new sequence every day\neveryone plays the same drop",
+                "everyone gets the same drop\nnew one every day",
                 MurgeUI.DMMono, OFont.body, OC.muted, "TaglineText");
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.lineSpacing = 8;

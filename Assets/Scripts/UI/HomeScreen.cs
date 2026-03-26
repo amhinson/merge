@@ -27,6 +27,10 @@ namespace MergeGame.UI
 
         // Built UI elements
         protected TextMeshProUGUI dayNumberLabel;
+        protected TextMeshProUGUI streakLabel;
+        private GameObject streakFireIcon;
+        private GameObject streakDivider;
+        private RectTransform puzzleLineRT;
         protected TextMeshProUGUI dateLabel;
         protected Transform leaderboardRowContainer;
         private GameObject leaderboardWrapper;
@@ -271,17 +275,60 @@ namespace MergeGame.UI
             rowLE.preferredHeight = 24;
             rowLE.minHeight = 24;
 
-            // Manual positioning within the row — no layout group to avoid stretching the line
-            var rowRT = row.GetComponent<RectTransform>();
+            // === Left side: fire icon + streak number ===
 
-            // Puzzle number (left)
+            // Fire icon
+            var fireGO = MurgeUI.CreateUIObject("FireIcon", row.transform);
+            var fireRT = fireGO.GetComponent<RectTransform>();
+            fireRT.anchorMin = new Vector2(0, 0.5f);
+            fireRT.anchorMax = new Vector2(0, 0.5f);
+            fireRT.pivot = new Vector2(0, 0.5f);
+            fireRT.anchoredPosition = new Vector2(24, 0);
+            fireRT.sizeDelta = new Vector2(14, 14);
+            var fireImg = fireGO.AddComponent<Image>();
+            fireImg.sprite = Visual.PixelUIGenerator.CreateLightningIcon(32, OC.amber);
+            fireImg.preserveAspect = true;
+            fireImg.raycastTarget = false;
+            streakFireIcon = fireGO;
+
+            // Streak number
+            var streakGO = MurgeUI.CreateUIObject("Streak", row.transform);
+            var streakRT = streakGO.GetComponent<RectTransform>();
+            streakRT.anchorMin = new Vector2(0, 0);
+            streakRT.anchorMax = new Vector2(0, 1);
+            streakRT.pivot = new Vector2(0, 0.5f);
+            streakRT.anchoredPosition = new Vector2(42, 0);
+            streakRT.sizeDelta = new Vector2(24, 0);
+            streakLabel = streakGO.AddComponent<TextMeshProUGUI>();
+            streakLabel.font = MurgeUI.PressStart2P;
+            streakLabel.fontSize = OFont.caption;
+            streakLabel.color = OC.amber;
+            streakLabel.alignment = TextAlignmentOptions.Left;
+            streakLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
+            streakLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            streakLabel.raycastTarget = false;
+
+            // Divider
+            var divGO = MurgeUI.CreateUIObject("Divider", row.transform);
+            var divRT = divGO.GetComponent<RectTransform>();
+            divRT.anchorMin = new Vector2(0, 0.2f);
+            divRT.anchorMax = new Vector2(0, 0.8f);
+            divRT.pivot = new Vector2(0, 0.5f);
+            divRT.anchoredPosition = new Vector2(70, 0);
+            divRT.sizeDelta = new Vector2(1, 0);
+            var divImg = divGO.AddComponent<Image>();
+            divImg.color = OC.border;
+            divImg.raycastTarget = false;
+            streakDivider = divGO;
+
+            // === Drop number ===
             var dayGO = MurgeUI.CreateUIObject("PuzzleNumber", row.transform);
             var dayRT = dayGO.GetComponent<RectTransform>();
             dayRT.anchorMin = new Vector2(0, 0);
             dayRT.anchorMax = new Vector2(0, 1);
             dayRT.pivot = new Vector2(0, 0.5f);
-            dayRT.anchoredPosition = new Vector2(24, 0);
-            dayRT.sizeDelta = new Vector2(60, 0);
+            dayRT.anchoredPosition = new Vector2(80, 0);
+            dayRT.sizeDelta = new Vector2(120, 0);
             dayNumberLabel = dayGO.AddComponent<TextMeshProUGUI>();
             dayNumberLabel.font = MurgeUI.PressStart2P;
             dayNumberLabel.fontSize = OFont.caption;
@@ -292,7 +339,7 @@ namespace MergeGame.UI
             dayNumberLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
             dayNumberLabel.raycastTarget = false;
 
-            // Date (right)
+            // === Date (right) ===
             var dateGO = MurgeUI.CreateUIObject("DateLabel", row.transform);
             var dateRT = dateGO.GetComponent<RectTransform>();
             dateRT.anchorMin = new Vector2(1, 0);
@@ -310,17 +357,18 @@ namespace MergeGame.UI
             dateLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
             dateLabel.raycastTarget = false;
 
-            // Thin line between them
+            // Thin line between drop number and date
             var lineGO = MurgeUI.CreateUIObject("Line", row.transform);
             var lineRT = lineGO.GetComponent<RectTransform>();
             lineRT.anchorMin = new Vector2(0, 0.5f);
             lineRT.anchorMax = new Vector2(1, 0.5f);
             lineRT.pivot = new Vector2(0.5f, 0.5f);
-            lineRT.offsetMin = new Vector2(84, -0.5f);  // left inset past #number
-            lineRT.offsetMax = new Vector2(-104, 0.5f); // right inset before date
+            lineRT.offsetMin = new Vector2(200, -0.5f);
+            lineRT.offsetMax = new Vector2(-104, 0.5f);
             var lineImg = lineGO.AddComponent<Image>();
             lineImg.color = OC.border;
             lineImg.raycastTarget = false;
+            puzzleLineRT = lineRT;
         }
 
         protected void BuildLeaderboardCard(Transform parent)
@@ -443,6 +491,35 @@ namespace MergeGame.UI
             {
                 var now = System.DateTime.Now;
                 dateLabel.text = now.ToString("MMM dd").ToUpper();
+            }
+            if (streakLabel != null)
+            {
+                int streak = StreakManager.Instance != null ? StreakManager.Instance.CurrentStreak : 0;
+                bool showStreak = streak > 0;
+                streakLabel.text = streak.ToString();
+                streakLabel.gameObject.SetActive(showStreak);
+                if (streakFireIcon != null) streakFireIcon.SetActive(showStreak);
+                if (streakDivider != null) streakDivider.SetActive(showStreak);
+
+                // Shift drop number left when streak is hidden
+                float dropX = showStreak ? 80 : 24;
+                if (dayNumberLabel != null)
+                {
+                    var dayRT = dayNumberLabel.GetComponent<RectTransform>();
+                    dayRT.anchoredPosition = new Vector2(dropX, 0);
+
+                    // Dynamically position the line centered between drop text and date
+                    if (puzzleLineRT != null && dateLabel != null)
+                    {
+                        dayNumberLabel.ForceMeshUpdate();
+                        dateLabel.ForceMeshUpdate();
+                        float leftEdge = dropX + dayNumberLabel.preferredWidth;
+                        float rightEdge = dateLabel.preferredWidth + 24; // 24 = right padding
+                        float gap = 24; // padding on each side of the line
+                        puzzleLineRT.offsetMin = new Vector2(leftEdge + gap, -0.5f);
+                        puzzleLineRT.offsetMax = new Vector2(-(rightEdge + gap), 0.5f);
+                    }
+                }
             }
         }
 
