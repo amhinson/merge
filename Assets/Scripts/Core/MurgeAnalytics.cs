@@ -13,8 +13,6 @@ namespace MergeGame.Core
     {
         public static MurgeAnalytics Instance { get; private set; }
 
-        private bool isInitialized;
-
         private System.Collections.IEnumerator InitializeGA()
         {
             // Wait a frame so all MonoBehaviours are set up
@@ -23,7 +21,6 @@ namespace MergeGame.Core
             try
             {
                 GameAnalyticsSDK.GameAnalytics.Initialize();
-                isInitialized = true;
                 Debug.Log("[Analytics] GameAnalytics initialized");
             }
             catch (System.Exception e)

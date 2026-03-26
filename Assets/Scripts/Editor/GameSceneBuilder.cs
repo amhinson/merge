@@ -356,10 +356,8 @@ namespace MergeGame.Editor
             // No background — gameplay world shows through
 
             // ===== HEADER BAR (top) =====
-            // Safe area inset for gameplay header — this is baked at editor time,
-            // so we use a fixed value (59 = iPhone Dynamic Island). On devices without
-            // a notch the extra padding is harmless (just slightly more top margin).
-            float safeTop = 59f;
+            // Safe area inset is 0 at editor time — GameplayHUDFitter adjusts at runtime.
+            float safeTop = 0f;
             // Back/close button (top-left) — smooth border, transparent bg, matching home screen style
             var backBtn = new GameObject("BackButton");
             backBtn.transform.SetParent(panel.transform, false);
@@ -660,6 +658,9 @@ namespace MergeGame.Editor
             clRT.offsetMin = Vector2.zero; clRT.offsetMax = Vector2.zero;
 
             confirmPanel.SetActive(false);
+
+            // Runtime safe area adjustment for HUD elements
+            panel.AddComponent<GameplayHUDFitter>();
 
             // Exit confirmation — finds its own children by name at runtime
             panel.AddComponent<SimpleExitConfirm>();

@@ -80,7 +80,7 @@ namespace MergeGame.UI
             rt.anchorMin = new Vector2(0.5f, 1);
             rt.anchorMax = new Vector2(0.5f, 1);
             rt.pivot = new Vector2(0.5f, 1);
-            rt.anchoredPosition = new Vector2(0, -(OS.safeAreaTop + 120));
+            rt.anchoredPosition = new Vector2(0, -(OS.safeAreaTop + 58));
             rt.sizeDelta = new Vector2(240, 28);
 
             // Background pill

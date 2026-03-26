@@ -6,8 +6,6 @@ Support URL
 Marketing URL
 Copyright
 
-Practice toast is too far down on device. But looks ok in Unity.
-
 Username server validation message doesn't show in app.
 
 Show streak on home screen.
