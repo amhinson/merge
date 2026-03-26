@@ -10,6 +10,7 @@ namespace MergeGame.Core
         ReachTier10,
         ReachTier11,
         SevenDayStreak,
+        CompletedAllOfOnboarding,
         HiddenAchievement,
     }
 
@@ -39,6 +40,7 @@ namespace MergeGame.Core
             new AchievementDef { id = AchievementId.ReachTier10, gameCenterId = "reach_tier10", displayName = "Reach tier 10" },
             new AchievementDef { id = AchievementId.ReachTier11, gameCenterId = "reach_tier11", displayName = "Reach tier 11" },
             new AchievementDef { id = AchievementId.SevenDayStreak, gameCenterId = "seven_day_streak", displayName = "7-day streak" },
+            new AchievementDef { id = AchievementId.CompletedAllOfOnboarding, gameCenterId = "completed_all_of_onboarding", displayName = "Completed full onboarding (all 11 tiers)" },
             new AchievementDef { id = AchievementId.HiddenAchievement, gameCenterId = "hidden_secret", displayName = "Hidden: tap coming soon 10x" },
         };
 
@@ -92,6 +94,12 @@ namespace MergeGame.Core
         public void OnGameCompleted(int finalScore)
         {
             ReportAchievement(AchievementId.FirstGameCompleted);
+        }
+
+        /// <summary>Called when user completes all 11 tiers in onboarding.</summary>
+        public void UnlockCompletedAllOfOnboarding()
+        {
+            ReportAchievement(AchievementId.CompletedAllOfOnboarding);
         }
 
         /// <summary>Called externally to unlock the hidden achievement.</summary>

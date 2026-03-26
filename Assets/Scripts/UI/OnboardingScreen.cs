@@ -9,15 +9,15 @@ namespace MergeGame.UI
 {
     /// <summary>
     /// Interactive onboarding: user taps to drop balls, watches them merge.
-    /// Two merge cycles, then LET'S PLAY appears.
+    /// Cycles through all 11 tiers. LET'S PLAY appears after merge 2.
+    /// Arena fades after the final merge (tier 11).
     /// </summary>
     public class OnboardingScreen : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private BallTierConfig tierConfig;
 
-        // State machine
-        private enum State { WaitingForDrop1, Dropping1, Merging1, WaitingForDrop2, Dropping2, Merging2, Done }
+        private enum State { WaitingForDrop, Dropping, Animating, Done }
         private State state;
 
         // UI elements
@@ -26,21 +26,26 @@ namespace MergeGame.UI
         private CanvasGroup startButtonCG;
         private GameObject ctaTagline;
         private RectTransform demoArena;
+        private CanvasGroup arenaCanvasGroup;
 
-        // Active balls in the arena
+        // Active balls
         private GameObject dropperBall;
         private GameObject sittingBall;
         private GameObject scorePop;
 
         private Coroutine animCoroutine;
         private bool isBuilt;
+        private int currentTier; // the tier of the sitting ball (0-10)
+        private bool ctaShown;
 
-        // Ball sizes per tier (UI pixels)
-        private const float Tier0Size = 32f;
-        private const float Tier1Size = 40f;
-        private const float Tier2Size = 52f;
+        // Ball sizes per tier (UI pixels) — proportional to game radii
+        private static readonly float[] TierSizes =
+            { 32f, 40f, 48f, 56f, 64f, 72f, 80f, 88f, 100f, 108f, 120f };
 
-        // Arena positions
+        // Point values shown in score pop
+        private static readonly int[] TierPoints =
+            { 1, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25 };
+
         private const float DropperY = 115f;
         private const float FloorY = -100f;
 
@@ -52,21 +57,12 @@ namespace MergeGame.UI
 
         private void Update()
         {
-            if (state != State.WaitingForDrop1 && state != State.WaitingForDrop2) return;
+            if (state != State.WaitingForDrop) return;
             if (Input.GetMouseButtonDown(0))
             {
-                if (state == State.WaitingForDrop1)
-                {
-                    state = State.Dropping1;
-                    if (animCoroutine != null) StopCoroutine(animCoroutine);
-                    animCoroutine = StartCoroutine(DropAndMerge1());
-                }
-                else if (state == State.WaitingForDrop2)
-                {
-                    state = State.Dropping2;
-                    if (animCoroutine != null) StopCoroutine(animCoroutine);
-                    animCoroutine = StartCoroutine(DropAndMerge2());
-                }
+                state = State.Dropping;
+                if (animCoroutine != null) StopCoroutine(animCoroutine);
+                animCoroutine = StartCoroutine(DropAndMerge());
             }
         }
 
@@ -74,107 +70,121 @@ namespace MergeGame.UI
 
         private void StartSequence()
         {
-            // Clean any existing balls
             ClearArena();
-
-            state = State.WaitingForDrop1;
-
+            currentTier = 0;
+            ctaShown = false;
+            state = State.WaitingForDrop;
             headingLabel.text = "DROP";
 
-            // Place a tier-0 ball at the bottom
-            sittingBall = CreateDemoBall(demoArena.transform, 0, new Vector2(0, FloorY), Tier0Size);
+            // Tier-0 ball sitting at bottom
+            sittingBall = CreateDemoBall(demoArena.transform, 0, new Vector2(0, FloorY), TierSizes[0]);
 
-            // Dropper at top
-            dropperBall = CreateDemoBall(demoArena.transform, 0, new Vector2(0, DropperY), Tier0Size);
+            // Tier-0 dropper at top
+            dropperBall = CreateDemoBall(demoArena.transform, 0, new Vector2(0, DropperY), TierSizes[0]);
 
-            // Start dropper bob
             if (animCoroutine != null) StopCoroutine(animCoroutine);
             animCoroutine = StartCoroutine(BobDropper());
 
-            // Hide start button
             if (startButton != null) startButton.SetActive(false);
+            if (ctaTagline != null) ctaTagline.SetActive(false);
+
+            // Reset arena visibility
+            if (arenaCanvasGroup != null) arenaCanvasGroup.alpha = 1f;
         }
 
-        private IEnumerator DropAndMerge1()
+        private IEnumerator DropAndMerge()
         {
-            // Drop the ball
-            yield return DropBall(dropperBall, FloorY + Tier0Size);
+            float oldSize = TierSizes[currentTier];
+            int nextTier = currentTier + 1;
+            float newSize = TierSizes[Mathf.Min(nextTier, TierSizes.Length - 1)];
 
-            // Heading: MERGE
+            // Drop
+            yield return DropBall(dropperBall, FloorY + oldSize);
 
-            headingLabel.text = "MERGE";
-
-            // Absorb animation
-            yield return AbsorbBalls(dropperBall, sittingBall, new Vector2(0, FloorY));
-
-            // Particles
-            SpawnMergeParticles(demoArena.transform, new Vector2(0, FloorY));
-
-            // Destroy old balls
-            Destroy(dropperBall);
-            Destroy(sittingBall);
-            dropperBall = null;
-            sittingBall = null;
-
-            // New tier-1 ball scales in at merge point
-            sittingBall = CreateDemoBall(demoArena.transform, 1, new Vector2(0, FloorY), Tier1Size);
-            sittingBall.GetComponent<RectTransform>().localScale = Vector3.one * (Tier0Size / Tier1Size);
-            yield return ScaleObject(sittingBall, sittingBall.GetComponent<RectTransform>().localScale, Vector3.one * 1.1f, 0.15f);
-            yield return ScaleObject(sittingBall, Vector3.one * 1.1f, Vector3.one, 0.08f);
-
-            yield return new WaitForSeconds(0.3f);
-
-            // Heading: SCORE, show score pop
-
-            headingLabel.text = "SCORE";
-            yield return ShowScorePop(new Vector2(0, FloorY + Tier1Size * 0.6f), "+ 5");
-
-            yield return new WaitForSeconds(0.3f);
-
-            // New tier-1 dropper appears at top — no heading change, let user figure it out
-            dropperBall = CreateDemoBall(demoArena.transform, 1, new Vector2(0, DropperY), Tier1Size);
-            dropperBall.GetComponent<RectTransform>().localScale = Vector3.zero;
-            yield return ScaleObject(dropperBall, Vector3.zero, Vector3.one * 1.1f, 0.15f);
-            yield return ScaleObject(dropperBall, Vector3.one * 1.1f, Vector3.one, 0.08f);
-
-            // Allow drops immediately, fade heading in background
-            state = State.WaitingForDrop2;
-            animCoroutine = StartCoroutine(BobDropper());
-            StartCoroutine(FadeHeadingDelayed(0.5f, 0.3f));
-        }
-
-        private IEnumerator DropAndMerge2()
-        {
-            // Drop the ball
-            yield return DropBall(dropperBall, FloorY + Tier1Size);
+            // First merge: show heading
+            if (currentTier == 0)
+                headingLabel.text = "MERGE";
 
             // Absorb
             yield return AbsorbBalls(dropperBall, sittingBall, new Vector2(0, FloorY));
 
-            // Particles
             SpawnMergeParticles(demoArena.transform, new Vector2(0, FloorY));
 
-            // Destroy old balls
             Destroy(dropperBall);
             Destroy(sittingBall);
             dropperBall = null;
             sittingBall = null;
 
-            // New tier-2 ball scales in
-            sittingBall = CreateDemoBall(demoArena.transform, 2, new Vector2(0, FloorY), Tier2Size);
-            sittingBall.GetComponent<RectTransform>().localScale = Vector3.one * (Tier1Size / Tier2Size);
+            // New merged ball scales in
+            sittingBall = CreateDemoBall(demoArena.transform, nextTier, new Vector2(0, FloorY), newSize);
+            sittingBall.GetComponent<RectTransform>().localScale = Vector3.one * (oldSize / newSize);
             yield return ScaleObject(sittingBall, sittingBall.GetComponent<RectTransform>().localScale, Vector3.one * 1.1f, 0.15f);
             yield return ScaleObject(sittingBall, Vector3.one * 1.1f, Vector3.one, 0.08f);
 
             yield return new WaitForSeconds(0.2f);
 
-            // Show score pop
-            yield return ShowScorePop(new Vector2(0, FloorY + Tier2Size * 0.6f), "+ 10");
+            // Score pop
+            if (currentTier == 0)
+            {
+                headingLabel.text = "SCORE";
+            }
+            int points = nextTier < TierPoints.Length ? TierPoints[nextTier] : 25;
+            yield return ShowScorePop(new Vector2(0, FloorY + newSize * 0.6f), $"+ {points}");
 
-            state = State.Done;
+            currentTier = nextTier;
 
-            // Show tagline + LET'S PLAY with fade-in
-            yield return new WaitForSeconds(0.3f);
+            // === Final tier (11 / index 10) — arena fades, achievement unlocked ===
+            if (currentTier >= 10)
+            {
+                state = State.Done;
+
+                // Achievement for completing full onboarding
+                if (AchievementManager.Instance != null)
+                    AchievementManager.Instance.UnlockCompletedAllOfOnboarding();
+
+                yield return new WaitForSeconds(0.5f);
+
+                // Fade out arena
+                if (arenaCanvasGroup != null)
+                {
+                    float elapsed = 0f;
+                    while (elapsed < 0.5f)
+                    {
+                        elapsed += Time.deltaTime;
+                        arenaCanvasGroup.alpha = 1f - Mathf.Clamp01(elapsed / 0.5f);
+                        yield return null;
+                    }
+                    arenaCanvasGroup.alpha = 0f;
+                }
+
+                // Ensure CTA is visible
+                if (!ctaShown) ShowCTA();
+                yield break;
+            }
+
+            // === After merge 2 (tier 2): show LET'S PLAY ===
+            if (currentTier >= 2 && !ctaShown)
+            {
+                ShowCTA();
+                StartCoroutine(FadeHeadingDelayed(0.5f, 0.3f));
+            }
+
+            yield return new WaitForSeconds(0.2f);
+
+            // New dropper appears
+            float nextDropperSize = TierSizes[currentTier];
+            dropperBall = CreateDemoBall(demoArena.transform, currentTier, new Vector2(0, DropperY), nextDropperSize);
+            dropperBall.GetComponent<RectTransform>().localScale = Vector3.zero;
+            yield return ScaleObject(dropperBall, Vector3.zero, Vector3.one * 1.1f, 0.15f);
+            yield return ScaleObject(dropperBall, Vector3.one * 1.1f, Vector3.one, 0.08f);
+
+            state = State.WaitingForDrop;
+            animCoroutine = StartCoroutine(BobDropper());
+        }
+
+        private void ShowCTA()
+        {
+            ctaShown = true;
 
             if (ctaTagline != null)
             {
@@ -187,21 +197,25 @@ namespace MergeGame.UI
             {
                 startButton.SetActive(true);
                 if (startButtonCG != null) startButtonCG.alpha = 0f;
-
-                float elapsed = 0f;
-                while (elapsed < 0.3f)
-                {
-                    elapsed += Time.deltaTime;
-                    float a = Mathf.Clamp01(elapsed / 0.3f);
-                    if (startButtonCG != null) startButtonCG.alpha = a;
-                    var tagCG = ctaTagline != null ? ctaTagline.GetComponent<CanvasGroup>() : null;
-                    if (tagCG != null) tagCG.alpha = a;
-                    yield return null;
-                }
-                if (startButtonCG != null) startButtonCG.alpha = 1f;
-                var finalCG = ctaTagline != null ? ctaTagline.GetComponent<CanvasGroup>() : null;
-                if (finalCG != null) finalCG.alpha = 1f;
+                StartCoroutine(FadeCTAIn());
             }
+        }
+
+        private IEnumerator FadeCTAIn()
+        {
+            float elapsed = 0f;
+            while (elapsed < 0.3f)
+            {
+                elapsed += Time.deltaTime;
+                float a = Mathf.Clamp01(elapsed / 0.3f);
+                if (startButtonCG != null) startButtonCG.alpha = a;
+                var tagCG = ctaTagline != null ? ctaTagline.GetComponent<CanvasGroup>() : null;
+                if (tagCG != null) tagCG.alpha = a;
+                yield return null;
+            }
+            if (startButtonCG != null) startButtonCG.alpha = 1f;
+            var finalCG = ctaTagline != null ? ctaTagline.GetComponent<CanvasGroup>() : null;
+            if (finalCG != null) finalCG.alpha = 1f;
         }
 
         // ───── Animations ─────
@@ -210,7 +224,7 @@ namespace MergeGame.UI
         {
             if (dropperBall == null) yield break;
             var rt = dropperBall.GetComponent<RectTransform>();
-            while (state == State.WaitingForDrop1 || state == State.WaitingForDrop2)
+            while (state == State.WaitingForDrop)
             {
                 if (rt == null) yield break;
                 float t = Mathf.PingPong(Time.time * 0.7f, 1f);
@@ -227,12 +241,11 @@ namespace MergeGame.UI
             float startY = rt.anchoredPosition.y;
             float duration = 0.4f;
             float elapsed = 0f;
-
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
-                float eased = t * t; // ease-in (gravity)
+                float eased = t * t;
                 rt.anchoredPosition = new Vector2(0, Mathf.Lerp(startY, targetY, eased));
                 yield return null;
             }
@@ -251,13 +264,11 @@ namespace MergeGame.UI
 
             float duration = 0.12f;
             float elapsed = 0f;
-
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
                 float eased = t * t;
-
                 if (rtA != null)
                 {
                     rtA.anchoredPosition = Vector2.Lerp(startA, mergePoint, eased);
@@ -291,7 +302,7 @@ namespace MergeGame.UI
                 yield return null;
             }
             headingLabel.text = "";
-            headingLabel.color = startColor; // restore alpha for next use
+            headingLabel.color = startColor;
         }
 
         private IEnumerator ShowScorePop(Vector2 pos, string text = "+ 10")
@@ -360,7 +371,6 @@ namespace MergeGame.UI
             float speed = 60f;
             float duration = 0.25f;
             float elapsed = 0f;
-
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
@@ -369,7 +379,6 @@ namespace MergeGame.UI
                 cg.alpha = 1f - t;
                 yield return null;
             }
-
             Destroy(prt.gameObject);
         }
 
@@ -418,7 +427,7 @@ namespace MergeGame.UI
             BuildHeadingLabel(content.transform);
             AddSpacer(content.transform, 44 + OS.safeAreaBottom);
 
-            // CTA tagline + button: absolute positioned so they don't shift layout
+            // CTA tagline + button: absolute positioned
             BuildCtaTagline(transform);
             BuildStartButton(transform);
         }
@@ -503,7 +512,9 @@ namespace MergeGame.UI
 
             BuildGridOverlay(arenaGO.transform);
 
-            // Score pop (reusable, hidden by default)
+            // CanvasGroup for fading the arena
+            arenaCanvasGroup = arenaGO.AddComponent<CanvasGroup>();
+
             scorePop = CreateScorePop(arenaGO.transform);
         }
 
@@ -583,14 +594,13 @@ namespace MergeGame.UI
 
         private void BuildStartButton(Transform parent)
         {
-            // Absolute positioned at bottom, matching home screen CTA padding
             var wrapper = MurgeUI.CreateUIObject("ButtonWrapper", parent);
             var wrapperRT = wrapper.GetComponent<RectTransform>();
             wrapperRT.anchorMin = new Vector2(0, 0);
             wrapperRT.anchorMax = new Vector2(1, 0);
             wrapperRT.pivot = new Vector2(0.5f, 0);
             wrapperRT.anchoredPosition = new Vector2(0, 24 + OS.safeAreaBottom);
-            wrapperRT.sizeDelta = new Vector2(-48, 44); // -48 = 24px padding each side
+            wrapperRT.sizeDelta = new Vector2(-48, 44);
 
             var (btnGO, _) = MurgeUI.CreatePrimaryButton(wrapper.transform, "LET'S PLAY", 44, "StartButton");
             MurgeUI.StretchFill(btnGO.GetComponent<RectTransform>());
@@ -612,8 +622,8 @@ namespace MergeGame.UI
         private void FinishOnboarding()
         {
             GameSession.MarkOnboardingComplete();
-            if (Core.MurgeAnalytics.Instance != null)
-                Core.MurgeAnalytics.Instance.TrackOnboardingComplete();
+            if (MurgeAnalytics.Instance != null)
+                MurgeAnalytics.Instance.TrackOnboardingComplete();
             if (ScreenManager.Instance != null)
                 ScreenManager.Instance.NavigateTo(Screen.HomeFresh);
         }
