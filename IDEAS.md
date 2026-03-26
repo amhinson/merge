@@ -8,8 +8,6 @@ Copyright
 
 Show streak on home screen.
 
-Check for new day when app comes from background. Maybe refresh data more often if app is open all day?
-
 Check Unity intro variations.
 
 Are any of the APIs going to become expensive and/or slow if the app starts to get some traction? Can we optimize any?
@@ -18,8 +16,6 @@ Incorporate "Daily Drop" somewhere if it's going to be in the App Store title.
 
 Onboarding idea: allow the user to cycle through all 11 balls, but show Lets Start after the 2nd. After the 11th, the grid fades away.
 Add an achievement for being fully educated.
-
-Fix Android app icon.
 
 Google Play setup.
 

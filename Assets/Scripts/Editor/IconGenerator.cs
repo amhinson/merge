@@ -1,146 +1,166 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
-using System.Collections.Generic;
 
 namespace MergeGame.Editor
 {
     public static class IconGenerator
     {
-        // Pixel art scale: each "pixel" is this many real pixels
-        private const int PixelScale = 6;
+        private static readonly Color BgColor = HexColor("0F1117");
 
-        // Colors
-        private static readonly Color BgColor = HexColor("121218");
-        private static readonly Color BallColor = HexColor("FF2D95");
-        private static readonly Color WaveColor = HexColor("2DFF97");
-        private static readonly Color RimHighlight = Color.Lerp(HexColor("FF2D95"), Color.white, 0.35f);
-        private static readonly Color RimBright = Color.Lerp(HexColor("FF2D95"), Color.white, 0.50f);
+        // Use tier 10 (cyan, the largest ball) for the icon
+        private const int IconTier = 10;
+        private const float GameRadius = 1.4f; // BallData tier 10
 
         [MenuItem("MergeGame/Generate App Icon", false, 40)]
         public static void GenerateIcons()
         {
-            GenerateIcon(1024, "Assets/Icons/app_icon_1024.png");
-            GenerateIcon(180, "Assets/Icons/app_icon_180.png");
-            GenerateIcon(60, "Assets/Icons/app_icon_60.png");
+            Directory.CreateDirectory("Assets/Icons");
+
+            // Render a ball using the actual shader to a RenderTexture
+            var ballTex = RenderBallWithShader(512);
+
+            GenerateIcon(1024, "Assets/Icons/app_icon_1024.png", ballTex, 0.35f, false);
+            GenerateIcon(180, "Assets/Icons/app_icon_180.png", ballTex, 0.35f, false);
+            GenerateIcon(60, "Assets/Icons/app_icon_60.png", ballTex, 0.35f, false);
+            GenerateIcon(432, "Assets/Icons/android_foreground.png", ballTex, 0.28f, true);
+            GenerateBackground(432, "Assets/Icons/android_background.png");
+
+            Object.DestroyImmediate(ballTex);
 
             AssetDatabase.Refresh();
             Debug.Log("App icons generated in Assets/Icons/");
-
-            // Configure the 1024 icon in Player Settings
             ConfigurePlayerIcon();
         }
 
-        private static void GenerateIcon(int outputSize, string path)
+        /// <summary>
+        /// Renders a ball using the actual WaveformBall shader to capture
+        /// the exact in-game look (scanlines, halo glow, wave thickness).
+        /// </summary>
+        private static Texture2D RenderBallWithShader(int size)
         {
-            var tex = new Texture2D(outputSize, outputSize, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Point;
+            // Create the ball body texture (static, no wave — shader draws the wave)
+            var ballColor = Visual.BallRenderer.GetBallColor(IconTier);
+            var bodyPixels = Visual.BallRenderer.GenerateStaticBallPixels(
+                IconTier, ballColor, GameRadius, out int texSize);
 
-            // Determine pixel scale for this output size
-            int ps = Mathf.Max(1, outputSize * PixelScale / 1024);
+            var bodyTex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
+            bodyTex.filterMode = FilterMode.Bilinear;
+            bodyTex.SetPixels(bodyPixels);
+            bodyTex.Apply();
 
-            // Art grid size
-            int gridSize = outputSize / ps;
-            int center = gridSize / 2;
+            var bodySprite = Sprite.Create(bodyTex, new Rect(0, 0, texSize, texSize),
+                new Vector2(0.5f, 0.5f), Visual.BallRenderer.PixelsPerUnit);
 
-            // Ball fills ~85% of the icon
-            int ballRadius = (int)(gridSize * 0.425f);
+            // Set up offscreen rendering
+            var go = new GameObject("IconBall");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = bodySprite;
 
-            // Build circle outline with midpoint algorithm
-            var outlinePixels = new HashSet<long>();
-            MidpointCircle(center, center, ballRadius, outlinePixels);
-
-            // Inner rim
-            var rimPixels = new HashSet<long>();
-            if (ballRadius > 3)
-                MidpointCircle(center, center, ballRadius - 1, rimPixels);
-
-            // Fill
-            var fillPixels = new HashSet<long>();
-            FillCircle(center, center, ballRadius, outlinePixels, fillPixels, gridSize);
-
-            // Waveform (tier 4 = neon pink, sawtooth-like)
-            int waveMargin = ballRadius / 5;
-            int waveLeft = center - ballRadius + waveMargin;
-            int waveRight = center + ballRadius - waveMargin;
-            int waveWidth = waveRight - waveLeft;
-            float maxAmp = waveWidth * 0.25f;
-            float[] waveY = new float[waveWidth];
-            for (int i = 0; i < waveWidth; i++)
+            // Apply the waveform shader
+            var shader = Shader.Find("Murge/WaveformBall");
+            if (shader != null)
             {
-                float t = (float)i / waveWidth;
-                float x = t * Mathf.PI * 2f;
-                // Tier 5 (index 4) = triangle wave
-                float v = ((t * 2.5f) % 1f);
-                float tri = v < 0.5f ? v * 4f - 1f : 3f - v * 4f;
-                waveY[i] = tri * maxAmp * 0.6f;
+                var mat = new Material(shader);
+                sr.material = mat;
+
+                var wc = Visual.BallRenderer.WaveConfig[IconTier];
+                float ballRadiusUV = Visual.BallRenderer.GetBallRadiusUV(GameRadius);
+                float lineWidthNorm = 2.5f / ((GameRadius * 2f * Visual.BallRenderer.PixelsPerUnit / 2f) - 2f);
+                float haloWidthNorm = 6.0f / ((GameRadius * 2f * Visual.BallRenderer.PixelsPerUnit / 2f) - 2f);
+
+                mat.SetColor("_WaveColor", new Color(ballColor.r, ballColor.g, ballColor.b, wc.Item3));
+                mat.SetFloat("_Freq", wc.Item1);
+                mat.SetFloat("_WaveType", wc.Item2);
+                mat.SetFloat("_Amp", 0.22f);
+                mat.SetFloat("_Phase", 0.15f);
+                mat.SetFloat("_LineWidth", lineWidthNorm);
+                mat.SetFloat("_HaloWidth", haloWidthNorm);
+                mat.SetFloat("_BallRadiusUV", ballRadiusUV);
             }
 
-            // Waveform thickness (in art pixels)
-            int waveThick = Mathf.Max(1, outputSize >= 512 ? 2 : 1);
+            // Render camera
+            var camGO = new GameObject("IconCamera");
+            var cam = camGO.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.orthographicSize = GameRadius * 1.15f;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.clear;
+            cam.cullingMask = ~0;
+            camGO.transform.position = new Vector3(0, 0, -10);
 
-            // Render to pixel art grid, then scale up
-            // First fill background
-            Color[] pixels = new Color[outputSize * outputSize];
+            var rt = new RenderTexture(size, size, 24, RenderTextureFormat.ARGB32);
+            cam.targetTexture = rt;
+            cam.Render();
+
+            // Read pixels
+            RenderTexture.active = rt;
+            var result = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            result.ReadPixels(new Rect(0, 0, size, size), 0, 0);
+            result.Apply();
+            RenderTexture.active = null;
+
+            // Cleanup
+            Object.DestroyImmediate(camGO);
+            Object.DestroyImmediate(go);
+            rt.Release();
+
+            return result;
+        }
+
+        private static void GenerateIcon(int size, string path, Texture2D ballTex, float fraction, bool transparent)
+        {
+            int targetBallSize = Mathf.RoundToInt(size * fraction * 2f);
+            var scaledBall = ScaleTexture(ballTex, targetBallSize, targetBallSize);
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] output = new Color[size * size];
+            Color bg = transparent ? Color.clear : BgColor;
+            for (int i = 0; i < output.Length; i++)
+                output[i] = bg;
+
+            Color[] ballPixels = scaledBall.GetPixels();
+            int offsetX = (size - targetBallSize) / 2;
+            int offsetY = (size - targetBallSize) / 2;
+
+            for (int y = 0; y < targetBallSize; y++)
+            {
+                for (int x = 0; x < targetBallSize; x++)
+                {
+                    int outX = x + offsetX;
+                    int outY = y + offsetY;
+                    if (outX < 0 || outX >= size || outY < 0 || outY >= size) continue;
+
+                    Color ballPx = ballPixels[y * targetBallSize + x];
+                    if (ballPx.a < 0.01f) continue;
+
+                    Color dst = output[outY * size + outX];
+                    float a = ballPx.a;
+                    output[outY * size + outX] = new Color(
+                        ballPx.r * a + dst.r * (1f - a),
+                        ballPx.g * a + dst.g * (1f - a),
+                        ballPx.b * a + dst.b * (1f - a),
+                        Mathf.Max(dst.a, a)
+                    );
+                }
+            }
+
+            tex.SetPixels(output);
+            tex.Apply();
+            File.WriteAllBytes(path, tex.EncodeToPNG());
+            Debug.Log($"Icon saved: {path} ({size}x{size})");
+        }
+
+        private static void GenerateBackground(int size, string path)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] pixels = new Color[size * size];
             for (int i = 0; i < pixels.Length; i++)
                 pixels[i] = BgColor;
-
-            // Draw each art pixel as a ps x ps block
-            foreach (long key in fillPixels)
-            {
-                int gx = (int)(key >> 16);
-                int gy = (int)(key & 0xFFFF);
-                if (gx < 0 || gx >= gridSize || gy < 0 || gy >= gridSize) continue;
-
-                Color pixel;
-
-                if (outlinePixels.Contains(key))
-                {
-                    pixel = BallColor;
-                }
-                else if (rimPixels.Contains(key))
-                {
-                    int dx = gx - center;
-                    int dy = gy - center;
-                    bool isTopLeft = (-dx - dy) > 0;
-                    pixel = isTopLeft ? RimBright : RimHighlight;
-                }
-                else
-                {
-                    pixel = BallColor;
-
-                    // Waveform
-                    if (gx >= waveLeft && gx < waveRight)
-                    {
-                        int wi = gx - waveLeft;
-                        int wavePixelY = center + Mathf.RoundToInt(waveY[wi]);
-
-                        if (Mathf.Abs(gy - wavePixelY) < waveThick)
-                            pixel = WaveColor;
-                        else if (Mathf.Abs(gy - wavePixelY) < waveThick + 1)
-                            pixel = Color.Lerp(BallColor, WaveColor, 0.25f);
-                    }
-                }
-
-                // Fill the ps x ps block
-                for (int by = 0; by < ps; by++)
-                {
-                    for (int bx = 0; bx < ps; bx++)
-                    {
-                        int px = gx * ps + bx;
-                        int py = gy * ps + by;
-                        if (px < outputSize && py < outputSize)
-                            pixels[py * outputSize + px] = pixel;
-                    }
-                }
-            }
-
             tex.SetPixels(pixels);
             tex.Apply();
-
-            byte[] png = tex.EncodeToPNG();
-            File.WriteAllBytes(path, png);
-            Debug.Log($"Icon saved: {path} ({outputSize}x{outputSize})");
+            File.WriteAllBytes(path, tex.EncodeToPNG());
+            Debug.Log($"Android background saved: {path}");
         }
 
         private static void ConfigurePlayerIcon()
@@ -159,7 +179,6 @@ namespace MergeGame.Editor
                 importer.SaveAndReimport();
             }
 
-            // Load the texture
             Texture2D iconTex = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
             if (iconTex == null)
             {
@@ -186,53 +205,66 @@ namespace MergeGame.Editor
             for (int i = 0; i < defaultIcons.Length; i++)
                 defaultIcons[i] = iconTex;
             PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Unknown, defaultIcons);
+
+            // Set Android icons
+            var androidIcons = PlayerSettings.GetIconsForTargetGroup(BuildTargetGroup.Android);
+            if (androidIcons == null || androidIcons.Length == 0)
+            {
+                var sizes = PlayerSettings.GetIconSizesForTargetGroup(BuildTargetGroup.Android);
+                androidIcons = new Texture2D[sizes.Length];
+            }
+            for (int i = 0; i < androidIcons.Length; i++)
+                androidIcons[i] = iconTex;
+            PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Android, androidIcons);
 #pragma warning restore CS0618
+
+            // Android adaptive icon layers
+            var fgTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Icons/android_foreground.png");
+            var bgTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Icons/android_background.png");
+            if (fgTex != null && bgTex != null)
+            {
+                // Ensure textures are importable
+                foreach (var texPath in new[] { "Assets/Icons/android_foreground.png", "Assets/Icons/android_background.png" })
+                {
+                    var imp = AssetImporter.GetAtPath(texPath) as TextureImporter;
+                    if (imp != null)
+                    {
+                        imp.textureType = TextureImporterType.Default;
+                        imp.npotScale = TextureImporterNPOTScale.None;
+                        imp.textureCompression = TextureImporterCompression.Uncompressed;
+                        imp.mipmapEnabled = false;
+                        imp.isReadable = true;
+                        imp.SaveAndReimport();
+                    }
+                }
+
+                fgTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Icons/android_foreground.png");
+                bgTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Icons/android_background.png");
+
+                var platform = UnityEditor.Android.AndroidPlatformIconKind.Adaptive;
+                var icons = PlayerSettings.GetPlatformIcons(BuildTargetGroup.Android, platform);
+                foreach (var icon in icons)
+                {
+                    icon.SetTextures(bgTex, fgTex);
+                }
+                PlayerSettings.SetPlatformIcons(BuildTargetGroup.Android, platform, icons);
+                Debug.Log("Android adaptive icon layers configured.");
+            }
 
             Debug.Log("Player Settings icons configured.");
         }
 
-        // ===== Circle drawing (same as BallRenderer) =====
-
-        private static void MidpointCircle(int cx, int cy, int r, HashSet<long> pixels)
+        private static Texture2D ScaleTexture(Texture2D source, int targetWidth, int targetHeight)
         {
-            if (r <= 0) return;
-            int x = r, y = 0, err = 1 - r;
-            while (x >= y)
-            {
-                SetPx(pixels, cx + x, cy + y); SetPx(pixels, cx - x, cy + y);
-                SetPx(pixels, cx + x, cy - y); SetPx(pixels, cx - x, cy - y);
-                SetPx(pixels, cx + y, cy + x); SetPx(pixels, cx - y, cy + x);
-                SetPx(pixels, cx + y, cy - x); SetPx(pixels, cx - y, cy - x);
-                y++;
-                if (err < 0) err += 2 * y + 1;
-                else { x--; err += 2 * (y - x) + 1; }
-            }
-        }
-
-        private static void SetPx(HashSet<long> set, int x, int y)
-        {
-            set.Add(((long)x << 16) | (long)(y & 0xFFFF));
-        }
-
-        private static void FillCircle(int cx, int cy, int r, HashSet<long> outline, HashSet<long> fill, int gridSize)
-        {
-            for (int py = cy - r; py <= cy + r; py++)
-            {
-                if (py < 0 || py >= gridSize) continue;
-                int left = gridSize, right = -1;
-                for (int px = cx - r; px <= cx + r; px++)
-                {
-                    if (px < 0 || px >= gridSize) continue;
-                    if (outline.Contains(((long)px << 16) | (long)(py & 0xFFFF)))
-                    {
-                        if (px < left) left = px;
-                        if (px > right) right = px;
-                    }
-                }
-                if (left <= right)
-                    for (int px = left; px <= right; px++)
-                        fill.Add(((long)px << 16) | (long)(py & 0xFFFF));
-            }
+            var rt = RenderTexture.GetTemporary(targetWidth, targetHeight, 0, RenderTextureFormat.ARGB32);
+            RenderTexture.active = rt;
+            Graphics.Blit(source, rt);
+            var result = new Texture2D(targetWidth, targetHeight, TextureFormat.RGBA32, false);
+            result.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
+            result.Apply();
+            RenderTexture.active = null;
+            RenderTexture.ReleaseTemporary(rt);
+            return result;
         }
 
         private static Color HexColor(string hex)

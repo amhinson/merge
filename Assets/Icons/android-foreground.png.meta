@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: ea6ff9e7892fc4be0ac5e53a0edc3b9a
+guid: 6d6d8b5ba480c47b99064ca38e751a4b
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3585906600795860787
-    second: app_icon_1024_0
+      213: -1342347005235457517
+    second: android-foreground_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -97,6 +97,19 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
     buildTarget: WebGL
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -126,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: app_icon_1024_0
+      name: android-foreground_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1024
-        height: 1024
+        x: 71
+        y: 71
+        width: 290
+        height: 290
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: dc095dd02fc4c3ec0800000000000000
-      internalID: -3585906600795860787
+      spriteID: 31291a3c2860f5de0800000000000000
+      internalID: -1342347005235457517
       vertices: []
       indices: 
       edges: []
@@ -161,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      app_icon_1024_0: -3585906600795860787
+      android-foreground_0: -1342347005235457517
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
