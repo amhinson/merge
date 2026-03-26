@@ -20,6 +20,12 @@ namespace MergeGame.UI
         private bool sfxOn;
         private bool isBuilt;
 
+        private Button saveButton;
+        private TextMeshProUGUI saveLabel;
+        private Image saveBgImage;
+        private string originalName;
+        private bool isSaving;
+
         private void OnEnable()
         {
             if (!isBuilt) { BuildUI(); isBuilt = true; }
@@ -30,7 +36,10 @@ namespace MergeGame.UI
         {
             if (nameInput != null && PlayerIdentity.Instance != null)
                 nameInput.text = PlayerIdentity.Instance.DisplayName;
+            originalName = PlayerIdentity.Instance != null ? PlayerIdentity.Instance.DisplayName : "";
+            isSaving = false;
             UpdateCharCount();
+            UpdateSaveButtonState();
             hapticOn = HapticManager.Instance != null && HapticManager.Instance.IsEnabled;
             sfxOn = MergeGame.Audio.AudioManager.Instance != null && MergeGame.Audio.AudioManager.Instance.IsSfxEnabled;
             UpdateToggleVisual(false);
@@ -518,7 +527,33 @@ namespace MergeGame.UI
 
             var (saveGO, saveTMP) = MurgeUI.CreatePrimaryButton(wrapper.transform, "SAVE", 44, "SaveButton");
             MurgeUI.StretchFill(saveGO.GetComponent<RectTransform>());
-            saveGO.GetComponent<Button>().onClick.AddListener(OnSaveClicked);
+
+            saveButton = saveGO.GetComponent<Button>();
+            saveLabel = saveTMP;
+            saveBgImage = saveGO.GetComponent<Image>();
+            saveButton.onClick.AddListener(OnSaveClicked);
+
+            // Listen for name input changes to enable/disable save
+            if (nameInput != null)
+                nameInput.onValueChanged.AddListener(_ => UpdateSaveButtonState());
+        }
+
+        private void UpdateSaveButtonState()
+        {
+            if (saveButton == null) return;
+
+            if (isSaving)
+            {
+                saveButton.interactable = false;
+                if (saveLabel != null) saveLabel.text = "SAVING...";
+                if (saveBgImage != null) saveBgImage.color = OC.border;
+                return;
+            }
+
+            bool hasChanges = nameInput != null && nameInput.text.Trim() != originalName;
+            saveButton.interactable = hasChanges;
+            if (saveLabel != null) saveLabel.text = "SAVE";
+            if (saveBgImage != null) saveBgImage.color = hasChanges ? OC.cyan : OC.border;
         }
 
         // ───── Handlers ─────
@@ -625,6 +660,7 @@ namespace MergeGame.UI
         private void OnSaveClicked()
         {
             if (nameInput == null || PlayerIdentity.Instance == null) return;
+            if (isSaving) return;
 
             string newName = nameInput.text.Trim();
 
@@ -642,13 +678,39 @@ namespace MergeGame.UI
                 return;
             }
 
+            // Show loading state
+            isSaving = true;
+            UpdateSaveButtonState();
+
             if (LeaderboardService.Instance != null)
-                LeaderboardService.Instance.UpdateDisplayName(newName);
+            {
+                // Wait for server validation before navigating away
+                LeaderboardService.Instance.UpdateDisplayName(newName, (serverSuccess, errorMsg) =>
+                {
+                    isSaving = false;
 
-            if (Core.MurgeAnalytics.Instance != null)
-                Core.MurgeAnalytics.Instance.TrackNameChanged();
+                    if (!serverSuccess)
+                    {
+                        // Revert local name change
+                        if (PlayerIdentity.Instance != null)
+                            PlayerIdentity.Instance.TrySetDisplayName(originalName);
 
-            OnBackClicked();
+                        string msg = !string.IsNullOrEmpty(errorMsg) ? errorMsg : "Failed to update name";
+                        Toast.Show(msg);
+                        UpdateSaveButtonState();
+                        return;
+                    }
+
+                    if (Core.MurgeAnalytics.Instance != null)
+                        Core.MurgeAnalytics.Instance.TrackNameChanged();
+
+                    OnBackClicked();
+                });
+            }
+            else
+            {
+                OnBackClicked();
+            }
         }
 
         private void OnBackClicked()

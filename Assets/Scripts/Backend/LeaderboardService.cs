@@ -64,6 +64,12 @@ namespace MergeGame.Backend
         public string display_name;
     }
 
+    [Serializable]
+    public class ErrorResponse
+    {
+        public string error;
+    }
+
     public class LeaderboardService : MonoBehaviour
     {
         public static LeaderboardService Instance { get; private set; }
@@ -287,26 +293,36 @@ namespace MergeGame.Backend
             });
         }
 
-        public void UpdateDisplayName(string newName, Action<bool> callback = null)
+        public void UpdateDisplayName(string newName, Action<bool, string> callback = null)
         {
             if (SupabaseClient.Instance == null)
             {
-                callback?.Invoke(false);
+                callback?.Invoke(false, "Not connected");
                 return;
             }
 
             var identity = MergeGame.Core.PlayerIdentity.Instance;
             if (identity == null)
             {
-                callback?.Invoke(false);
+                callback?.Invoke(false, "Player not found");
                 return;
             }
 
             var nameReq = new UpdateNameRequest { device_uuid = identity.DeviceUUID, display_name = newName };
             string json = JsonUtility.ToJson(nameReq);
-            SupabaseClient.Instance.CallFunction("update-display-name", json, (success, _) =>
+            SupabaseClient.Instance.CallFunction("update-display-name", json, (success, response) =>
             {
-                callback?.Invoke(success);
+                string errorMsg = null;
+                if (!success && !string.IsNullOrEmpty(response))
+                {
+                    try
+                    {
+                        var err = JsonUtility.FromJson<ErrorResponse>(response);
+                        errorMsg = err?.error;
+                    }
+                    catch { errorMsg = "Failed to update name"; }
+                }
+                callback?.Invoke(success, errorMsg);
             });
         }
     }

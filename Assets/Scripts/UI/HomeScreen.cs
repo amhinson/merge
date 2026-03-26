@@ -138,7 +138,7 @@ namespace MergeGame.UI
             settingsRT.anchorMin = new Vector2(1, 1);
             settingsRT.anchorMax = new Vector2(1, 1);
             settingsRT.pivot = new Vector2(1, 1);
-            settingsRT.anchoredPosition = new Vector2(-24, -OS.safeAreaTop);
+            settingsRT.anchoredPosition = new Vector2(-24, -(OS.safeAreaTop + 12));
             settingsRT.sizeDelta = new Vector2(34, 34);
 
             // Outline-only sprite (transparent fill, just the border ring)

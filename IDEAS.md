@@ -6,23 +6,28 @@ Support URL
 Marketing URL
 Copyright
 
-Username server validation message doesn't show in app.
-
 Show streak on home screen.
+
+Add bit of padding above settings icon.
 
 Make recap balls and numbers bigger.
 
 Check for new day when app comes from background. Maybe refresh data more often if app is open all day?
 
+Check Unity intro variations.
+
 Are any of the APIs going to become expensive and/or slow if the app starts to get some traction? Can we optimize any?
 
-Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.
-
 Incorporate "Daily Drop" somewhere if it's going to be in the App Store title.
+
+Onboarding idea: allow the user to cycle through all 11 balls, but show Lets Start after the 2nd. After the 11th, the grid fades away.
+Add an achievement for being fully educated.
 
 Fix Android app icon.
 
 Google Play setup.
+
+Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.
 
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
 Note any top 3 finished on profile.
