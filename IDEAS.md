@@ -6,10 +6,6 @@ Support URL
 Marketing URL
 Copyright
 
-Show streak on home screen.
-
-Incorporate "Daily Drop" somewhere if it's going to be in the App Store title.
-
 Google Play setup.
 
 Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.

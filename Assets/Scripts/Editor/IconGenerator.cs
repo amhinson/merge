@@ -242,12 +242,13 @@ namespace MergeGame.Editor
                 bgTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Icons/android_background.png");
 
                 var platform = UnityEditor.Android.AndroidPlatformIconKind.Adaptive;
-                var icons = PlayerSettings.GetPlatformIcons(BuildTargetGroup.Android, platform);
+                var namedTarget = UnityEditor.Build.NamedBuildTarget.Android;
+                var icons = PlayerSettings.GetPlatformIcons(namedTarget, platform);
                 foreach (var icon in icons)
                 {
                     icon.SetTextures(bgTex, fgTex);
                 }
-                PlayerSettings.SetPlatformIcons(BuildTargetGroup.Android, platform, icons);
+                PlayerSettings.SetPlatformIcons(namedTarget, platform, icons);
                 Debug.Log("Android adaptive icon layers configured.");
             }
 

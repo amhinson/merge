@@ -22,6 +22,7 @@ namespace MergeGame.UI
         private GameObject chainBadge;
         private TextMeshProUGUI chainCountLabel;
         private Coroutine chainAnimCoroutine;
+        private bool chainAnimPlayed;
         private CanvasGroup contentCG;
         private RectTransform contentPanel;
         private GameObject rankWrapper;
@@ -42,6 +43,7 @@ namespace MergeGame.UI
         private void OnEnable()
         {
             if (!isBuilt) { BuildUI(); isBuilt = true; }
+            chainAnimPlayed = false;
             Populate();
             // Don't fetch rank here — GameManager fetches it after score submission completes
             // and calls Populate() to update the UI
@@ -630,14 +632,23 @@ namespace MergeGame.UI
             // Chain badge — animate if chain >= 2
             if (chainBadge != null)
             {
-                // Stop any existing animation
-                if (chainAnimCoroutine != null) StopCoroutine(chainAnimCoroutine);
-
                 int chain = GameSession.LongestChain;
                 if (chain >= 2)
                 {
-                    chainCountLabel.text = "CHAIN";
-                    chainAnimCoroutine = StartCoroutine(AnimateChainBadge(chain));
+                    if (!chainAnimPlayed)
+                    {
+                        chainAnimPlayed = true;
+                        if (chainAnimCoroutine != null) StopCoroutine(chainAnimCoroutine);
+                        chainCountLabel.text = "CHAIN";
+                        chainAnimCoroutine = StartCoroutine(AnimateChainBadge(chain));
+                    }
+                    // On subsequent Populate calls, just ensure final state is shown
+                    else
+                    {
+                        chainCountLabel.text = $"x{chain} CHAIN";
+                        chainBadge.GetComponent<CanvasGroup>().alpha = 1f;
+                        chainBadge.transform.localScale = Vector3.one;
+                    }
                 }
                 else
                 {
@@ -664,36 +675,18 @@ namespace MergeGame.UI
             bgImg.color = OC.A(OC.amber, 0.15f);
             bgImg.raycastTarget = false;
 
-            // Inner HLG for icon + text
-            var innerHLG = chainBadge.AddComponent<HorizontalLayoutGroup>();
-            innerHLG.childAlignment = TextAnchor.MiddleCenter;
-            innerHLG.spacing = 6;
-            innerHLG.childControlWidth = false;
-            innerHLG.childControlHeight = false;
-            innerHLG.childForceExpandWidth = false;
-            innerHLG.padding = new RectOffset(10, 10, 0, 0);
-
-            // Lightning icon
-            var iconGO = MurgeUI.CreateUIObject("LightningIcon", chainBadge.transform);
-            var iconRT = iconGO.GetComponent<RectTransform>();
-            iconRT.sizeDelta = new Vector2(12, 12);
-            iconGO.AddComponent<LayoutElement>();
-            var iconImg = iconGO.AddComponent<Image>();
-            iconImg.sprite = Visual.PixelUIGenerator.CreateLightningIcon(32, OC.amber);
-            iconImg.preserveAspect = true;
-            iconImg.raycastTarget = false;
-
-            // Chain text: "x7 CHAIN"
+            // Chain text centered in pill
             var textGO = MurgeUI.CreateUIObject("ChainText", chainBadge.transform);
-            textGO.GetComponent<RectTransform>().sizeDelta = new Vector2(100, 20);
-            textGO.AddComponent<LayoutElement>();
+            var textRT = textGO.GetComponent<RectTransform>();
+            textRT.anchorMin = Vector2.zero; textRT.anchorMax = Vector2.one;
+            textRT.offsetMin = Vector2.zero; textRT.offsetMax = Vector2.zero;
             chainCountLabel = textGO.AddComponent<TextMeshProUGUI>();
             chainCountLabel.text = "";
             chainCountLabel.font = MurgeUI.PressStart2P;
             chainCountLabel.fontSize = 8;
             chainCountLabel.color = OC.amber;
             chainCountLabel.characterSpacing = 1;
-            chainCountLabel.alignment = TextAlignmentOptions.Left;
+            chainCountLabel.alignment = TextAlignmentOptions.Center;
             chainCountLabel.raycastTarget = false;
 
             // Start hidden

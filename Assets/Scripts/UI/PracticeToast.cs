@@ -100,7 +100,7 @@ namespace MergeGame.UI
             textRT.offsetMax = Vector2.zero;
 
             var tmp = textGO.AddComponent<TextMeshProUGUI>();
-            tmp.text = "PRACTICE — score won't count";
+            tmp.text = "PRACTICE - score won't count";
             tmp.font = MurgeUI.PressStart2P;
             tmp.fontSize = 6;
             tmp.color = OC.amber;

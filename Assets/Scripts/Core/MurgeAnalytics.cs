@@ -15,6 +15,10 @@ namespace MergeGame.Core
 
         private System.Collections.IEnumerator InitializeGA()
         {
+#if UNITY_EDITOR
+            // GameAnalytics doesn't support the editor — skip initialization
+            yield break;
+#else
             // Wait a frame so all MonoBehaviours are set up
             yield return null;
 
@@ -27,6 +31,7 @@ namespace MergeGame.Core
             {
                 Debug.LogWarning($"[Analytics] GameAnalytics init failed: {e.Message}");
             }
+#endif
         }
 
         private void Awake()
