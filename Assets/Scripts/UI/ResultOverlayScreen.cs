@@ -19,7 +19,9 @@ namespace MergeGame.UI
         private TextMeshProUGUI rankSubLabel;
         private Transform mergeRow;
         private Transform mergeRow2;
-        private TextMeshProUGUI chainLabel;
+        private GameObject chainBadge;
+        private TextMeshProUGUI chainCountLabel;
+        private Coroutine chainAnimCoroutine;
         private CanvasGroup contentCG;
         private RectTransform contentPanel;
         private GameObject rankWrapper;
@@ -311,10 +313,10 @@ namespace MergeGame.UI
 
             AddSpacer(panel.transform, 16);
 
-            // Merges card
+            // Merges card (chain badge is inside)
             BuildMergeCard(panel.transform);
 
-            AddSpacer(panel.transform, 16);
+            AddSpacer(panel.transform, 12);
 
             // Button row
             BuildButtonRow(panel.transform);
@@ -481,7 +483,7 @@ namespace MergeGame.UI
         {
             var card = MurgeUI.CreateUIObject("MergeCard", parent);
             var cardLE = card.AddComponent<LayoutElement>();
-            cardLE.preferredHeight = 155; cardLE.minHeight = 135;
+            cardLE.preferredHeight = 240; cardLE.minHeight = 220;
 
             // Border
             var borderGO = MurgeUI.CreateUIObject("Border", card.transform);
@@ -517,9 +519,9 @@ namespace MergeGame.UI
             var rowsContainer = MurgeUI.CreateUIObject("BallRows", card.transform);
             var rcRT = rowsContainer.GetComponent<RectTransform>();
             rcRT.anchorMin = new Vector2(0, 0); rcRT.anchorMax = new Vector2(1, 1);
-            rcRT.offsetMin = new Vector2(8, 28); rcRT.offsetMax = new Vector2(-8, -26);
+            rcRT.offsetMin = new Vector2(8, 52); rcRT.offsetMax = new Vector2(-8, -26);
             var rcVLG = rowsContainer.AddComponent<VerticalLayoutGroup>();
-            rcVLG.spacing = 2;
+            rcVLG.spacing = 0;
             rcVLG.childAlignment = TextAnchor.MiddleCenter;
             rcVLG.childControlWidth = true;
             rcVLG.childControlHeight = true;
@@ -546,16 +548,8 @@ namespace MergeGame.UI
             row2HLG.childForceExpandWidth = false;
             mergeRow2 = row2GO.transform;
 
-            // Chain label (inside card, bottom-right)
-            chainLabel = MurgeUI.CreateLabel(card.transform, "",
-                MurgeUI.PressStart2P, 7, OC.muted, "ChainLabel");
-            chainLabel.characterSpacing = 1;
-            chainLabel.alignment = TextAlignmentOptions.Right;
-            var clRT = chainLabel.GetComponent<RectTransform>();
-            clRT.anchorMin = new Vector2(0, 0); clRT.anchorMax = new Vector2(1, 0);
-            clRT.pivot = new Vector2(1, 0);
-            clRT.anchoredPosition = new Vector2(-14, 8);
-            clRT.sizeDelta = new Vector2(-28, 14);
+            // Chain badge (absolute positioned inside card, bottom center)
+            BuildChainBadge(card.transform);
         }
 
         private void PopulateMergeRow()
@@ -580,7 +574,7 @@ namespace MergeGame.UI
                 Color ballColor = Visual.BallRenderer.GetBallColor(tier);
 
                 float baseSize = BaseSizes[tier];
-                float gridSize = Mathf.Max(20f, baseSize * 0.55f);
+                float gridSize = Mathf.Max(26f, baseSize * 0.72f);
 
                 var cell = MurgeUI.CreateUIObject($"Ball{tier}", targetRow);
                 var cellRT = cell.GetComponent<RectTransform>();
@@ -626,20 +620,85 @@ namespace MergeGame.UI
                     var countTMP = countGO.AddComponent<TextMeshProUGUI>();
                     countTMP.text = $"{count}";
                     countTMP.font = MurgeUI.PressStart2P;
-                    countTMP.fontSize = 7;
+                    countTMP.fontSize = 9;
                     countTMP.color = ballColor;
                     countTMP.alignment = TextAlignmentOptions.Center;
                     countTMP.raycastTarget = false;
                 }
             }
 
-            // Chain label
-            if (chainLabel != null)
+            // Chain badge — animate if chain >= 2
+            if (chainBadge != null)
             {
+                // Stop any existing animation
+                if (chainAnimCoroutine != null) StopCoroutine(chainAnimCoroutine);
+
                 int chain = GameSession.LongestChain;
-                chainLabel.text = chain >= 2 ? $"BEST CHAIN x{chain}" : "";
-                Debug.Log($"[ResultOverlay] LongestChain={chain}, label='{chainLabel.text}', active={chainLabel.gameObject.activeInHierarchy}");
+                if (chain >= 2)
+                {
+                    chainCountLabel.text = "CHAIN";
+                    chainAnimCoroutine = StartCoroutine(AnimateChainBadge(chain));
+                }
+                else
+                {
+                    chainBadge.GetComponent<CanvasGroup>().alpha = 0f;
+                }
             }
+        }
+
+        private void BuildChainBadge(Transform parent)
+        {
+            // Absolute positioned inside card, bottom center
+            chainBadge = MurgeUI.CreateUIObject("ChainBadge", parent);
+            var badgeRT = chainBadge.GetComponent<RectTransform>();
+            badgeRT.anchorMin = new Vector2(0.5f, 0);
+            badgeRT.anchorMax = new Vector2(0.5f, 0);
+            badgeRT.pivot = new Vector2(0.5f, 0);
+            badgeRT.anchoredPosition = new Vector2(0, 18);
+            badgeRT.sizeDelta = new Vector2(140, 28);
+
+            // Pill background
+            var bgImg = chainBadge.AddComponent<Image>();
+            bgImg.sprite = MurgeUI.SmoothRoundedRect;
+            bgImg.type = Image.Type.Sliced;
+            bgImg.color = OC.A(OC.amber, 0.15f);
+            bgImg.raycastTarget = false;
+
+            // Inner HLG for icon + text
+            var innerHLG = chainBadge.AddComponent<HorizontalLayoutGroup>();
+            innerHLG.childAlignment = TextAnchor.MiddleCenter;
+            innerHLG.spacing = 6;
+            innerHLG.childControlWidth = false;
+            innerHLG.childControlHeight = false;
+            innerHLG.childForceExpandWidth = false;
+            innerHLG.padding = new RectOffset(10, 10, 0, 0);
+
+            // Lightning icon
+            var iconGO = MurgeUI.CreateUIObject("LightningIcon", chainBadge.transform);
+            var iconRT = iconGO.GetComponent<RectTransform>();
+            iconRT.sizeDelta = new Vector2(12, 12);
+            iconGO.AddComponent<LayoutElement>();
+            var iconImg = iconGO.AddComponent<Image>();
+            iconImg.sprite = Visual.PixelUIGenerator.CreateLightningIcon(32, OC.amber);
+            iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false;
+
+            // Chain text: "x7 CHAIN"
+            var textGO = MurgeUI.CreateUIObject("ChainText", chainBadge.transform);
+            textGO.GetComponent<RectTransform>().sizeDelta = new Vector2(100, 20);
+            textGO.AddComponent<LayoutElement>();
+            chainCountLabel = textGO.AddComponent<TextMeshProUGUI>();
+            chainCountLabel.text = "";
+            chainCountLabel.font = MurgeUI.PressStart2P;
+            chainCountLabel.fontSize = 8;
+            chainCountLabel.color = OC.amber;
+            chainCountLabel.characterSpacing = 1;
+            chainCountLabel.alignment = TextAlignmentOptions.Left;
+            chainCountLabel.raycastTarget = false;
+
+            // Start hidden
+            var cg = chainBadge.AddComponent<CanvasGroup>();
+            cg.alpha = 0f;
         }
 
         private void BuildButtonRow(Transform parent)
@@ -748,6 +807,57 @@ namespace MergeGame.UI
             GameSession.IsPractice = true;
             if (GameManager.Instance != null)
                 GameManager.Instance.OnPlayButtonPressed();
+        }
+
+        private System.Collections.IEnumerator AnimateChainBadge(int targetChain)
+        {
+            var cg = chainBadge.GetComponent<CanvasGroup>();
+            cg.alpha = 0f;
+            chainBadge.transform.localScale = Vector3.one * 0.5f;
+
+            // Delay so it appears after merge card populates
+            yield return new WaitForSeconds(0.4f);
+
+            // Fade + scale in
+            float elapsed = 0f;
+            while (elapsed < 0.25f)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / 0.25f);
+                float eased = 1f - (1f - t) * (1f - t);
+                cg.alpha = eased;
+                // Slight overshoot
+                float scale = Mathf.LerpUnclamped(0.5f, 1f, eased + 0.1f * Mathf.Sin(t * Mathf.PI));
+                chainBadge.transform.localScale = Vector3.one * scale;
+                yield return null;
+            }
+            cg.alpha = 1f;
+            chainBadge.transform.localScale = Vector3.one;
+
+            // Tick up the counter from 0 to target
+            for (int i = 1; i <= targetChain; i++)
+            {
+                chainCountLabel.text = $"x{i} CHAIN";
+
+                // Quick scale pulse on each tick
+                chainBadge.transform.localScale = Vector3.one * 1.08f;
+                float pulseElapsed = 0f;
+                while (pulseElapsed < 0.06f)
+                {
+                    pulseElapsed += Time.deltaTime;
+                    float pt = Mathf.Clamp01(pulseElapsed / 0.06f);
+                    chainBadge.transform.localScale = Vector3.Lerp(Vector3.one * 1.08f, Vector3.one, pt);
+                    yield return null;
+                }
+                chainBadge.transform.localScale = Vector3.one;
+
+                // Haptic tick
+                if (HapticManager.Instance != null && i > 1)
+                    HapticManager.Instance.PlayUITap();
+
+                if (i < targetChain)
+                    yield return new WaitForSeconds(0.08f);
+            }
         }
 
         private void AddSpacer(Transform parent, float height)

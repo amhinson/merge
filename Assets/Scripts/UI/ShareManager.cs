@@ -123,7 +123,7 @@ namespace MergeGame.UI
                     int count = tier < counts.Length ? counts[tier] : 0;
                     Color ballColor = Visual.BallRenderer.GetBallColor(tier);
                     float baseSize = BaseSizes[tier];
-                    float gridSize = Mathf.Max(20f, baseSize * 0.55f);
+                    float gridSize = Mathf.Max(26f, baseSize * 0.72f);
                     float shareSize = gridSize * 1.5f;
 
                     var cellGO = new GameObject($"Ball{tier}");
@@ -170,7 +170,7 @@ namespace MergeGame.UI
                         var countTMP = countGO.AddComponent<TextMeshProUGUI>();
                         countTMP.text = $"{count}";
                         countTMP.font = MurgeUI.PressStart2P;
-                        countTMP.fontSize = 10;
+                        countTMP.fontSize = 12;
                         countTMP.color = ballColor;
                         countTMP.alignment = TextAlignmentOptions.Center;
                         countTMP.raycastTarget = false;
@@ -184,8 +184,7 @@ namespace MergeGame.UI
             if (shareChainLabel != null)
             {
                 int chain = GameSession.LongestChain;
-                shareChainLabel.text = chain >= 2 ? $"BEST CHAIN x{chain}" : "";
-                Debug.Log($"[ShareManager] LongestChain={chain}, label='{shareChainLabel.text}'");
+                shareChainLabel.text = chain >= 2 ? $"x{chain} CHAIN" : "";
             }
         }
 
@@ -329,7 +328,7 @@ namespace MergeGame.UI
             br1HLG.childControlWidth = false;
             br1HLG.childControlHeight = false;
             br1HLG.childForceExpandWidth = false;
-            ballRow1GO.AddComponent<LayoutElement>().preferredHeight = 70;
+            ballRow1GO.AddComponent<LayoutElement>().preferredHeight = 95;
             ballRow = ballRow1GO.transform;
 
             // Row 2: tiers 5-0
@@ -343,7 +342,7 @@ namespace MergeGame.UI
             br2HLG.childControlWidth = false;
             br2HLG.childControlHeight = false;
             br2HLG.childForceExpandWidth = false;
-            ballRow2GO.AddComponent<LayoutElement>().preferredHeight = 50;
+            ballRow2GO.AddComponent<LayoutElement>().preferredHeight = 68;
             shareBallRow2 = ballRow2GO.transform;
 
             // Chain label
@@ -352,7 +351,7 @@ namespace MergeGame.UI
             shareChainLabel.text = "";
             shareChainLabel.font = MurgeUI.PressStart2P;
             shareChainLabel.fontSize = 10;
-            shareChainLabel.color = OC.muted;
+            shareChainLabel.color = OC.amber;
             shareChainLabel.characterSpacing = 1;
             shareChainLabel.alignment = TextAlignmentOptions.Center;
 

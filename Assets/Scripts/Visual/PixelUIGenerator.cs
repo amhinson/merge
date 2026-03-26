@@ -230,6 +230,60 @@ namespace MergeGame.Visual
             return Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), s);
         }
 
+        public static Sprite CreateLightningIcon(int size, Color color)
+        {
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            ClearTexture(tex);
+
+            int s = size;
+            float cx = s / 2f;
+
+            // Lightning bolt shape — defined as normalized polygon points (0-1 range)
+            // Zigzag shape: wide top, narrow middle, wide bottom kick
+            float[][] points = new float[][]
+            {
+                new float[] { 0.55f, 1.0f },   // top right
+                new float[] { 0.30f, 1.0f },   // top left
+                new float[] { 0.40f, 0.58f },  // mid left upper
+                new float[] { 0.25f, 0.58f },  // kick left
+                new float[] { 0.50f, 0.0f },   // bottom point
+                new float[] { 0.42f, 0.42f },  // mid right lower
+                new float[] { 0.60f, 0.42f },  // kick right
+            };
+
+            // Rasterize the polygon using scanline fill
+            for (int py = 0; py < s; py++)
+            {
+                float ny = (float)py / s;
+                // Find x intersections at this y
+                var xIntersections = new System.Collections.Generic.List<float>();
+                int n = points.Length;
+                for (int i = 0; i < n; i++)
+                {
+                    int j = (i + 1) % n;
+                    float y0 = points[i][1], y1 = points[j][1];
+                    if ((ny >= Mathf.Min(y0, y1)) && (ny < Mathf.Max(y0, y1)))
+                    {
+                        float t = (ny - y0) / (y1 - y0);
+                        float x = Mathf.Lerp(points[i][0], points[j][0], t);
+                        xIntersections.Add(x);
+                    }
+                }
+                xIntersections.Sort();
+                for (int i = 0; i + 1 < xIntersections.Count; i += 2)
+                {
+                    int x0 = Mathf.Max(0, Mathf.FloorToInt(xIntersections[i] * s));
+                    int x1 = Mathf.Min(s - 1, Mathf.CeilToInt(xIntersections[i + 1] * s));
+                    for (int px = x0; px <= x1; px++)
+                        tex.SetPixel(px, py, color);
+                }
+            }
+
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), s);
+        }
+
         public static Sprite CreateBackIcon(int size, Color color)
         {
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
