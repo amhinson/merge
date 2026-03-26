@@ -23,6 +23,16 @@ namespace MergeGame.UI
         private TextMeshProUGUI chainCountLabel;
         private Coroutine chainAnimCoroutine;
         private bool chainAnimPlayed;
+
+        // Name prompt
+        private GameObject namePromptCard;
+        private TMP_InputField namePromptInput;
+        private Button namePromptSaveBtn;
+        private TextMeshProUGUI namePromptSaveLabel;
+        private Image namePromptSaveBg;
+        private TextMeshProUGUI namePromptCharCount;
+        private bool namePromptSaving;
+        private const string NamePromptShownKey = "name_prompt_shown";
         private CanvasGroup contentCG;
         private RectTransform contentPanel;
         private GameObject rankWrapper;
@@ -214,6 +224,10 @@ namespace MergeGame.UI
             if (playAgainBtn != null) playAgainBtn.SetActive(isPractice);
 
             PopulateMergeRow();
+
+            // Name prompt — show only on first scored game with auto-generated name
+            if (namePromptCard != null)
+                namePromptCard.SetActive(ShouldShowNamePrompt());
         }
 
         private void FetchRank()
@@ -313,7 +327,12 @@ namespace MergeGame.UI
             // Practice info (practice mode)
             BuildPracticeInfo(panel.transform);
 
-            AddSpacer(panel.transform, 16);
+            AddSpacer(panel.transform, 8);
+
+            // Name prompt (first scored game only)
+            BuildNamePrompt(panel.transform);
+
+            AddSpacer(panel.transform, 8);
 
             // Merges card (chain badge is inside)
             BuildMergeCard(panel.transform);
@@ -692,6 +711,212 @@ namespace MergeGame.UI
             // Start hidden
             var cg = chainBadge.AddComponent<CanvasGroup>();
             cg.alpha = 0f;
+        }
+
+        private void BuildNamePrompt(Transform parent)
+        {
+            namePromptCard = MurgeUI.CreateUIObject("NamePrompt", parent);
+            var cardLE = namePromptCard.AddComponent<LayoutElement>();
+            cardLE.preferredHeight = 80;
+            cardLE.minHeight = 80;
+
+            // Border
+            var border = MurgeUI.CreateUIObject("Border", namePromptCard.transform);
+            MurgeUI.StretchFill(border.GetComponent<RectTransform>());
+            var borderImg = border.AddComponent<Image>();
+            borderImg.sprite = MurgeUI.SmoothRoundedRect;
+            borderImg.type = Image.Type.Sliced;
+            borderImg.color = OC.border;
+            borderImg.raycastTarget = false;
+
+            // Fill
+            var fill = MurgeUI.CreateUIObject("Fill", namePromptCard.transform);
+            var fillRT = fill.GetComponent<RectTransform>();
+            fillRT.anchorMin = Vector2.zero; fillRT.anchorMax = Vector2.one;
+            fillRT.offsetMin = new Vector2(1, 1); fillRT.offsetMax = new Vector2(-1, -1);
+            var fillImg = fill.AddComponent<Image>();
+            fillImg.sprite = MurgeUI.SmoothRoundedRect;
+            fillImg.type = Image.Type.Sliced;
+            fillImg.color = OC.surface;
+            fillImg.raycastTarget = false;
+
+            // "Claim your spot" label
+            var label = MurgeUI.CreateLabel(namePromptCard.transform, "set your leaderboard name",
+                MurgeUI.DMMono, OFont.bodySm, OC.muted, "PromptLabel");
+            label.alignment = TextAlignmentOptions.Left;
+            label.verticalAlignment = VerticalAlignmentOptions.Middle;
+            var labelRT = label.GetComponent<RectTransform>();
+            labelRT.anchorMin = new Vector2(0, 0.65f); labelRT.anchorMax = new Vector2(0.7f, 1);
+            labelRT.offsetMin = new Vector2(14, 0); labelRT.offsetMax = new Vector2(0, -8);
+
+            // Input row (input + save button)
+            var inputRow = MurgeUI.CreateUIObject("InputRow", namePromptCard.transform);
+            var rowRT = inputRow.GetComponent<RectTransform>();
+            rowRT.anchorMin = new Vector2(0, 0); rowRT.anchorMax = new Vector2(1, 0.6f);
+            rowRT.offsetMin = new Vector2(14, 8); rowRT.offsetMax = new Vector2(-14, 0);
+            var rowHLG = inputRow.AddComponent<HorizontalLayoutGroup>();
+            rowHLG.spacing = 8;
+            rowHLG.childAlignment = TextAnchor.MiddleCenter;
+            rowHLG.childControlWidth = true;
+            rowHLG.childControlHeight = true;
+            rowHLG.childForceExpandWidth = false;
+            rowHLG.childForceExpandHeight = true;
+
+            // Input field
+            var inputGO = MurgeUI.CreateUIObject("NameInput", inputRow.transform);
+            var inputBg = inputGO.AddComponent<Image>();
+            inputBg.sprite = MurgeUI.SmoothRoundedRect;
+            inputBg.type = Image.Type.Sliced;
+            inputBg.color = OC.bg;
+            inputGO.AddComponent<LayoutElement>().flexibleWidth = 1;
+
+            var inputTextGO = MurgeUI.CreateUIObject("Text", inputGO.transform);
+            MurgeUI.StretchFill(inputTextGO.GetComponent<RectTransform>());
+            inputTextGO.GetComponent<RectTransform>().offsetMin = new Vector2(8, 0);
+            inputTextGO.GetComponent<RectTransform>().offsetMax = new Vector2(-8, 0);
+            var inputTMP = inputTextGO.AddComponent<TextMeshProUGUI>();
+            inputTMP.font = MurgeUI.DMMono;
+            inputTMP.fontSize = OFont.body;
+            inputTMP.color = OC.white;
+            inputTMP.alignment = TextAlignmentOptions.Left;
+            inputTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
+
+            var placeholderGO = MurgeUI.CreateUIObject("Placeholder", inputGO.transform);
+            MurgeUI.StretchFill(placeholderGO.GetComponent<RectTransform>());
+            placeholderGO.GetComponent<RectTransform>().offsetMin = new Vector2(8, 0);
+            placeholderGO.GetComponent<RectTransform>().offsetMax = new Vector2(-8, 0);
+            var placeholderTMP = placeholderGO.AddComponent<TextMeshProUGUI>();
+            placeholderTMP.text = "enter name";
+            placeholderTMP.font = MurgeUI.DMMono;
+            placeholderTMP.fontSize = OFont.body;
+            placeholderTMP.color = OC.A(OC.white, 0.2f);
+            placeholderTMP.alignment = TextAlignmentOptions.Left;
+            placeholderTMP.verticalAlignment = VerticalAlignmentOptions.Middle;
+
+            namePromptInput = inputGO.AddComponent<TMP_InputField>();
+            namePromptInput.textComponent = inputTMP;
+            namePromptInput.placeholder = placeholderTMP;
+            namePromptInput.characterLimit = 16;
+            namePromptInput.contentType = TMP_InputField.ContentType.Alphanumeric;
+            namePromptInput.caretColor = OC.cyan;
+            namePromptInput.selectionColor = OC.A(OC.cyan, 0.3f);
+
+            // Save button
+            var (saveGO, saveTMP) = MurgeUI.CreatePrimaryButton(inputRow.transform, "SAVE", 32, "SaveName");
+            var saveLE = saveGO.GetComponent<LayoutElement>();
+            saveLE.preferredWidth = 70;
+            saveLE.flexibleWidth = 0;
+            namePromptSaveBtn = saveGO.GetComponent<Button>();
+            namePromptSaveLabel = saveTMP;
+            namePromptSaveBg = saveGO.GetComponent<Image>();
+            namePromptSaveBtn.onClick.AddListener(OnNamePromptSave);
+
+            // Character count (same row as label, right-aligned)
+            var charCountGO = MurgeUI.CreateUIObject("CharCount", namePromptCard.transform);
+            var ccRT = charCountGO.GetComponent<RectTransform>();
+            ccRT.anchorMin = new Vector2(0.7f, 0.65f); ccRT.anchorMax = new Vector2(1, 1);
+            ccRT.offsetMin = new Vector2(0, 0); ccRT.offsetMax = new Vector2(-14, -8);
+            namePromptCharCount = charCountGO.AddComponent<TextMeshProUGUI>();
+            namePromptCharCount.text = "0/16";
+            namePromptCharCount.font = MurgeUI.DMMono;
+            namePromptCharCount.fontSize = OFont.bodyXs;
+            namePromptCharCount.color = OC.dim;
+            namePromptCharCount.alignment = TextAlignmentOptions.Right;
+            namePromptCharCount.verticalAlignment = VerticalAlignmentOptions.Middle;
+            namePromptCharCount.raycastTarget = false;
+
+            // Update char count on input change
+            namePromptInput.onValueChanged.AddListener((_) =>
+            {
+                int len = namePromptInput.text.Length;
+                namePromptCharCount.text = $"{len}/16";
+                namePromptCharCount.color = len > 0 ? OC.muted : OC.dim;
+            });
+
+            // Start hidden
+            namePromptCard.SetActive(false);
+        }
+
+        private bool ShouldShowNamePrompt()
+        {
+            // Only show once, on first scored game, if name looks auto-generated
+            if (PlayerPrefs.GetInt(NamePromptShownKey, 0) == 1) return false;
+            if (GameSession.IsPractice) return false;
+            if (PlayerIdentity.Instance == null) return false;
+
+            string name = PlayerIdentity.Instance.DisplayName;
+            if (string.IsNullOrEmpty(name)) return true;
+
+            // Auto-generated names end with digits (e.g. "TweezyPossum42")
+            return name.Length > 2 && char.IsDigit(name[name.Length - 1]);
+        }
+
+        private void OnNamePromptSave()
+        {
+            if (namePromptInput == null || PlayerIdentity.Instance == null) return;
+            if (namePromptSaving) return;
+
+            string newName = namePromptInput.text.Trim();
+            if (newName.Length < 3)
+            {
+                Toast.Show("Name must be at least 3 characters");
+                return;
+            }
+
+            if (!PlayerIdentity.Instance.TrySetDisplayName(newName)) return;
+
+            // Loading state
+            namePromptSaving = true;
+            if (namePromptSaveLabel != null) namePromptSaveLabel.text = "...";
+            if (namePromptSaveBtn != null) namePromptSaveBtn.interactable = false;
+            if (namePromptSaveBg != null) namePromptSaveBg.color = OC.A(OC.cyan, 0.4f);
+
+            if (Backend.LeaderboardService.Instance != null)
+            {
+                Backend.LeaderboardService.Instance.UpdateDisplayName(newName, (success, errorMsg) =>
+                {
+                    namePromptSaving = false;
+
+                    if (!success)
+                    {
+                        // Revert
+                        if (namePromptSaveLabel != null) namePromptSaveLabel.text = "SAVE";
+                        if (namePromptSaveBtn != null) namePromptSaveBtn.interactable = true;
+                        if (namePromptSaveBg != null) namePromptSaveBg.color = OC.cyan;
+
+                        string msg = !string.IsNullOrEmpty(errorMsg) ? errorMsg : "Failed to update name";
+                        Toast.Show(msg);
+                    }
+                    else
+                    {
+                        PlayerPrefs.SetInt(NamePromptShownKey, 1);
+                        PlayerPrefs.Save();
+                        StartCoroutine(FadeOutNamePrompt());
+                    }
+                });
+            }
+            else
+            {
+                PlayerPrefs.SetInt(NamePromptShownKey, 1);
+                PlayerPrefs.Save();
+                StartCoroutine(FadeOutNamePrompt());
+            }
+        }
+
+        private System.Collections.IEnumerator FadeOutNamePrompt()
+        {
+            if (namePromptCard == null) yield break;
+            var cg = namePromptCard.GetComponent<CanvasGroup>();
+            if (cg == null) cg = namePromptCard.AddComponent<CanvasGroup>();
+
+            float elapsed = 0f;
+            while (elapsed < 0.3f)
+            {
+                elapsed += Time.deltaTime;
+                cg.alpha = 1f - Mathf.Clamp01(elapsed / 0.3f);
+                yield return null;
+            }
+            namePromptCard.SetActive(false);
         }
 
         private void BuildButtonRow(Transform parent)

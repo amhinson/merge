@@ -13,18 +13,18 @@ namespace MergeGame.Core
     {
         public static MurgeAnalytics Instance { get; private set; }
 
+        private bool initialized;
+
         private System.Collections.IEnumerator InitializeGA()
         {
 #if UNITY_EDITOR
-            // GameAnalytics doesn't support the editor — skip initialization
             yield break;
 #else
-            // Wait a frame so all MonoBehaviours are set up
             yield return null;
-
             try
             {
                 GameAnalyticsSDK.GameAnalytics.Initialize();
+                initialized = true;
                 Debug.Log("[Analytics] GameAnalytics initialized");
             }
             catch (System.Exception e)
@@ -51,6 +51,7 @@ namespace MergeGame.Core
         /// <summary>Player starts a new puzzle (scored or practice).</summary>
         public void TrackPuzzleStarted()
         {
+            if (!initialized) return;
             try
             {
                 bool isScored = DailySeedManager.Instance != null &&
@@ -73,6 +74,7 @@ namespace MergeGame.Core
         /// <summary>Player completes a puzzle (game over with score).</summary>
         public void TrackPuzzleCompleted(int score, float timeElapsed)
         {
+            if (!initialized) return;
             try
             {
                 bool isScored = DailySeedManager.Instance != null &&
@@ -107,6 +109,7 @@ namespace MergeGame.Core
         /// <summary>Player's puzzle ends (alias for completed, kept for clarity).</summary>
         public void TrackPuzzleFailed(int score)
         {
+            if (!initialized) return;
             try
             {
                 bool isScored = DailySeedManager.Instance != null &&
@@ -128,6 +131,7 @@ namespace MergeGame.Core
         /// <summary>Player taps the share button.</summary>
         public void TrackShareCard()
         {
+            if (!initialized) return;
             try
             {
                 GameAnalyticsSDK.GameAnalytics.NewDesignEvent("social:share_card");
@@ -141,6 +145,7 @@ namespace MergeGame.Core
         /// <summary>Player's streak updated after a scored game.</summary>
         public void TrackStreakUpdated(int streakLength)
         {
+            if (!initialized) return;
             try
             {
                 GameAnalyticsSDK.GameAnalytics.NewDesignEvent("engagement:streak", streakLength);
@@ -154,6 +159,7 @@ namespace MergeGame.Core
         /// <summary>Player completes onboarding.</summary>
         public void TrackOnboardingComplete()
         {
+            if (!initialized) return;
             try
             {
                 GameAnalyticsSDK.GameAnalytics.NewDesignEvent("onboarding:complete");
@@ -167,6 +173,7 @@ namespace MergeGame.Core
         /// <summary>Player uses a shake.</summary>
         public void TrackShakeUsed(int remaining)
         {
+            if (!initialized) return;
             try
             {
                 GameAnalyticsSDK.GameAnalytics.NewDesignEvent("gameplay:shake_used", remaining);
@@ -180,6 +187,7 @@ namespace MergeGame.Core
         /// <summary>Player changes their display name.</summary>
         public void TrackNameChanged()
         {
+            if (!initialized) return;
             try
             {
                 GameAnalyticsSDK.GameAnalytics.NewDesignEvent("engagement:name_changed");
