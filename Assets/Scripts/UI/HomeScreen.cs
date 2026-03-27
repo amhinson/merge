@@ -27,10 +27,9 @@ namespace MergeGame.UI
 
         // Built UI elements
         protected TextMeshProUGUI dayNumberLabel;
-        protected TextMeshProUGUI streakLabel;
-        private GameObject streakFireIcon;
-        private GameObject streakDivider;
         private RectTransform puzzleLineRT;
+        protected GameObject streakPill;
+        protected TextMeshProUGUI streakPillLabel;
         protected TextMeshProUGUI dateLabel;
         protected Transform leaderboardRowContainer;
         private GameObject leaderboardWrapper;
@@ -108,6 +107,11 @@ namespace MergeGame.UI
             BuildMiddleSection(content.transform);
 
             BuildLeaderboardCard(content.transform);
+
+            // Streak pill — centered above CTA
+            AddSpacer(content.transform, 12);
+            BuildStreakPill(content.transform);
+            AddSpacer(content.transform, 6);
 
             // CTA container — fixed height, don't let layout stretch it
             ctaContainer = MurgeUI.CreateUIObject("CTABlock", content.transform).transform;
@@ -242,59 +246,13 @@ namespace MergeGame.UI
             rowLE.preferredHeight = 24;
             rowLE.minHeight = 24;
 
-            // === Left side: fire icon + streak number ===
-
-            // Fire icon
-            var fireGO = MurgeUI.CreateUIObject("FireIcon", row.transform);
-            var fireRT = fireGO.GetComponent<RectTransform>();
-            fireRT.anchorMin = new Vector2(0, 0.5f);
-            fireRT.anchorMax = new Vector2(0, 0.5f);
-            fireRT.pivot = new Vector2(0, 0.5f);
-            fireRT.anchoredPosition = new Vector2(24, 0);
-            fireRT.sizeDelta = new Vector2(14, 14);
-            var fireImg = fireGO.AddComponent<Image>();
-            fireImg.sprite = Visual.PixelUIGenerator.CreateLightningIcon(32, OC.amber);
-            fireImg.preserveAspect = true;
-            fireImg.raycastTarget = false;
-            streakFireIcon = fireGO;
-
-            // Streak number
-            var streakGO = MurgeUI.CreateUIObject("Streak", row.transform);
-            var streakRT = streakGO.GetComponent<RectTransform>();
-            streakRT.anchorMin = new Vector2(0, 0);
-            streakRT.anchorMax = new Vector2(0, 1);
-            streakRT.pivot = new Vector2(0, 0.5f);
-            streakRT.anchoredPosition = new Vector2(42, 0);
-            streakRT.sizeDelta = new Vector2(24, 0);
-            streakLabel = streakGO.AddComponent<TextMeshProUGUI>();
-            streakLabel.font = MurgeUI.PressStart2P;
-            streakLabel.fontSize = OFont.caption;
-            streakLabel.color = OC.amber;
-            streakLabel.alignment = TextAlignmentOptions.Left;
-            streakLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
-            streakLabel.textWrappingMode = TextWrappingModes.NoWrap;
-            streakLabel.raycastTarget = false;
-
-            // Divider
-            var divGO = MurgeUI.CreateUIObject("Divider", row.transform);
-            var divRT = divGO.GetComponent<RectTransform>();
-            divRT.anchorMin = new Vector2(0, 0.2f);
-            divRT.anchorMax = new Vector2(0, 0.8f);
-            divRT.pivot = new Vector2(0, 0.5f);
-            divRT.anchoredPosition = new Vector2(70, 0);
-            divRT.sizeDelta = new Vector2(1, 0);
-            var divImg = divGO.AddComponent<Image>();
-            divImg.color = OC.border;
-            divImg.raycastTarget = false;
-            streakDivider = divGO;
-
-            // === Drop number ===
+            // Drop number (left)
             var dayGO = MurgeUI.CreateUIObject("PuzzleNumber", row.transform);
             var dayRT = dayGO.GetComponent<RectTransform>();
             dayRT.anchorMin = new Vector2(0, 0);
             dayRT.anchorMax = new Vector2(0, 1);
             dayRT.pivot = new Vector2(0, 0.5f);
-            dayRT.anchoredPosition = new Vector2(80, 0);
+            dayRT.anchoredPosition = new Vector2(24, 0);
             dayRT.sizeDelta = new Vector2(120, 0);
             dayNumberLabel = dayGO.AddComponent<TextMeshProUGUI>();
             dayNumberLabel.font = MurgeUI.PressStart2P;
@@ -336,6 +294,84 @@ namespace MergeGame.UI
             lineImg.color = OC.border;
             lineImg.raycastTarget = false;
             puzzleLineRT = lineRT;
+        }
+
+        private void BuildStreakPill(Transform parent)
+        {
+            // Wrapper for centering
+            var wrapper = MurgeUI.CreateUIObject("StreakPillWrapper", parent);
+            var wrapperHLG = wrapper.AddComponent<HorizontalLayoutGroup>();
+            wrapperHLG.childAlignment = TextAnchor.MiddleCenter;
+            wrapperHLG.childControlWidth = false;
+            wrapperHLG.childControlHeight = false;
+            wrapperHLG.childForceExpandWidth = false;
+            var wrapperLE = wrapper.AddComponent<LayoutElement>();
+            wrapperLE.preferredHeight = 26;
+            wrapperLE.minHeight = 26;
+            wrapperLE.flexibleHeight = 0;
+
+            // Pill
+            streakPill = MurgeUI.CreateUIObject("StreakPill", wrapper.transform);
+            var pillRT = streakPill.GetComponent<RectTransform>();
+            pillRT.sizeDelta = new Vector2(160, 24);
+            streakPill.AddComponent<LayoutElement>();
+
+            // Pill background — teal outline with dark fill
+            var bgImg = streakPill.AddComponent<Image>();
+            bgImg.sprite = MurgeUI.SmoothRoundedRect;
+            bgImg.type = Image.Type.Sliced;
+            bgImg.color = OC.border;
+            bgImg.raycastTarget = false;
+
+            // Inner fill
+            var fillGO = MurgeUI.CreateUIObject("Fill", streakPill.transform);
+            var fillRT = fillGO.GetComponent<RectTransform>();
+            fillRT.anchorMin = Vector2.zero; fillRT.anchorMax = Vector2.one;
+            fillRT.offsetMin = new Vector2(1, 1); fillRT.offsetMax = new Vector2(-1, -1);
+            var fillImg = fillGO.AddComponent<Image>();
+            fillImg.sprite = MurgeUI.SmoothRoundedRect;
+            fillImg.type = Image.Type.Sliced;
+            fillImg.color = OC.bg;
+            fillImg.raycastTarget = false;
+
+            // Lightning icon + text
+            var innerHLG = MurgeUI.CreateUIObject("Inner", streakPill.transform);
+            var innerRT = innerHLG.GetComponent<RectTransform>();
+            innerRT.anchorMin = Vector2.zero; innerRT.anchorMax = Vector2.one;
+            innerRT.offsetMin = Vector2.zero; innerRT.offsetMax = Vector2.zero;
+            var hlg = innerHLG.AddComponent<HorizontalLayoutGroup>();
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.spacing = 6;
+            hlg.childControlWidth = false;
+            hlg.childControlHeight = false;
+            hlg.childForceExpandWidth = false;
+            hlg.padding = new RectOffset(10, 10, 0, 0);
+
+            // Lightning icon
+            var iconGO = MurgeUI.CreateUIObject("Icon", innerHLG.transform);
+            iconGO.GetComponent<RectTransform>().sizeDelta = new Vector2(10, 10);
+            iconGO.AddComponent<LayoutElement>();
+            var iconImg = iconGO.AddComponent<Image>();
+            iconImg.sprite = Visual.PixelUIGenerator.CreateLightningIcon(32, OC.cyan);
+            iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false;
+
+            // Label
+            var labelGO = MurgeUI.CreateUIObject("Label", innerHLG.transform);
+            labelGO.GetComponent<RectTransform>().sizeDelta = new Vector2(120, 16);
+            labelGO.AddComponent<LayoutElement>();
+            streakPillLabel = labelGO.AddComponent<TextMeshProUGUI>();
+            streakPillLabel.text = "";
+            streakPillLabel.font = MurgeUI.PressStart2P;
+            streakPillLabel.fontSize = 7;
+            streakPillLabel.color = OC.cyan;
+            streakPillLabel.characterSpacing = 1;
+            streakPillLabel.alignment = TextAlignmentOptions.Center;
+            streakPillLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
+            streakPillLabel.raycastTarget = false;
+
+            // Start hidden
+            streakPill.SetActive(false);
         }
 
         protected void BuildLeaderboardCard(Transform parent)
@@ -459,33 +495,32 @@ namespace MergeGame.UI
                 var now = System.DateTime.Now;
                 dateLabel.text = now.ToString("MMM dd").ToUpper();
             }
-            if (streakLabel != null)
+
+            // Dynamically position the line between drop text and date
+            if (puzzleLineRT != null && dayNumberLabel != null && dateLabel != null)
+            {
+                dayNumberLabel.ForceMeshUpdate();
+                dateLabel.ForceMeshUpdate();
+                float leftEdge = 24 + dayNumberLabel.preferredWidth;
+                float rightEdge = dateLabel.preferredWidth + 24;
+                float gap = 24;
+                puzzleLineRT.offsetMin = new Vector2(leftEdge + gap, -0.5f);
+                puzzleLineRT.offsetMax = new Vector2(-(rightEdge + gap), 0.5f);
+            }
+
+            // Streak pill
+            if (streakPill != null)
             {
                 int streak = StreakManager.Instance != null ? StreakManager.Instance.CurrentStreak : 0;
-                bool showStreak = streak > 0;
-                streakLabel.text = streak.ToString();
-                streakLabel.gameObject.SetActive(showStreak);
-                if (streakFireIcon != null) streakFireIcon.SetActive(showStreak);
-                if (streakDivider != null) streakDivider.SetActive(showStreak);
-
-                // Shift drop number left when streak is hidden
-                float dropX = showStreak ? 80 : 24;
-                if (dayNumberLabel != null)
+                if (streak > 0)
                 {
-                    var dayRT = dayNumberLabel.GetComponent<RectTransform>();
-                    dayRT.anchoredPosition = new Vector2(dropX, 0);
-
-                    // Dynamically position the line centered between drop text and date
-                    if (puzzleLineRT != null && dateLabel != null)
-                    {
-                        dayNumberLabel.ForceMeshUpdate();
-                        dateLabel.ForceMeshUpdate();
-                        float leftEdge = dropX + dayNumberLabel.preferredWidth;
-                        float rightEdge = dateLabel.preferredWidth + 24; // 24 = right padding
-                        float gap = 24; // padding on each side of the line
-                        puzzleLineRT.offsetMin = new Vector2(leftEdge + gap, -0.5f);
-                        puzzleLineRT.offsetMax = new Vector2(-(rightEdge + gap), 0.5f);
-                    }
+                    streakPill.SetActive(true);
+                    if (streakPillLabel != null)
+                        streakPillLabel.text = $"{streak} DAY STREAK";
+                }
+                else
+                {
+                    streakPill.SetActive(false);
                 }
             }
         }
