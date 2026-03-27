@@ -127,50 +127,50 @@ namespace MergeGame.UI
             arLE.preferredHeight = 44;
             arLE.minHeight = 44;
 
-            // SHARE — primary cyan button
-            var (shareGO, shareLabel) = MurgeUI.CreatePrimaryButton(actionRow.transform, "SHARE", 44, "ShareButton");
-            shareGO.GetComponent<LayoutElement>().flexibleWidth = 1;
-            shareGO.GetComponent<Button>().onClick.AddListener(OnShareClicked);
+            // PLAY AGAIN — primary cyan button (2/3 width)
+            var (replayGO, replayLabel) = MurgeUI.CreatePrimaryButton(actionRow.transform, "PLAY AGAIN", 44, "PlayAgainButton");
+            replayGO.GetComponent<LayoutElement>().flexibleWidth = 2;
+            replayGO.GetComponent<Button>().onClick.AddListener(OnPlayAgainClicked);
 
-            // PLAY AGAIN — smooth border, bg matches screen
-            var replayGO = MurgeUI.CreateUIObject("PlayAgainButton", actionRow.transform);
+            // SHARE — ghost/outline button (1/3 width)
+            var shareGO = MurgeUI.CreateUIObject("ShareButton", actionRow.transform);
             // Border
-            var rpBorderGO = MurgeUI.CreateUIObject("Border", replayGO.transform);
-            MurgeUI.StretchFill(rpBorderGO.GetComponent<RectTransform>());
-            var rpBdrImg = rpBorderGO.AddComponent<Image>();
-            rpBdrImg.sprite = GetSmootherRoundedRect();
-            rpBdrImg.type = Image.Type.Sliced;
-            rpBdrImg.color = OC.border;
-            rpBdrImg.raycastTarget = false;
+            var shBorderGO = MurgeUI.CreateUIObject("Border", shareGO.transform);
+            MurgeUI.StretchFill(shBorderGO.GetComponent<RectTransform>());
+            var shBdrImg = shBorderGO.AddComponent<Image>();
+            shBdrImg.sprite = GetSmootherRoundedRect();
+            shBdrImg.type = Image.Type.Sliced;
+            shBdrImg.color = OC.border;
+            shBdrImg.raycastTarget = false;
             // Fill (inset, matches bg)
-            var rpFillGO = MurgeUI.CreateUIObject("Fill", replayGO.transform);
-            var rpFillRT = rpFillGO.GetComponent<RectTransform>();
-            rpFillRT.anchorMin = Vector2.zero; rpFillRT.anchorMax = Vector2.one;
-            rpFillRT.offsetMin = new Vector2(1, 1); rpFillRT.offsetMax = new Vector2(-1, -1);
-            var rpFillImg = rpFillGO.AddComponent<Image>();
-            rpFillImg.sprite = GetSmootherRoundedRect();
-            rpFillImg.type = Image.Type.Sliced;
-            rpFillImg.color = OC.bg;
-            rpFillImg.raycastTarget = false;
+            var shFillGO = MurgeUI.CreateUIObject("Fill", shareGO.transform);
+            var shFillRT = shFillGO.GetComponent<RectTransform>();
+            shFillRT.anchorMin = Vector2.zero; shFillRT.anchorMax = Vector2.one;
+            shFillRT.offsetMin = new Vector2(1, 1); shFillRT.offsetMax = new Vector2(-1, -1);
+            var shFillImg = shFillGO.AddComponent<Image>();
+            shFillImg.sprite = GetSmootherRoundedRect();
+            shFillImg.type = Image.Type.Sliced;
+            shFillImg.color = OC.bg;
+            shFillImg.raycastTarget = false;
             // Hit area for button
-            var replayImg = replayGO.AddComponent<Image>();
-            replayImg.color = Color.clear;
-            var replayBtn = replayGO.AddComponent<Button>();
-            replayBtn.targetGraphic = rpBdrImg; // use border as target so it gets click
-            replayBtn.onClick.AddListener(OnPlayAgainClicked);
-            var replayLE = replayGO.AddComponent<LayoutElement>();
-            replayLE.flexibleWidth = 1;
+            var shareImg = shareGO.AddComponent<Image>();
+            shareImg.color = Color.clear;
+            var shareBtn = shareGO.AddComponent<Button>();
+            shareBtn.targetGraphic = shBdrImg;
+            shareBtn.onClick.AddListener(OnShareClicked);
+            var shareLE = shareGO.AddComponent<LayoutElement>();
+            shareLE.flexibleWidth = 1;
             // Label
-            var replayLabelGO = MurgeUI.CreateUIObject("Label", replayGO.transform);
-            var replayLabelTMP = replayLabelGO.AddComponent<TextMeshProUGUI>();
-            replayLabelTMP.text = "PLAY AGAIN";
-            replayLabelTMP.font = MurgeUI.PressStart2P;
-            replayLabelTMP.fontSize = OFont.label;
-            replayLabelTMP.color = OC.muted;
-            replayLabelTMP.characterSpacing = 1;
-            replayLabelTMP.alignment = TextAlignmentOptions.Center;
-            replayLabelTMP.raycastTarget = false;
-            MurgeUI.StretchFill(replayLabelGO.GetComponent<RectTransform>());
+            var shareLabelGO = MurgeUI.CreateUIObject("Label", shareGO.transform);
+            var shareLabelTMP = shareLabelGO.AddComponent<TextMeshProUGUI>();
+            shareLabelTMP.text = "SHARE";
+            shareLabelTMP.font = MurgeUI.PressStart2P;
+            shareLabelTMP.fontSize = OFont.label;
+            shareLabelTMP.color = OC.muted;
+            shareLabelTMP.characterSpacing = 1;
+            shareLabelTMP.alignment = TextAlignmentOptions.Center;
+            shareLabelTMP.raycastTarget = false;
+            MurgeUI.StretchFill(shareLabelGO.GetComponent<RectTransform>());
 
             // Hint
             var hint = MurgeUI.CreateLabel(parent, "only first score of the day is counted",

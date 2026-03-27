@@ -18,14 +18,11 @@ NBA Jam style "He's on fire!" type comments when something big happens.
 
 Recap push notification the next day. "You played 2nd out of 98 people!" "You were in the top 75% of all players yesterday"
 "Well, someone had to get last, right?"
-Configure recap update time. Make it seem informative, not pushy to play the next day.
+Configure recap update time. Make it seem informative and helpful, not pushy to play the next day.
 Use AI so it's unique each day.
 Can group segments. Top 10 get their own. Then remaining top 50%, then lower 40% and 10%, then last gets something unique and funny-ish.
 
 Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.
-
-I really don't care about sharing much, for as much as I'm pushing it in the game. Maybe I shouldn't push the viral agenda too hard
-and just appear more humble, and that I just wanted to build this game for myself, so I did.
 
 Ball design doesn't inspire me. Waves seem stale. Colors a bit boring?
 

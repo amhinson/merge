@@ -40,6 +40,8 @@ namespace MergeGame.UI
         private TextMeshProUGUI practiceLabel;
         private TextMeshProUGUI todayScoreLabel;
         private GameObject shareBtn;
+        private GameObject doneScoredBtn;
+        private GameObject donePracticeBtn;
         private GameObject playAgainBtn;
         private Image playAgainBg;
         private bool isBuilt;
@@ -220,8 +222,12 @@ namespace MergeGame.UI
             }
 
             // Buttons — SHARE for scored, PLAY AGAIN for practice
+            // Scored mode: DONE (primary) + SHARE (ghost)
+            // Practice mode: PLAY AGAIN (amber) + DONE (ghost)
+            if (doneScoredBtn != null) doneScoredBtn.SetActive(!isPractice);
             if (shareBtn != null) shareBtn.SetActive(!isPractice);
             if (playAgainBtn != null) playAgainBtn.SetActive(isPractice);
+            if (donePracticeBtn != null) donePracticeBtn.SetActive(isPractice);
 
             PopulateMergeRow();
 
@@ -937,42 +943,42 @@ namespace MergeGame.UI
             rowLE.preferredHeight = 34; rowLE.minHeight = 34;
             rowLE.flexibleHeight = 0; // never expand
 
-            // DONE — transparent + border only
-            var doneGO = MurgeUI.CreateUIObject("DoneButton", row.transform);
-            var doneBdr = MurgeUI.CreateUIObject("Border", doneGO.transform);
-            MurgeUI.StretchFill(doneBdr.GetComponent<RectTransform>());
-            var dbImg = doneBdr.AddComponent<Image>();
-            dbImg.sprite = MurgeUI.SmoothRoundedRect;
-            dbImg.type = Image.Type.Sliced;
-            dbImg.color = OC.border;
-            dbImg.raycastTarget = false;
-            var doneImg = doneGO.AddComponent<Image>();
-            doneImg.color = Color.clear;
-            var doneBtn = doneGO.AddComponent<Button>();
-            doneBtn.targetGraphic = dbImg;
-            doneBtn.onClick.AddListener(OnDoneClicked);
-            var doneLE = doneGO.AddComponent<LayoutElement>();
-            doneLE.flexibleWidth = 1;
-            doneLE.flexibleHeight = 0;
-            var doneLbl = MurgeUI.CreateUIObject("Label", doneGO.transform);
-            MurgeUI.StretchFill(doneLbl.GetComponent<RectTransform>());
-            var doneTMP = doneLbl.AddComponent<TextMeshProUGUI>();
-            doneTMP.text = "DONE";
-            doneTMP.font = MurgeUI.PressStart2P;
-            doneTMP.fontSize = 9;
-            doneTMP.color = OC.muted;
-            doneTMP.characterSpacing = 1;
-            doneTMP.alignment = TextAlignmentOptions.Center;
-            doneTMP.textWrappingMode = TextWrappingModes.NoWrap;
-            doneTMP.overflowMode = TextOverflowModes.Ellipsis;
-            doneTMP.raycastTarget = false;
+            // DONE — primary cyan (scored mode, left)
+            var (doneGO2, doneTMP2) = MurgeUI.CreatePrimaryButton(row.transform, "DONE", 34, "DoneButtonScored");
+            var doneLE2 = doneGO2.GetComponent<LayoutElement>();
+            doneLE2.flexibleWidth = 2;
+            doneLE2.flexibleHeight = 0;
+            doneGO2.GetComponent<Button>().onClick.AddListener(OnDoneClicked);
+            doneScoredBtn = doneGO2;
 
-            // SHARE — primary cyan with scanlines (scored mode)
-            var (shareGO2, shareTMP) = MurgeUI.CreatePrimaryButton(row.transform, "SHARE", 34, "ShareButton");
-            var shareLE = shareGO2.GetComponent<LayoutElement>();
-            shareLE.flexibleWidth = 2;
+            // SHARE — ghost/outline (scored mode, right)
+            var shareGO2 = MurgeUI.CreateUIObject("ShareButton", row.transform);
+            var shBdr = MurgeUI.CreateUIObject("Border", shareGO2.transform);
+            MurgeUI.StretchFill(shBdr.GetComponent<RectTransform>());
+            var shBdrImg = shBdr.AddComponent<Image>();
+            shBdrImg.sprite = MurgeUI.SmoothRoundedRect;
+            shBdrImg.type = Image.Type.Sliced;
+            shBdrImg.color = OC.border;
+            shBdrImg.raycastTarget = false;
+            var shareImg2 = shareGO2.AddComponent<Image>();
+            shareImg2.color = Color.clear;
+            var shareBtn2 = shareGO2.AddComponent<Button>();
+            shareBtn2.targetGraphic = shBdrImg;
+            shareBtn2.onClick.AddListener(OnShareClicked);
+            var shareLE = shareGO2.AddComponent<LayoutElement>();
+            shareLE.flexibleWidth = 1;
             shareLE.flexibleHeight = 0;
-            shareGO2.GetComponent<Button>().onClick.AddListener(OnShareClicked);
+            var shareLblGO = MurgeUI.CreateUIObject("Label", shareGO2.transform);
+            MurgeUI.StretchFill(shareLblGO.GetComponent<RectTransform>());
+            var shareLblTMP = shareLblGO.AddComponent<TextMeshProUGUI>();
+            shareLblTMP.text = "SHARE";
+            shareLblTMP.font = MurgeUI.PressStart2P;
+            shareLblTMP.fontSize = 9;
+            shareLblTMP.color = OC.muted;
+            shareLblTMP.characterSpacing = 1;
+            shareLblTMP.alignment = TextAlignmentOptions.Center;
+            shareLblTMP.textWrappingMode = TextWrappingModes.NoWrap;
+            shareLblTMP.raycastTarget = false;
             shareBtn = shareGO2;
 
             // PLAY AGAIN — amber button (practice mode)
@@ -1011,6 +1017,37 @@ namespace MergeGame.UI
             paLabelTMP.raycastTarget = false;
             playAgainBtn = paGO;
             playAgainBtn.SetActive(false); // hidden by default
+
+            // DONE — transparent + border only
+            var doneGO = MurgeUI.CreateUIObject("DoneButton", row.transform);
+            var doneBdr = MurgeUI.CreateUIObject("Border", doneGO.transform);
+            MurgeUI.StretchFill(doneBdr.GetComponent<RectTransform>());
+            var dbImg = doneBdr.AddComponent<Image>();
+            dbImg.sprite = MurgeUI.SmoothRoundedRect;
+            dbImg.type = Image.Type.Sliced;
+            dbImg.color = OC.border;
+            dbImg.raycastTarget = false;
+            var doneImg = doneGO.AddComponent<Image>();
+            doneImg.color = Color.clear;
+            var doneBtn = doneGO.AddComponent<Button>();
+            doneBtn.targetGraphic = dbImg;
+            doneBtn.onClick.AddListener(OnDoneClicked);
+            var doneLE = doneGO.AddComponent<LayoutElement>();
+            doneLE.flexibleWidth = 1;
+            doneLE.flexibleHeight = 0;
+            var doneLbl = MurgeUI.CreateUIObject("Label", doneGO.transform);
+            MurgeUI.StretchFill(doneLbl.GetComponent<RectTransform>());
+            var doneTMP = doneLbl.AddComponent<TextMeshProUGUI>();
+            doneTMP.text = "DONE";
+            doneTMP.font = MurgeUI.PressStart2P;
+            doneTMP.fontSize = 9;
+            doneTMP.color = OC.muted;
+            doneTMP.characterSpacing = 1;
+            doneTMP.alignment = TextAlignmentOptions.Center;
+            doneTMP.textWrappingMode = TextWrappingModes.NoWrap;
+            doneTMP.overflowMode = TextOverflowModes.Ellipsis;
+            doneTMP.raycastTarget = false;
+            donePracticeBtn = doneGO;
         }
 
         private void OnDoneClicked()
