@@ -170,7 +170,8 @@ namespace MergeGame.UI
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / DropDuration);
-                float eased = t * t; // gravity ease-in
+                // Cubic ease-in — slow at top, fast at impact (like real gravity)
+                float eased = t * t * t;
                 rt.anchoredPosition = new Vector2(0, Mathf.Lerp(startY, targetY, eased));
                 yield return null;
             }
