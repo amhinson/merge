@@ -22,7 +22,7 @@ namespace MergeGame.UI
         private static readonly float[] TierSizes =
             { 28f, 34f, 40f, 46f, 52f, 58f, 64f, 72f, 82f, 92f, 104f };
 
-        private const float DropStartY = 200f;
+        private const float DropStartY = 500f; // above the visible screen
         private const float CenterY = -10f;
         private const int MaxTier = 10;
 
@@ -33,7 +33,7 @@ namespace MergeGame.UI
         private const float FinalPause = 1.5f;
 
         // Animation durations — matching BallController exactly
-        private const float DropDuration = 0.45f;
+        private const float DropDuration = 1.0f;
         private const float DropFadeInDuration = 0.12f;
         private const float AbsorbDuration = 0.12f; // exact match: physicsConfig.mergeAbsorbDuration
         private const float ScaleDuration = 0.18f;  // exact match: physicsConfig.mergeScaleDuration
@@ -45,6 +45,7 @@ namespace MergeGame.UI
         public void Initialize()
         {
             container = GetComponent<RectTransform>();
+
             PrewarmSprites();
             StartLoop();
         }
@@ -98,7 +99,6 @@ namespace MergeGame.UI
 
                 // First tier-0 ball drops in from above to settle at center
                 sittingBall = CreateBall(0, new Vector2(0, DropStartY));
-                SetAlpha(sittingBall, 0f);
                 yield return DropWithFadeIn(sittingBall, CenterY);
                 yield return new WaitForSeconds(PreDropPause);
 
@@ -114,7 +114,7 @@ namespace MergeGame.UI
                     float landingY = CenterY + oldSize; // edges touching
 
                     droppingBall = CreateBall(tier, new Vector2(0, DropStartY));
-                    SetAlpha(droppingBall, 0f);
+
                     yield return DropWithFadeIn(droppingBall, landingY);
 
                     // Absorb immediately on contact — no pause (matches game)
@@ -162,6 +162,7 @@ namespace MergeGame.UI
             if (ball == null) yield break;
             var rt = ball.GetComponent<RectTransform>();
             var cg = EnsureCG(ball);
+            cg.alpha = 1f; // fully visible — mask clips it until it enters
             float startY = rt.anchoredPosition.y;
             float elapsed = 0f;
 
@@ -169,19 +170,11 @@ namespace MergeGame.UI
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / DropDuration);
-
-                // Gravity ease-in for position
-                float eased = t * t;
+                float eased = t * t; // gravity ease-in
                 rt.anchoredPosition = new Vector2(0, Mathf.Lerp(startY, targetY, eased));
-
-                // Fade in over the first portion of the drop
-                float fadeT = Mathf.Clamp01(elapsed / DropFadeInDuration);
-                cg.alpha = fadeT;
-
                 yield return null;
             }
             rt.anchoredPosition = new Vector2(0, targetY);
-            cg.alpha = 1f;
         }
 
         // ───── Absorb (exact match: BallController.MergeCoroutine) ─────
