@@ -4,56 +4,80 @@ using UnityEngine.UI;
 namespace MergeGame.Visual
 {
     /// <summary>
-    /// Assigns a static waveform ball sprite to a UI Image.
-    /// Uses a single pre-cached sprite per tier (no animation) for maximum performance.
+    /// Animates a waveform ball in UI space by periodically updating the sprite
+    /// with a new phase. Smooth scrolling wave that matches the in-game look.
     /// </summary>
     public class UIBallAnimator : MonoBehaviour
     {
-        private static Sprite[] uiSpriteCache;
-        private static bool[] uiCacheBuilt;
+        private Image image;
+        private int tier;
+        private float radius;
+        private float phase;
+        private float speed;
+        private float lastUpdateTime;
 
-        public void Initialize(int ballTier, float radius)
+        private const float UpdateInterval = 0.1f; // regenerate sprite every 100ms
+        private const float CycleSeconds = 30f;
+
+        public void Initialize(int ballTier, float uiRadius)
         {
-            var image = GetComponent<Image>();
+            image = GetComponent<Image>();
             if (image == null) return;
 
-            int tier = ballTier;
-            EnsureCache();
+            tier = ballTier;
+            // Generate at higher resolution for crisp UI rendering
+            radius = Mathf.Max(uiRadius, 0.7f);
+            phase = Random.Range(0f, 1f);
+            speed = 1f / CycleSeconds;
 
-            if (!uiCacheBuilt[tier])
-                BuildSprite(tier, radius);
+            UpdateSprite();
+        }
 
-            if (uiSpriteCache[tier] != null)
+        private void Update()
+        {
+            if (image == null) return;
+
+            phase += Time.deltaTime * speed;
+            if (phase >= 1f) phase -= 1f;
+
+            // Only regenerate sprite periodically (not every frame)
+            if (Time.time - lastUpdateTime >= UpdateInterval)
             {
-                image.sprite = uiSpriteCache[tier];
-                image.color = Color.white;
+                lastUpdateTime = Time.time;
+                UpdateSprite();
             }
         }
 
-        private static void EnsureCache()
+        private void UpdateSprite()
         {
-            if (uiSpriteCache == null)
-            {
-                uiSpriteCache = new Sprite[11];
-                uiCacheBuilt = new bool[11];
-            }
-        }
-
-        private static void BuildSprite(int tier, float radius)
-        {
-            uiCacheBuilt[tier] = true;
             var color = BallRenderer.GetBallColor(tier);
-            float phase = tier * 0.09f;
             var pixels = BallRenderer.GenerateBallPixels(tier, color, radius, phase, out int texSize);
 
             var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
             tex.SetPixels(pixels);
-            tex.Apply(false, true);
+            tex.Apply();
 
-            // PPU = texSize so sprite renders as 1 unit, Image scales it
-            uiSpriteCache[tier] = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
-                new Vector2(0.5f, 0.5f), texSize);
+            // Destroy old sprite texture to avoid memory leak
+            if (image.sprite != null && image.sprite.texture != null)
+            {
+                var oldTex = image.sprite.texture;
+                image.sprite = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
+                    new Vector2(0.5f, 0.5f), texSize);
+                Destroy(oldTex);
+            }
+            else
+            {
+                image.sprite = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
+                    new Vector2(0.5f, 0.5f), texSize);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // Clean up texture
+            if (image != null && image.sprite != null && image.sprite.texture != null)
+                Destroy(image.sprite.texture);
         }
     }
 }

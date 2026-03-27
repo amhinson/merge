@@ -6,8 +6,6 @@ Support URL
 Marketing URL
 Copyright
 
-Google Play setup.
-
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
 Note any top 3 finished on profile.
 

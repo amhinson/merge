@@ -92,11 +92,11 @@ namespace MergeGame.UI
             // === TOP: Logo ===
             BuildLogoBlock(content.transform);
 
-            // === Flex spacer (pushes balls to center) ===
+            // === Flex spacer ===
             AddFlex(content.transform, 1f);
 
-            // === MIDDLE: Ball cluster ===
-            BuildBallCluster(content.transform);
+            // === MIDDLE: Looping merge animation ===
+            BuildMergeLoop(content.transform);
 
             // === Flex spacer ===
             AddFlex(content.transform, 1f);
@@ -223,49 +223,16 @@ namespace MergeGame.UI
             tagTMP.raycastTarget = false;
         }
 
-        private void BuildBallCluster(Transform parent)
+        private void BuildMergeLoop(Transform parent)
         {
-            var cluster = MurgeUI.CreateUIObject("BallCluster", parent);
-            var hlg = cluster.AddComponent<HorizontalLayoutGroup>();
-            hlg.childAlignment = TextAnchor.MiddleCenter;
-            hlg.spacing = 16;
-            hlg.childControlWidth = false;
-            hlg.childControlHeight = false;
-            hlg.childForceExpandWidth = false;
-            var clusterLE = cluster.AddComponent<LayoutElement>();
-            clusterLE.preferredHeight = 100;
-            clusterLE.minHeight = 80;
+            var container = MurgeUI.CreateUIObject("MergeLoop", parent);
+            var containerLE = container.AddComponent<LayoutElement>();
+            containerLE.preferredHeight = 140;
+            containerLE.minHeight = 120;
+            containerLE.flexibleHeight = 0.5f;
 
-            // Design shows: pink (L2, tier 9), cyan (L1, tier 10, largest center), amber (L3, tier 8)
-            int[] tiers = { 9, 10, 8 };
-            float[] sizes = { 66f, 82f, 56f };
-
-            for (int i = 0; i < 3; i++)
-            {
-                var ballGO = MurgeUI.CreateUIObject($"ClusterBall{i}", cluster.transform);
-                var ballRT = ballGO.GetComponent<RectTransform>();
-                ballRT.sizeDelta = new Vector2(sizes[i], sizes[i]);
-
-                var img = ballGO.AddComponent<Image>();
-
-                // Use real ball sprite from BallRenderer
-                float uiRadius = sizes[i] / (2f * Visual.BallRenderer.PixelsPerUnit);
-                var png = Visual.BallRenderer.GenerateBallPNG(tiers[i], Color.white, uiRadius, 0f);
-                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                tex.filterMode = FilterMode.Bilinear;
-                tex.LoadImage(png);
-                img.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
-                    new Vector2(0.5f, 0.5f), tex.width);
-                img.type = Image.Type.Simple;
-                img.preserveAspect = true;
-                img.color = Color.white;
-
-                // Animate the waveform
-                var anim = ballGO.AddComponent<Visual.UIBallAnimator>();
-                anim.Initialize(tiers[i], uiRadius);
-
-                ballGO.AddComponent<LayoutElement>();
-            }
+            var loop = container.AddComponent<HomeMergeLoop>();
+            loop.Initialize();
         }
 
         private void BuildPuzzleRow(Transform parent)
