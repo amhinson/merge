@@ -461,10 +461,11 @@ namespace MergeGame.UI
             divGO.AddComponent<Image>().color = OC.border;
 
             // Row container — VLG below the header (starts at y=-25)
+            // Inset 1px on sides so row backgrounds don't overflow the card's rounded corners
             var rowContainer = MurgeUI.CreateUIObject("Rows", card.transform);
             var rcRT = rowContainer.GetComponent<RectTransform>();
             rcRT.anchorMin = new Vector2(0, 0); rcRT.anchorMax = new Vector2(1, 1);
-            rcRT.offsetMin = new Vector2(0, 0); rcRT.offsetMax = new Vector2(0, -25);
+            rcRT.offsetMin = new Vector2(1, 0); rcRT.offsetMax = new Vector2(-1, -25);
             var rowVLG = rowContainer.AddComponent<VerticalLayoutGroup>();
             rowVLG.childControlWidth = true;
             rowVLG.childControlHeight = true;  // MUST be true for LayoutElement.preferredHeight to work

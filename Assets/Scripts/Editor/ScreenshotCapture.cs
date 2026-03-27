@@ -1,41 +1,32 @@
 using UnityEngine;
+using UnityEditor;
 using System.IO;
 
-namespace MergeGame.Core
+namespace MergeGame.Editor
 {
     /// <summary>
-    /// Press F12 during play to capture a screenshot.
+    /// Capture screenshot via menu: MergeGame > Screenshot Setup > Capture (Alt+S)
     /// Saves to Screenshots/ folder in the project root.
-    /// Editor-only — stripped from builds.
     /// </summary>
-    public class ScreenshotCapture : MonoBehaviour
+    public static class ScreenshotCapture
     {
-#if UNITY_EDITOR
-        private void Update()
+        [MenuItem("MergeGame/Screenshot Setup/Capture _&s", false, 51)]
+        public static void Capture()
         {
-            if (Input.GetKeyDown(KeyCode.F12))
+            if (!EditorApplication.isPlaying)
             {
-                string dir = Path.Combine(Application.dataPath, "..", "Screenshots");
-                Directory.CreateDirectory(dir);
-
-                string timestamp = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                int w = Screen.width;
-                int h = Screen.height;
-                string filename = $"screenshot_{w}x{h}_{timestamp}.png";
-                string path = Path.Combine(dir, filename);
-
-                ScreenCapture.CaptureScreenshot(path);
-                Debug.Log($"[Screenshot] Saved: {path}");
+                Debug.LogWarning("[Screenshot] Enter Play mode first.");
+                return;
             }
-        }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void AutoCreate()
-        {
-            var go = new GameObject("ScreenshotCapture");
-            go.AddComponent<ScreenshotCapture>();
-            go.hideFlags = HideFlags.HideInHierarchy;
+            string dir = Path.Combine(Application.dataPath, "..", "Screenshots");
+            Directory.CreateDirectory(dir);
+
+            string timestamp = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            string path = Path.Combine(dir, $"screenshot_{timestamp}.png");
+
+            UnityEngine.ScreenCapture.CaptureScreenshot(path);
+            Debug.Log($"[Screenshot] Saved: screenshot_{timestamp}.png");
         }
-#endif
     }
 }

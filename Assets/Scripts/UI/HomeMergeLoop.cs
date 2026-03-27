@@ -42,12 +42,37 @@ namespace MergeGame.UI
         // Pre-cached sprites per tier
         private Sprite[] cachedSprites;
 
+        // Screenshot mode: show a single static ball instead of animating.
+        // Uses PlayerPrefs so it survives domain reload when entering Play mode.
+        private const string ScreenshotTierKey = "screenshot_static_tier";
+
+        public static int? ScreenshotStaticTier
+        {
+            get
+            {
+                int val = PlayerPrefs.GetInt(ScreenshotTierKey, -1);
+                return val >= 0 ? val : (int?)null;
+            }
+            set
+            {
+                if (value.HasValue)
+                    PlayerPrefs.SetInt(ScreenshotTierKey, value.Value);
+                else
+                    PlayerPrefs.DeleteKey(ScreenshotTierKey);
+                PlayerPrefs.Save();
+            }
+        }
+
         public void Initialize()
         {
             container = GetComponent<RectTransform>();
 
             PrewarmSprites();
-            StartLoop();
+            var staticTier = ScreenshotStaticTier;
+            if (staticTier.HasValue)
+                ShowStaticBall(staticTier.Value);
+            else
+                StartLoop();
         }
 
         private void PrewarmSprites()
@@ -69,9 +94,21 @@ namespace MergeGame.UI
             }
         }
 
+        private void ShowStaticBall(int tier)
+        {
+            if (loopCoroutine != null) { StopCoroutine(loopCoroutine); loopCoroutine = null; }
+            ClearBalls();
+            int clampedTier = Mathf.Clamp(tier, 0, MaxTier);
+            sittingBall = CreateBall(clampedTier, new Vector2(0, CenterY));
+        }
+
         private void OnEnable()
         {
-            if (container != null && loopCoroutine == null)
+            if (container == null) return;
+            var staticTier = ScreenshotStaticTier;
+            if (staticTier.HasValue)
+                ShowStaticBall(staticTier.Value);
+            else if (loopCoroutine == null)
                 StartLoop();
         }
 

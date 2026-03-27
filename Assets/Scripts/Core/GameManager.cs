@@ -161,8 +161,8 @@ namespace MergeGame.Core
                 LeaderboardService.Instance.FetchPlayerRankFull(GameSession.TodayDateStr, (rank, total) =>
                 {
                     Debug.Log($"[Preload] Rank: {(Time.realtimeSinceStartup - rankStart) * 1000:F0}ms, rank={rank}, total={total}");
-                    GameSession.ResultRank = rank;
-                    GameSession.ResultTotalPlayers = total;
+                    if (rank > 0) GameSession.ResultRank = rank;
+                    if (total > 0) GameSession.ResultTotalPlayers = total;
                     rankDone = true;
                 });
             }

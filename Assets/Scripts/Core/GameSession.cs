@@ -96,8 +96,9 @@ namespace MergeGame.Core
 
             // MergeCounts loaded from profile API response (see GameManager.FetchProfileAndShowHome)
             MergeCounts = new int[11];
-            ResultRank = 0;
-            ResultTotalPlayers = 0;
+            // Screenshot setup can inject a fake rank via PlayerPrefs
+            ResultRank = PlayerPrefs.GetInt("screenshot_rank", 0);
+            ResultTotalPlayers = PlayerPrefs.GetInt("screenshot_total_players", 0);
         }
 
         /// <summary>
