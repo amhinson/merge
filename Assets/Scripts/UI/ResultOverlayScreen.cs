@@ -42,6 +42,7 @@ namespace MergeGame.UI
         private GameObject shareBtn;
         private GameObject doneScoredBtn;
         private GameObject donePracticeBtn;
+        private TextMeshProUGUI quipLabel;
         private GameObject playAgainBtn;
         private Image playAgainBg;
         private bool isBuilt;
@@ -56,6 +57,7 @@ namespace MergeGame.UI
         {
             if (!isBuilt) { BuildUI(); isBuilt = true; }
             chainAnimPlayed = false;
+            if (quipLabel != null) quipLabel.text = "";
             Populate();
             // Don't fetch rank here — GameManager fetches it after score submission completes
             // and calls Populate() to update the UI
@@ -197,6 +199,10 @@ namespace MergeGame.UI
             if (finalScoreLabel != null)
                 finalScoreLabel.text = isPractice ? "PRACTICE SCORE" : "FINAL SCORE";
 
+            // Quip — only generate once (first Populate call)
+            if (quipLabel != null && string.IsNullOrEmpty(quipLabel.text))
+                quipLabel.text = GameQuips.GetQuip();
+
             // Rank pill — only for scored games
             if (rankWrapper != null)
                 rankWrapper.SetActive(!isPractice);
@@ -325,7 +331,16 @@ namespace MergeGame.UI
             var svLE = scoreValue.gameObject.AddComponent<LayoutElement>();
             svLE.preferredHeight = 56; svLE.minHeight = 56;
 
-            AddSpacer(panel.transform, 8);
+            AddSpacer(panel.transform, 6);
+
+            // Quip
+            quipLabel = MurgeUI.CreateLabel(panel.transform, "",
+                MurgeUI.DMMono, OFont.bodySm, OC.muted, "Quip");
+            quipLabel.alignment = TextAlignmentOptions.Center;
+            quipLabel.fontStyle = TMPro.FontStyles.Italic;
+            quipLabel.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
+
+            AddSpacer(panel.transform, 4);
 
             // Rank badge (scored mode)
             BuildRankBadge(panel.transform);

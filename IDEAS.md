@@ -9,11 +9,6 @@ Copyright
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.
 Note any top 3 finished on profile.
 
-Affirmations afterwards, and really give an honest recap based on the users historical performance. Some light AI usage here.
-Makes it a fun thing to look forward to after each game because it will always be unique.
-Can Supabase host a lightweight AI model to generate this?
-Maybe each day also has an AI generated funny Phish-adjacent phrase that is short, but lightly humorous.
-
 NBA Jam style "He's on fire!" type comments when something big happens.
 
 Recap push notification the next day. "You played 2nd out of 98 people!" "You were in the top 75% of all players yesterday"
