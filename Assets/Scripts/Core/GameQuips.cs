@@ -25,17 +25,17 @@ namespace MergeGame.Core
         private struct GameContext
         {
             public int score;
-            public int highScore;
+            public int prevHighScore; // high score BEFORE this game started
             public int todayScore; // first scored attempt of the day
-            public bool beatHighScore;
-            public bool isNewHighScore; // first time beating it (not just matching)
+            public bool isNewHighScore; // beat the previous high score
+            public bool matchedHighScore; // matched but didn't beat
             public bool beatTodayScore; // free play score > today's scored attempt
             public int highestTier;
             public int longestChain;
             public int totalMerges;
             public int streak;
             public bool isFreePlay;
-            public bool isFirstGame;
+            public bool isFirstScoredGame; // this was a scored attempt (not free play)
             public int gamesPlayed;
         }
 
@@ -43,12 +43,36 @@ namespace MergeGame.Core
         {
             var ctx = new GameContext();
             ctx.score = ScoreManager.Instance != null ? ScoreManager.Instance.CurrentScore : 0;
-            ctx.highScore = ScoreManager.Instance != null ? ScoreManager.Instance.HighScore : 0;
-            ctx.beatHighScore = ctx.score >= ctx.highScore && ctx.highScore > 0;
-            ctx.isNewHighScore = ctx.score > ctx.highScore;
             ctx.isFreePlay = GameSession.IsPractice;
             ctx.todayScore = GameSession.TodayScore;
+
+            // HighScore is already updated during play, so we need to check if
+            // this game's score IS the high score (meaning previous was lower)
+            int currentHigh = ScoreManager.Instance != null ? ScoreManager.Instance.HighScore : 0;
+            // If score equals high score, this game set it. Previous was lower (or 0).
+            // If score < high score, previous high score was already higher.
+            ctx.prevHighScore = ctx.score >= currentHigh ? 0 : currentHigh;
+            // For first-ever game, prevHighScore is 0 — can't beat or match 0
+            if (ctx.score == currentHigh && currentHigh > 0)
+            {
+                // This game set the high score — but was there a previous one?
+                // We can't perfectly know, but if it's the first scored game
+                // there was no previous high score
+                ctx.isNewHighScore = !ctx.isFreePlay || currentHigh > ctx.todayScore;
+            }
+            else
+            {
+                ctx.isNewHighScore = false;
+            }
+            ctx.matchedHighScore = ctx.score > 0 && ctx.score == currentHigh && !ctx.isNewHighScore;
+
             ctx.beatTodayScore = ctx.isFreePlay && ctx.score > ctx.todayScore && ctx.todayScore > 0;
+
+            // This was a scored attempt if not free play
+            // Use CurrentAttemptType since MarkScoredAttemptComplete already ran
+            ctx.isFirstScoredGame = !ctx.isFreePlay &&
+                (DailySeedManager.Instance != null &&
+                 DailySeedManager.Instance.CurrentAttemptType == AttemptType.Scored);
 
             if (MergeTracker.Instance != null)
             {
@@ -58,8 +82,7 @@ namespace MergeGame.Core
             }
 
             ctx.streak = StreakManager.Instance != null ? StreakManager.Instance.CurrentStreak : 0;
-            ctx.isFirstGame = !DailySeedManager.Instance?.HasCompletedScoredAttempt() ?? true;
-            ctx.gamesPlayed = ctx.streak; // approximation — streak is the best proxy we have
+            ctx.gamesPlayed = ctx.streak;
 
             return ctx;
         }
@@ -85,10 +108,12 @@ namespace MergeGame.Core
         private static QuipCategory PickCategory(GameContext ctx)
         {
             // Priority order — most impressive/relevant first
-            if (ctx.isFirstGame && !ctx.isFreePlay)
+
+            // First ever scored game of the day
+            if (ctx.isFirstScoredGame)
                 return QuipCategory.FirstEverGame;
 
-            // Free play: new personal best (higher priority than beating today)
+            // Free play: new personal best
             if (ctx.isFreePlay && ctx.isNewHighScore && ctx.score > 0)
                 return QuipCategory.FreePlayNewPB;
 
@@ -100,7 +125,7 @@ namespace MergeGame.Core
             if (ctx.isNewHighScore && ctx.score > 0)
                 return QuipCategory.NewHighScore;
 
-            if (ctx.beatHighScore)
+            if (ctx.matchedHighScore)
                 return QuipCategory.MatchedHighScore;
 
             if (ctx.highestTier >= 10)
