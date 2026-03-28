@@ -1,5 +1,7 @@
 ## NEXT UP
 
+note QUIT will submit score, like what used to be there.
+
 Add BETA? with click modal that things might change. Feedback welcome. Add some way to send feedback.
 
 Use supabase anonymous auth. Optional sign in/up when app starts, but make it discrete.

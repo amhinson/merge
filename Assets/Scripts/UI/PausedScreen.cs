@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using TMPro;
 using MergeGame.Core;
 using MergeGame.Data;
@@ -18,17 +19,23 @@ namespace MergeGame.UI
         private TextMeshProUGUI personalBestValue;
         private Transform leaderboardRowContainer;
         private GameObject leaderboardLoading;
-
         private void OnEnable()
         {
             if (!isBuilt) { BuildUI(); isBuilt = true; }
-            Populate();
             if (DropController.Instance != null)
                 DropController.Instance.DropBlocked = true;
+            StartCoroutine(PopulateDeferred());
+        }
+
+        private IEnumerator PopulateDeferred()
+        {
+            yield return null;
+            Populate();
         }
 
         private void OnDisable()
         {
+            StopAllCoroutines();
             if (DropController.Instance != null)
                 DropController.Instance.DropBlocked = false;
         }
@@ -270,9 +277,8 @@ namespace MergeGame.UI
             r2HLG.childControlHeight = false;
             r2HLG.childForceExpandWidth = true;
 
-            // Generate ball sprites
             float[] uiSizes = { 28f, 34f, 40f, 46f, 52f, 58f, 64f, 72f, 82f, 92f, 104f };
-            float maxSize = 56f; // max display size in the card
+            float maxSize = 56f;
 
             for (int tier = 10; tier >= 0; tier--)
             {
@@ -284,13 +290,20 @@ namespace MergeGame.UI
                 brt.sizeDelta = new Vector2(displaySize, displaySize);
 
                 float renderRadius = Mathf.Max(uiSizes[tier] / (2f * BallRenderer.PixelsPerUnit), 0.5f);
+                var color = BallRenderer.GetBallColor(tier);
+                float phase = tier * 0.09f;
+                var pixels = BallRenderer.GenerateBallPixels(tier, color, renderRadius, phase, out int texSize);
+                var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
+                tex.filterMode = FilterMode.Bilinear;
+                tex.SetPixels(pixels);
+                tex.Apply(false, true);
+                var sprite = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
+                    new Vector2(0.5f, 0.5f), texSize);
+
                 var img = ballGO.AddComponent<Image>();
+                img.sprite = sprite;
                 img.raycastTarget = false;
                 img.preserveAspect = true;
-
-                // Animate waveform like in-game
-                var animator = ballGO.AddComponent<UIBallAnimator>();
-                animator.Initialize(tier, renderRadius);
             }
 
             var cardLE = card.AddComponent<LayoutElement>();
