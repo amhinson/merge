@@ -5,6 +5,7 @@ using TMPro;
 using MergeGame.Core;
 using MergeGame.Data;
 using MergeGame.Visual;
+using MergeGame.Audio;
 using MergeGame.Backend;
 
 namespace MergeGame.UI
@@ -20,6 +21,12 @@ namespace MergeGame.UI
         private GameObject personalBestCard;
         private Transform leaderboardRowContainer;
         private GameObject leaderboardLoading;
+
+        // Toggle state
+        private Image hapticTrack;
+        private RectTransform hapticThumb;
+        private Image sfxTrack;
+        private RectTransform sfxThumb;
         private void OnEnable()
         {
             if (!isBuilt) { BuildUI(); isBuilt = true; }
@@ -71,25 +78,44 @@ namespace MergeGame.UI
             // Header pinned at top
             BuildHeader(outer.transform);
 
-            // Flex spacer above content to center it
-            AddFlex(outer.transform, 1);
+            // Scrollable area for the rest of the content
+            var scrollGO = MurgeUI.CreateUIObject("Scroll", outer.transform);
+            var scrollLE = scrollGO.AddComponent<LayoutElement>();
+            scrollLE.flexibleHeight = 1; // take remaining space
+            var scrollRect = scrollGO.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Elastic;
+            scrollRect.scrollSensitivity = 20f;
 
-            // Content group — cards + buttons
-            var contentGO = MurgeUI.CreateUIObject("Content", outer.transform);
+            // Viewport
+            var viewportGO = MurgeUI.CreateUIObject("Viewport", scrollGO.transform);
+            MurgeUI.StretchFill(viewportGO.GetComponent<RectTransform>());
+            viewportGO.AddComponent<RectMask2D>();
+            scrollRect.viewport = viewportGO.GetComponent<RectTransform>();
+
+            // Content — middle-anchored so it centers when shorter than viewport
+            var contentGO = MurgeUI.CreateUIObject("Content", viewportGO.transform);
+            var contentRT = contentGO.GetComponent<RectTransform>();
+            contentRT.anchorMin = new Vector2(0, 1); contentRT.anchorMax = new Vector2(1, 1);
+            contentRT.pivot = new Vector2(0.5f, 1);
+            contentRT.offsetMin = Vector2.zero; contentRT.offsetMax = Vector2.zero;
             var contentVLG = contentGO.AddComponent<VerticalLayoutGroup>();
             contentVLG.spacing = 16;
             contentVLG.childControlWidth = true;
             contentVLG.childControlHeight = true;
             contentVLG.childForceExpandWidth = true;
             contentVLG.childForceExpandHeight = false;
+            contentVLG.padding = new RectOffset(0, 0, 0, 16);
+            var csf = contentGO.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            scrollRect.content = contentRT;
 
             BuildPersonalBestCard(contentGO.transform);
             BuildLeaderboardCard(contentGO.transform);
             BuildBallSizesCard(contentGO.transform);
+            BuildControlsCard(contentGO.transform);
             BuildButtons(contentGO.transform);
-
-            // Flex spacer below content to center it
-            AddFlex(outer.transform, 1);
         }
 
         // ───── Header ─────
@@ -312,6 +338,169 @@ namespace MergeGame.UI
             cardLE.preferredHeight = 160; cardLE.minHeight = 160;
         }
 
+        // ───── Controls ─────
+
+        private void BuildControlsCard(Transform parent)
+        {
+            var card = MurgeUI.CreateCard(parent);
+            card.name = "ControlsCard";
+            var cardLE = card.AddComponent<LayoutElement>();
+            cardLE.preferredHeight = 97; cardLE.minHeight = 97;
+
+            // Two rows: haptic + SFX
+            var rowArea = MurgeUI.CreateUIObject("Rows", card.transform);
+            var raRT = rowArea.GetComponent<RectTransform>();
+            raRT.anchorMin = Vector2.zero; raRT.anchorMax = Vector2.one;
+            raRT.offsetMin = new Vector2(0, 4); raRT.offsetMax = new Vector2(0, -4);
+            var raVLG = rowArea.AddComponent<VerticalLayoutGroup>();
+            raVLG.childControlWidth = true;
+            raVLG.childControlHeight = true;
+            raVLG.childForceExpandWidth = true;
+            raVLG.childForceExpandHeight = false;
+            raVLG.spacing = 0;
+
+            // Haptic row
+            bool hapticOn = HapticManager.Instance != null && HapticManager.Instance.IsEnabled;
+            BuildToggleRow(rowArea.transform, "Haptic feedback", "Vibrate on merge",
+                hapticOn, out hapticTrack, out hapticThumb, OnToggleHaptic);
+
+            // Divider
+            var div = MurgeUI.CreateUIObject("Div", rowArea.transform);
+            div.AddComponent<Image>().color = OC.border;
+            div.GetComponent<Image>().raycastTarget = false;
+            var divLE = div.AddComponent<LayoutElement>();
+            divLE.preferredHeight = 1; divLE.minHeight = 1; divLE.flexibleHeight = 0;
+
+            // SFX row
+            bool sfxOn = PlayerPrefs.GetInt("sfx_enabled", 1) == 1;
+            BuildToggleRow(rowArea.transform, "Sound effects", "Merge sounds",
+                sfxOn, out sfxTrack, out sfxThumb, OnToggleSfx);
+        }
+
+        private void BuildToggleRow(Transform parent, string title, string subtitle,
+            bool isOn, out Image track, out RectTransform thumb, UnityEngine.Events.UnityAction onTap)
+        {
+            var row = MurgeUI.CreateUIObject("ToggleRow", parent);
+            var rowLE = row.AddComponent<LayoutElement>();
+            rowLE.preferredHeight = 44; rowLE.minHeight = 44;
+
+            // Title
+            var titleTMP = MurgeUI.CreateLabel(row.transform, title,
+                MurgeUI.DMMono, 13, Color.white, "Title");
+            var ttRT = titleTMP.GetComponent<RectTransform>();
+            ttRT.anchorMin = new Vector2(0, 0.5f); ttRT.anchorMax = new Vector2(0.7f, 1);
+            ttRT.offsetMin = new Vector2(12, 0); ttRT.offsetMax = new Vector2(0, -6);
+            titleTMP.alignment = TextAlignmentOptions.Left;
+            titleTMP.verticalAlignment = VerticalAlignmentOptions.Bottom;
+
+            // Subtitle
+            var subTMP = MurgeUI.CreateLabel(row.transform, subtitle,
+                MurgeUI.DMMono, 10, OC.muted, "Sub");
+            var stRT = subTMP.GetComponent<RectTransform>();
+            stRT.anchorMin = new Vector2(0, 0); stRT.anchorMax = new Vector2(0.7f, 0.5f);
+            stRT.offsetMin = new Vector2(12, 6); stRT.offsetMax = Vector2.zero;
+            subTMP.alignment = TextAlignmentOptions.Left;
+            subTMP.verticalAlignment = VerticalAlignmentOptions.Top;
+
+            // Toggle switch
+            var toggleGO = MurgeUI.CreateUIObject("Toggle", row.transform);
+            var tgRT = toggleGO.GetComponent<RectTransform>();
+            tgRT.anchorMin = new Vector2(1, 0.5f); tgRT.anchorMax = new Vector2(1, 0.5f);
+            tgRT.pivot = new Vector2(1, 0.5f);
+            tgRT.anchoredPosition = new Vector2(-12, 0);
+            tgRT.sizeDelta = new Vector2(48, 26);
+
+            track = toggleGO.AddComponent<Image>();
+            track.sprite = NewSettingsScreen.GetSmoothPill();
+            track.type = Image.Type.Sliced;
+            track.color = isOn ? OC.cyan : OC.A(Color.white, 0.15f);
+
+            var thumbGO = MurgeUI.CreateUIObject("Thumb", toggleGO.transform);
+            thumb = thumbGO.GetComponent<RectTransform>();
+            thumb.anchorMin = new Vector2(0, 0.5f);
+            thumb.anchorMax = new Vector2(0, 0.5f);
+            thumb.pivot = new Vector2(0, 0.5f);
+            thumb.sizeDelta = new Vector2(20, 20);
+            thumb.anchoredPosition = new Vector2(isOn ? 25 : 3, 0);
+
+            var thumbImg = thumbGO.AddComponent<Image>();
+            thumbImg.sprite = NewSettingsScreen.GetSmoothCircle();
+            thumbImg.type = Image.Type.Simple;
+            thumbImg.color = Color.white;
+
+            var btn = toggleGO.AddComponent<Button>();
+            btn.targetGraphic = track;
+            btn.onClick.AddListener(onTap);
+        }
+
+        private void OnToggleHaptic()
+        {
+            if (HapticManager.Instance == null) return;
+            bool newState = !HapticManager.Instance.IsEnabled;
+            HapticManager.Instance.SetEnabled(newState);
+            AnimateToggle(hapticTrack, hapticThumb, newState, ref hapticToggleAnim);
+        }
+
+        private void OnToggleSfx()
+        {
+            bool current = PlayerPrefs.GetInt("sfx_enabled", 1) == 1;
+            bool newState = !current;
+            PlayerPrefs.SetInt("sfx_enabled", newState ? 1 : 0);
+            PlayerPrefs.Save();
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.SetSfxEnabled(newState);
+            AnimateToggle(sfxTrack, sfxThumb, newState, ref sfxToggleAnim);
+        }
+
+        private void SyncToggles()
+        {
+            bool hapticOn = HapticManager.Instance != null && HapticManager.Instance.IsEnabled;
+            if (hapticTrack != null)
+                hapticTrack.color = hapticOn ? OC.cyan : OC.A(Color.white, 0.15f);
+            if (hapticThumb != null)
+                hapticThumb.anchoredPosition = new Vector2(hapticOn ? 25 : 3, 0);
+
+            bool sfxOn = PlayerPrefs.GetInt("sfx_enabled", 1) == 1;
+            if (sfxTrack != null)
+                sfxTrack.color = sfxOn ? OC.cyan : OC.A(Color.white, 0.15f);
+            if (sfxThumb != null)
+                sfxThumb.anchoredPosition = new Vector2(sfxOn ? 25 : 3, 0);
+        }
+
+        private Coroutine hapticToggleAnim;
+        private Coroutine sfxToggleAnim;
+
+        private void AnimateToggle(Image trackImg, RectTransform thumbRT, bool on, ref Coroutine anim)
+        {
+            if (trackImg == null || thumbRT == null) return;
+            Color targetColor = on ? OC.cyan : OC.A(Color.white, 0.15f);
+            Vector2 targetPos = new Vector2(on ? 25 : 3, 0);
+            if (anim != null) StopCoroutine(anim);
+            anim = StartCoroutine(AnimateToggleCoroutine(trackImg, thumbRT, targetColor, targetPos));
+        }
+
+        private IEnumerator AnimateToggleCoroutine(Image trackImg, RectTransform thumbRT,
+            Color targetColor, Vector2 targetPos)
+        {
+            Color startColor = trackImg.color;
+            Vector2 startPos = thumbRT.anchoredPosition;
+            float elapsed = 0f;
+            const float duration = 0.2f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float eased = 1f - (1f - t) * (1f - t);
+                trackImg.color = Color.Lerp(startColor, targetColor, eased);
+                thumbRT.anchoredPosition = Vector2.Lerp(startPos, targetPos, eased);
+                yield return null;
+            }
+
+            trackImg.color = targetColor;
+            thumbRT.anchoredPosition = targetPos;
+        }
+
         // ───── Buttons ─────
 
         private void BuildButtons(Transform parent)
@@ -379,6 +568,9 @@ namespace MergeGame.UI
                 personalBestCard.SetActive(preGameBest > 0);
             if (personalBestValue != null)
                 personalBestValue.text = preGameBest.ToString("N0");
+
+            // Sync toggles with current state (may have changed in settings)
+            SyncToggles();
 
             // Leaderboard
             PopulateLeaderboard();

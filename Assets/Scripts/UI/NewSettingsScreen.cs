@@ -43,6 +43,7 @@ namespace MergeGame.UI
             hapticOn = HapticManager.Instance != null && HapticManager.Instance.IsEnabled;
             sfxOn = MergeGame.Audio.AudioManager.Instance != null && MergeGame.Audio.AudioManager.Instance.IsSfxEnabled;
             UpdateToggleVisual(false);
+            UpdateSfxToggleVisual(false);
         }
 
         private void BuildUI()
@@ -792,7 +793,7 @@ namespace MergeGame.UI
         // ───── Smooth sprites ─────
 
         private static Sprite _smoothPill;
-        private static Sprite GetSmoothPill()
+        public static Sprite GetSmoothPill()
         {
             if (_smoothPill != null) return _smoothPill;
             // 48x26 pill with 13px radius, anti-aliased
@@ -822,7 +823,7 @@ namespace MergeGame.UI
         }
 
         private static Sprite _smoothCircle;
-        private static Sprite GetSmoothCircle()
+        public static Sprite GetSmoothCircle()
         {
             if (_smoothCircle != null) return _smoothCircle;
             // 40x40 circle, anti-aliased, rendered at 20pt

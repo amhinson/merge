@@ -3,8 +3,6 @@
 Remove Coming Soon Achievement.
 Add Send Feedback Achievement.
 
-Add Haptic & Sound to in-game menu.
-
 Use supabase anonymous auth. Optional sign in/up when app starts, but make it discrete.
 Prompt after 2 day streak to connect account so you don't lose scores.
 Also have a place in settings to connect & manage this.
