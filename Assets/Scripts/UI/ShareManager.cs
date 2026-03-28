@@ -99,7 +99,10 @@ namespace MergeGame.UI
                 dateLine.text = $"#{GameSession.TodayDayNumber}  ·  {now.ToString("MMM dd").ToUpper()}";
             }
 
-            int score = GameSession.TodayScore;
+            // Free play: show current game's score. Scored: show today's submitted score.
+            int score = GameSession.IsPractice
+                ? (ScoreManager.Instance != null ? ScoreManager.Instance.CurrentScore : 0)
+                : GameSession.TodayScore;
             if (score <= 0 && ScoreManager.Instance != null)
                 score = ScoreManager.Instance.HighScore;
             if (scoreText != null)

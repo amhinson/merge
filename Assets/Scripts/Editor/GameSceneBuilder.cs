@@ -711,7 +711,7 @@ namespace MergeGame.Editor
             SetAnchors(rankText.rectTransform, 0.2f, 0.43f, 0.8f, 0.48f);
 
             // Replay label
-            var replayLabel = CreateText(panel.transform, "ReplayLabel", "Practice Run", 20, MutedText);
+            var replayLabel = CreateText(panel.transform, "ReplayLabel", "Free Play", 20, MutedText);
             SetAnchors(replayLabel.rectTransform, 0.3f, 0.43f, 0.7f, 0.47f);
             replayLabel.gameObject.SetActive(false);
 

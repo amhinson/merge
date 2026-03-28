@@ -127,8 +127,8 @@ namespace MergeGame.UI
             arLE.preferredHeight = 44;
             arLE.minHeight = 44;
 
-            // PLAY AGAIN — primary cyan button (2/3 width)
-            var (replayGO, replayLabel) = MurgeUI.CreatePrimaryButton(actionRow.transform, "PLAY AGAIN", 44, "PlayAgainButton");
+            // FREE PLAY — primary cyan button (2/3 width)
+            var (replayGO, replayLabel) = MurgeUI.CreatePrimaryButton(actionRow.transform, "FREE PLAY", 44, "PlayAgainButton");
             replayGO.GetComponent<LayoutElement>().flexibleWidth = 2;
             replayGO.GetComponent<Button>().onClick.AddListener(OnPlayAgainClicked);
 
@@ -168,7 +168,7 @@ namespace MergeGame.UI
             MurgeUI.StretchFill(shareLabelGO.GetComponent<RectTransform>());
 
             // Hint
-            var hint = MurgeUI.CreateLabel(parent, "only first score of the day is counted",
+            var hint = MurgeUI.CreateLabel(parent, "first score of the day counts for leaderboard",
                 MurgeUI.DMMono, OFont.caption, OC.dim, "HintLabel");
             hint.alignment = TextAlignmentOptions.Center;
             hint.gameObject.AddComponent<LayoutElement>().preferredHeight = 14;

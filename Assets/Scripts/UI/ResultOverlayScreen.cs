@@ -38,6 +38,7 @@ namespace MergeGame.UI
         private GameObject rankWrapper;
         private GameObject practiceInfoWrapper;
         private TextMeshProUGUI practiceLabel;
+        private GameObject todayScoreBox;
         private TextMeshProUGUI todayScoreLabel;
         private GameObject shareBtn;
         private GameObject doneScoredBtn;
@@ -185,19 +186,18 @@ namespace MergeGame.UI
             bool isPractice = GameSession.IsPractice;
             Color amber = OC.amber; // #F0B429
 
-            // Score value — cyan for scored, amber for practice
+            // Score value — always show this game's score
+            int currentScore = ScoreManager.Instance != null ? ScoreManager.Instance.CurrentScore : 0;
             if (scoreValue != null)
             {
-                int displayScore = isPractice
-                    ? (ScoreManager.Instance != null ? ScoreManager.Instance.CurrentScore : 0)
-                    : GameSession.TodayScore;
+                int displayScore = isPractice ? currentScore : GameSession.TodayScore;
                 scoreValue.text = displayScore.ToString("N0");
                 scoreValue.color = isPractice ? amber : OC.cyan;
             }
 
             // Header label
             if (finalScoreLabel != null)
-                finalScoreLabel.text = isPractice ? "PRACTICE SCORE" : "FINAL SCORE";
+                finalScoreLabel.text = isPractice ? "FREE PLAY" : "FINAL SCORE";
 
             // Quip — only generate once (first Populate call)
             if (quipLabel != null && string.IsNullOrEmpty(quipLabel.text))
@@ -218,20 +218,17 @@ namespace MergeGame.UI
                         : !Core.NetworkMonitor.IsOnline ? "offline — rank will update when connected" : "ranking...";
             }
 
-            // Practice info — only for practice games
+            // Free play info pill — no leaderboard score box
             if (practiceInfoWrapper != null)
                 practiceInfoWrapper.SetActive(isPractice);
-            if (isPractice && todayScoreLabel != null)
-            {
-                string cHex = ColorUtility.ToHtmlStringRGB(OC.cyan);
-                todayScoreLabel.text = $"TODAY  <color=#{cHex}>{GameSession.TodayScore.ToString("N0")}</color>";
-            }
+            if (todayScoreBox != null)
+                todayScoreBox.SetActive(false);
 
-            // Buttons — SHARE for scored, PLAY AGAIN for practice
+            // Buttons — both modes get SHARE now
             // Scored mode: DONE (primary) + SHARE (ghost)
-            // Practice mode: PLAY AGAIN (amber) + DONE (ghost)
+            // Free play mode: PLAY AGAIN (amber) + SHARE (ghost)
             if (doneScoredBtn != null) doneScoredBtn.SetActive(!isPractice);
-            if (shareBtn != null) shareBtn.SetActive(!isPractice);
+            if (shareBtn != null) shareBtn.SetActive(true); // always show SHARE
             if (playAgainBtn != null) playAgainBtn.SetActive(isPractice);
             if (donePracticeBtn != null) donePracticeBtn.SetActive(isPractice);
 
@@ -450,7 +447,7 @@ namespace MergeGame.UI
             pillWrapper.AddComponent<LayoutElement>().preferredHeight = 34;
 
             var pill = MurgeUI.CreateUIObject("PracticePill", pillWrapper.transform);
-            pill.GetComponent<RectTransform>().sizeDelta = new Vector2(230, 34);
+            pill.GetComponent<RectTransform>().sizeDelta = new Vector2(280, 34);
             // Border (amber @ 28%)
             var pBorder = MurgeUI.CreateUIObject("Border", pill.transform);
             MurgeUI.StretchFill(pBorder.GetComponent<RectTransform>());
@@ -469,19 +466,20 @@ namespace MergeGame.UI
             pfImg.type = Image.Type.Sliced;
             pfImg.color = new Color32(22, 22, 16, 255); // composited amber @ 12% over dark bg
             pfImg.raycastTarget = false;
-            // Text: "PRACTICE  score not counted"
+            // Text: "FREE PLAY  leaderboard locked"
             practiceLabel = MurgeUI.CreateLabel(pill.transform, "",
-                MurgeUI.PressStart2P, 8, OC.muted, "PracticeText");
+                MurgeUI.PressStart2P, 7, OC.muted, "PracticeText");
             string amberHex = ColorUtility.ToHtmlStringRGB(OC.amber);
-            practiceLabel.text = $"<color=#{amberHex}>PRACTICE</color>  score not counted";
+            practiceLabel.text = $"<color=#{amberHex}>FREE PLAY</color>  1st daily score locked";
             practiceLabel.richText = true;
             practiceLabel.alignment = TextAlignmentOptions.Center;
             practiceLabel.verticalAlignment = VerticalAlignmentOptions.Middle;
             practiceLabel.textWrappingMode = TextWrappingModes.NoWrap;
             MurgeUI.StretchFill(practiceLabel.GetComponent<RectTransform>());
 
-            // TODAY score box
+            // Leaderboard score box (hidden for now, kept for potential future use)
             var todayBox = MurgeUI.CreateUIObject("TodayBox", practiceInfoWrapper.transform);
+            todayScoreBox = todayBox;
             var tbLE = todayBox.AddComponent<LayoutElement>();
             tbLE.preferredHeight = 38; tbLE.minHeight = 38;
             // Border

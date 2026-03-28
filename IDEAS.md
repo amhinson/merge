@@ -1,12 +1,5 @@
 ## NEXT UP
 
-Reframe "Practice".
-Note that it still counts towards your Personal Best.
-Keep first score for leaderboard.
-Add quip for the case where practice score is more than first score.
-Explain briefly how the leaderboard mechanic works.
-Results screen will need updates to make all this clearer. Make sure it shows the data from the game just played, not first score.
-
 In-game menu to view leaderboard, see ball sizes, show personal best, and quit the game.
 
 Add BETA? with click modal that things might change. Feedback welcome. Add some way to send feedback.
@@ -15,6 +8,8 @@ Use supabase anonymous auth. Optional sign in/up when app starts, but make it di
 Prompt after 2 day streak to connect account so you don't lose scores.
 Also have a place in settings to connect & manage this.
 Make big note about how it is only for convenience to persist scores. No personal identifiable data besides ID (?) is stored on our end.
+
+Post on Reddit and other places online to promote. Get strategy from Claude.
 
 ## EVENTUALLY
 

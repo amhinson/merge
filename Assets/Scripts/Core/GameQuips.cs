@@ -26,16 +26,17 @@ namespace MergeGame.Core
         {
             public int score;
             public int highScore;
+            public int todayScore; // first scored attempt of the day
             public bool beatHighScore;
             public bool isNewHighScore; // first time beating it (not just matching)
+            public bool beatTodayScore; // free play score > today's scored attempt
             public int highestTier;
             public int longestChain;
             public int totalMerges;
             public int streak;
-            public bool isPractice;
+            public bool isFreePlay;
             public bool isFirstGame;
-            public bool quitEarly; // quit via modal, not death line
-            public int gamesPlayed; // total days played
+            public int gamesPlayed;
         }
 
         private static GameContext GatherContext()
@@ -45,7 +46,9 @@ namespace MergeGame.Core
             ctx.highScore = ScoreManager.Instance != null ? ScoreManager.Instance.HighScore : 0;
             ctx.beatHighScore = ctx.score >= ctx.highScore && ctx.highScore > 0;
             ctx.isNewHighScore = ctx.score > ctx.highScore;
-            ctx.isPractice = GameSession.IsPractice;
+            ctx.isFreePlay = GameSession.IsPractice;
+            ctx.todayScore = GameSession.TodayScore;
+            ctx.beatTodayScore = ctx.isFreePlay && ctx.score > ctx.todayScore && ctx.todayScore > 0;
 
             if (MergeTracker.Instance != null)
             {
@@ -67,12 +70,13 @@ namespace MergeGame.Core
         {
             FirstEverGame,
             NewHighScore,
+            FreePlayNewPB,
+            FreePlayBeatToday,
             MatchedHighScore,
             HitMaxTier,
             LongChain,
             HighStreak,
             ModerateStreak,
-            PracticeMode,
             LowScore,
             DecentScore,
             FallbackGeneric,
@@ -81,12 +85,18 @@ namespace MergeGame.Core
         private static QuipCategory PickCategory(GameContext ctx)
         {
             // Priority order — most impressive/relevant first
-            if (ctx.isFirstGame && !ctx.isPractice)
+            if (ctx.isFirstGame && !ctx.isFreePlay)
                 return QuipCategory.FirstEverGame;
 
-            if (ctx.isPractice)
-                return QuipCategory.PracticeMode;
+            // Free play: new personal best (higher priority than beating today)
+            if (ctx.isFreePlay && ctx.isNewHighScore && ctx.score > 0)
+                return QuipCategory.FreePlayNewPB;
 
+            // Free play: beat today's scored attempt but not PB
+            if (ctx.beatTodayScore)
+                return QuipCategory.FreePlayBeatToday;
+
+            // Scored game: new high score
             if (ctx.isNewHighScore && ctx.score > 0)
                 return QuipCategory.NewHighScore;
 
@@ -119,7 +129,7 @@ namespace MergeGame.Core
         private static readonly Dictionary<QuipCategory, string[]> Variants = new()
         {
             [QuipCategory.FirstEverGame] = new[] {
-                "Welcome to the daily drop.", 
+                "Welcome to the daily drop.",
             },
             [QuipCategory.NewHighScore] = new[] {
                 "New high. Noted.",
@@ -129,6 +139,20 @@ namespace MergeGame.Core
                 "The scoreboard had to make room.",
                 "Old record didn't survive the day.",
                 "Your best just got better.",
+            },
+            [QuipCategory.FreePlayNewPB] = new[] {
+                "New personal best. Leaderboard locked, though.",
+                "Your best score ever. Tomorrow, make it count.",
+                "New record. Off the leaderboard, but on the books.",
+                "PB broken. Come back tomorrow to prove it.",
+                "That was your best game. The leaderboard will have to wait.",
+            },
+            [QuipCategory.FreePlayBeatToday] = new[] {
+                "Better than your ranked score. Figures.",
+                "You peaked after it counted.",
+                "The leaderboard doesn't know about this one.",
+                "Higher than this morning. Tomorrow's a new chance.",
+                "Outscored yourself. Unofficially.",
             },
             [QuipCategory.MatchedHighScore] = new[] {
                 "Same peak. Suspiciously consistent.",
@@ -165,22 +189,6 @@ namespace MergeGame.Core
                 "You came back. That's the hard part.",
                 "Getting into a rhythm.",
                 "The streak appreciates your consistency.",
-            },
-            [QuipCategory.PracticeMode] = new[] {
-                "Doesn't count. Still fun though.",
-                "Off the record.",
-                "Practice round. No judgement.",
-                "Warm-up complete.",
-                "Just between us.",
-                "Rehearsal went well.",
-                "Nobody's watching. Go wild.",
-                "Free reps.",
-                "The score vanishes at midnight anyway.",
-                "Zero stakes. Full send.",
-                "This is the sandbox.",
-                "Tomorrow it's real. Today it's not.",
-                "Unranked but not unnoticed.",
-                "A run with no consequences.",
             },
             [QuipCategory.LowScore] = new[] {
                 "Gravity won this round.",

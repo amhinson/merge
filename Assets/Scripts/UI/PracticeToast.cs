@@ -38,6 +38,13 @@ namespace MergeGame.UI
 
         public void Show()
         {
+            // Only show once per day
+            string today = System.DateTime.Now.ToString("yyyy-MM-dd");
+            string lastShown = PlayerPrefs.GetString("freeplay_toast_date", "");
+            if (lastShown == today) return;
+            PlayerPrefs.SetString("freeplay_toast_date", today);
+            PlayerPrefs.Save();
+
             if (toastGO == null) BuildToast();
             toastGO.SetActive(true);
             canvasGroup.alpha = 1f;
@@ -80,8 +87,8 @@ namespace MergeGame.UI
             rt.anchorMin = new Vector2(0.5f, 1);
             rt.anchorMax = new Vector2(0.5f, 1);
             rt.pivot = new Vector2(0.5f, 1);
-            rt.anchoredPosition = new Vector2(0, -(OS.safeAreaTop + 58));
-            rt.sizeDelta = new Vector2(240, 28);
+            rt.anchoredPosition = new Vector2(0, -(OS.safeAreaTop + 72));
+            rt.sizeDelta = new Vector2(340, 36);
 
             // Background pill
             var bgImg = toastGO.AddComponent<Image>();
@@ -96,13 +103,13 @@ namespace MergeGame.UI
             var textRT = textGO.AddComponent<RectTransform>();
             textRT.anchorMin = Vector2.zero;
             textRT.anchorMax = Vector2.one;
-            textRT.offsetMin = Vector2.zero;
-            textRT.offsetMax = Vector2.zero;
+            textRT.offsetMin = new Vector2(8, 4);
+            textRT.offsetMax = new Vector2(-8, -4);
 
             var tmp = textGO.AddComponent<TextMeshProUGUI>();
-            tmp.text = "PRACTICE - score won't count";
+            tmp.text = "FREE PLAY - won't affect today's leaderboard";
             tmp.font = MurgeUI.PressStart2P;
-            tmp.fontSize = 6;
+            tmp.fontSize = 8;
             tmp.color = OC.amber;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.characterSpacing = 1;
