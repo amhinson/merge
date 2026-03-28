@@ -132,31 +132,26 @@ namespace MergeGame.UI
             replayGO.GetComponent<LayoutElement>().flexibleWidth = 2;
             replayGO.GetComponent<Button>().onClick.AddListener(OnPlayAgainClicked);
 
-            // SHARE — ghost/outline button (1/3 width)
+            // SHARE — outline-only button (1/3 width)
+            // Build manually: rounded border + bg-colored fill (appears transparent)
             var shareGO = MurgeUI.CreateUIObject("ShareButton", actionRow.transform);
-            // Border
-            var shBorderGO = MurgeUI.CreateUIObject("Border", shareGO.transform);
-            MurgeUI.StretchFill(shBorderGO.GetComponent<RectTransform>());
-            var shBdrImg = shBorderGO.AddComponent<Image>();
-            shBdrImg.sprite = GetSmootherRoundedRect();
-            shBdrImg.type = Image.Type.Sliced;
-            shBdrImg.color = OC.border;
-            shBdrImg.raycastTarget = false;
-            // Fill (inset, matches bg)
-            var shFillGO = MurgeUI.CreateUIObject("Fill", shareGO.transform);
-            var shFillRT = shFillGO.GetComponent<RectTransform>();
-            shFillRT.anchorMin = Vector2.zero; shFillRT.anchorMax = Vector2.one;
-            shFillRT.offsetMin = new Vector2(1, 1); shFillRT.offsetMax = new Vector2(-1, -1);
-            var shFillImg = shFillGO.AddComponent<Image>();
-            shFillImg.sprite = GetSmootherRoundedRect();
-            shFillImg.type = Image.Type.Sliced;
-            shFillImg.color = OC.bg;
-            shFillImg.raycastTarget = false;
-            // Hit area for button
-            var shareImg = shareGO.AddComponent<Image>();
-            shareImg.color = Color.clear;
+            var shareBgImg = shareGO.AddComponent<Image>();
+            shareBgImg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
+            shareBgImg.type = Image.Type.Sliced;
+            shareBgImg.color = OC.border;
+            // Fill inset to create border effect
+            var shareFill = MurgeUI.CreateUIObject("Fill", shareGO.transform);
+            var sfRT = shareFill.GetComponent<RectTransform>();
+            sfRT.anchorMin = Vector2.zero; sfRT.anchorMax = Vector2.one;
+            sfRT.offsetMin = new Vector2(1, 1); sfRT.offsetMax = new Vector2(-1, -1);
+            var sfImg = shareFill.AddComponent<Image>();
+            sfImg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
+            sfImg.type = Image.Type.Sliced;
+            sfImg.color = OC.bg;
+            sfImg.raycastTarget = false;
+            // Button
             var shareBtn = shareGO.AddComponent<Button>();
-            shareBtn.targetGraphic = shBdrImg;
+            shareBtn.targetGraphic = shareBgImg;
             shareBtn.onClick.AddListener(OnShareClicked);
             var shareLE = shareGO.AddComponent<LayoutElement>();
             shareLE.flexibleWidth = 1;

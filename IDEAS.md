@@ -1,6 +1,20 @@
 ## NEXT UP
 
-App Store Screenshots and info
+Reframe "Practice".
+Note that it still counts towards your Personal Best.
+Keep first score for leaderboard.
+Add quip for the case where practice score is more than first score.
+Explain briefly how the leaderboard mechanic works.
+Results screen will need updates to make all this clearer. Make sure it shows the data from the game just played, not first score.
+
+In-game menu to view leaderboard, see ball sizes, show personal best, and quit the game.
+
+Add BETA? with click modal that things might change. Feedback welcome. Add some way to send feedback.
+
+Use supabase anonymous auth. Optional sign in/up when app starts, but make it discrete.
+Prompt after 2 day streak to connect account so you don't lose scores.
+Also have a place in settings to connect & manage this.
+Make big note about how it is only for convenience to persist scores. No personal identifiable data besides ID (?) is stored on our end.
 
 ## EVENTUALLY
 
@@ -12,6 +26,8 @@ Merge reactions are still a bit weird when space is tight, especially with large
 Ball design doesn't inspire me. Waves seem stale. Colors a bit boring?
 
 Wavelength react somehow to nearby?
+
+Look into better logo.
 
 MAYBE
 
@@ -62,24 +78,3 @@ Shows the first-launch tutorial — clean, inviting.
 3. Tap through a couple drops so it looks active (maybe at tier 2-3)
 4. Press F12 at each Game View size
 5. Exit Play mode
-
----
-
-After all rounds
-
-- MergeGame > Screenshot Setup > Reset All Screenshot Data
-- MergeGame > Screenshot Setup > Unfreeze Merge Ball
-
-All screenshots land in Screenshots/ at the project root, named by device size.
-
-Round 2 and 4 need manual F12 presses because you're controlling the game state by playing. Rounds 1 and 3 can use the automated Capture
-All Sizes since the screen is static.
-
-New workflow:
-
-1. Run MergeGame > Screenshot Setup > Add Screenshot Sizes to Game View (once)
-2. Set data + freeze ball
-3. Enter Play mode
-4. Select a resolution from the Game View dropdown (bottom-left of Game View), press F12
-5. Switch to next resolution, press F12 again
-6. Repeat

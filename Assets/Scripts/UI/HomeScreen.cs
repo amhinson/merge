@@ -403,6 +403,7 @@ namespace MergeGame.UI
             coImg.color = OC.border;
             coImg.raycastTarget = false;
             // Card fill (on top of border, exact card size)
+            // Also acts as Mask to clip row backgrounds to the rounded shape
             var cardFill = MurgeUI.CreateUIObject("Fill", card.transform);
             var cfRT = cardFill.GetComponent<RectTransform>();
             cfRT.anchorMin = Vector2.zero; cfRT.anchorMax = Vector2.one;
@@ -414,7 +415,8 @@ namespace MergeGame.UI
             cardBg.raycastTarget = false;
 
             // Header: "TODAY'S TOP" (left) + "ALL →" (right), 24px tall at top
-            var headerLabelGO = MurgeUI.CreateUIObject("HeaderLabel", card.transform);
+            // All content parented to cardFill so Mask clips to rounded corners
+            var headerLabelGO = MurgeUI.CreateUIObject("HeaderLabel", cardFill.transform);
             var hlRT = headerLabelGO.GetComponent<RectTransform>();
             hlRT.anchorMin = new Vector2(0, 1); hlRT.anchorMax = new Vector2(0.6f, 1);
             hlRT.pivot = new Vector2(0, 1);
@@ -430,7 +432,7 @@ namespace MergeGame.UI
             headerLabel.textWrappingMode = TextWrappingModes.NoWrap;
             headerLabel.raycastTarget = false;
 
-            var allBtnGO = MurgeUI.CreateUIObject("AllButton", card.transform);
+            var allBtnGO = MurgeUI.CreateUIObject("AllButton", cardFill.transform);
             var abRT = allBtnGO.GetComponent<RectTransform>();
             abRT.anchorMin = new Vector2(0.6f, 1); abRT.anchorMax = new Vector2(1, 1);
             abRT.pivot = new Vector2(1, 1);
@@ -452,7 +454,7 @@ namespace MergeGame.UI
             });
 
             // Divider line at y=-24 from top
-            var divGO = MurgeUI.CreateUIObject("Divider", card.transform);
+            var divGO = MurgeUI.CreateUIObject("Divider", cardFill.transform);
             var divRT = divGO.GetComponent<RectTransform>();
             divRT.anchorMin = new Vector2(0, 1); divRT.anchorMax = new Vector2(1, 1);
             divRT.pivot = new Vector2(0.5f, 1);
@@ -462,7 +464,7 @@ namespace MergeGame.UI
 
             // Row container — VLG below the header (starts at y=-25)
             // Inset 1px on sides so row backgrounds don't overflow the card's rounded corners
-            var rowContainer = MurgeUI.CreateUIObject("Rows", card.transform);
+            var rowContainer = MurgeUI.CreateUIObject("Rows", cardFill.transform);
             var rcRT = rowContainer.GetComponent<RectTransform>();
             rcRT.anchorMin = new Vector2(0, 0); rcRT.anchorMax = new Vector2(1, 1);
             rcRT.offsetMin = new Vector2(1, 0); rcRT.offsetMax = new Vector2(-1, -25);
@@ -562,6 +564,7 @@ namespace MergeGame.UI
                 Destroy(child.gameObject);
 
             int rowCount = 0;
+            GameObject lastEntryRow = null;
 
             bool playerInTop3 = false;
 
@@ -610,6 +613,11 @@ namespace MergeGame.UI
                         : entry.rank == 2 ? OC.A(Color.white, 0.5f)
                         : OC.A(OC.orange, 0.7f);
 
+                    // Check if this is the last row visible (no "You" row will follow)
+                    bool willHaveYourRow = !playerInTop3;
+                    // We don't know yet if hasPlayed — defer isLastRow to after the loop
+                    bool isLastEntry = (i == count - 1);
+
                     var rowGO = BuildScoreRow(
                         leaderboardRowContainer,
                         rankText, 8,
@@ -621,6 +629,9 @@ namespace MergeGame.UI
                         $"Row{i}",
                         true,
                         isMe ? OC.cyan : rankColor);
+
+                    // Store last entry row for potential rounding later
+                    if (isLastEntry) lastEntryRow = rowGO;
                 }
                 rowCount = count;
             }
@@ -655,8 +666,19 @@ namespace MergeGame.UI
                     OC.A(OC.cyan, 0.04f),           // very subtle bg tint
                     "YourRank",
                     true,                           // use PressStart2P for rank
-                    OC.cyan);                       // rank color cyan
+                    OC.cyan,                        // rank color cyan
+                    isLastRow: true);               // always the last row when present
                 rowCount++;
+            }
+            else if (lastEntryRow != null)
+            {
+                // No "You" row — the last top-3 entry is the bottom row
+                var img = lastEntryRow.GetComponent<Image>();
+                if (img != null && img.color.a > 0.01f)
+                {
+                    img.sprite = Visual.PixelUIGenerator.GetBottomRoundedRect9Slice();
+                    img.type = Image.Type.Sliced;
+                }
             }
 
             // Resize wrapper: header(25) + rows(38 each) + dividers(~1 each)
@@ -672,7 +694,7 @@ namespace MergeGame.UI
         private GameObject BuildScoreRow(Transform parent, string rankText, float rankFontSize,
             string nameText, string scoreText, Color nameColor, Color scoreColor,
             Color bgColor, string name, bool usePixelFontForRank = false,
-            Color? rankColor = null)
+            Color? rankColor = null, bool isLastRow = false)
         {
             var row = MurgeUI.CreateUIObject(name, parent);
             var rowLE = row.AddComponent<LayoutElement>();
@@ -680,8 +702,13 @@ namespace MergeGame.UI
             rowLE.minHeight = 38;
             rowLE.flexibleHeight = 0;
 
-            // Background
+            // Background — use rounded sprite when this is the last row to match card corners
             var rowBg = row.AddComponent<Image>();
+            if (isLastRow && bgColor.a > 0.01f)
+            {
+                rowBg.sprite = Visual.PixelUIGenerator.GetBottomRoundedRect9Slice();
+                rowBg.type = Image.Type.Sliced;
+            }
             rowBg.color = bgColor;
             rowBg.raycastTarget = false;
 

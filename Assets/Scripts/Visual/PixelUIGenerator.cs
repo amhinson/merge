@@ -489,6 +489,62 @@ namespace MergeGame.Visual
 
         private static Sprite cachedRoundedRect9Slice;
 
+        /// <summary>
+        /// Rounded bottom corners, square top corners. For last-row highlights.
+        /// </summary>
+        public static Sprite GetBottomRoundedRect9Slice()
+        {
+            if (cachedBottomRoundedRect != null) return cachedBottomRoundedRect;
+
+            const int size = 32;
+            const int radius = 8;
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.wrapMode = TextureWrapMode.Clamp;
+            ClearTexture(tex);
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    // Bottom corners: rounded. Top corners: square.
+                    // In Unity texture space, y=0 is bottom.
+                    bool inside;
+                    if (y < radius)
+                    {
+                        // Bottom region — check rounded corners
+                        inside = IsInsideRoundedRect(x, y, size, size, radius);
+                    }
+                    else
+                    {
+                        // Top region — square (just check x bounds)
+                        inside = x >= 0 && x < size;
+                    }
+                    if (inside)
+                        tex.SetPixel(x, y, Color.white);
+                }
+            }
+
+            tex.Apply();
+
+            // 9-slice: radius on bottom, 0 on top
+            var border = new Vector4(radius, radius, radius, 0); // left, bottom, right, top
+            cachedBottomRoundedRect = Sprite.Create(
+                tex,
+                new Rect(0, 0, size, size),
+                new Vector2(0.5f, 0.5f),
+                100f,
+                0,
+                SpriteMeshType.FullRect,
+                border
+            );
+            cachedBottomRoundedRect.name = "BottomRoundedRect9Slice";
+            return cachedBottomRoundedRect;
+        }
+
+        private static Sprite cachedBottomRoundedRect;
+
         private static void ClearTexture(Texture2D tex)
         {
             Color[] clear = new Color[tex.width * tex.height];
