@@ -18,6 +18,7 @@ namespace MergeGame.UI
 
         public void SetImmediate(int value)
         {
+            if (tickCoroutine != null) { StopCoroutine(tickCoroutine); tickCoroutine = null; }
             displayedValue = value;
             targetValue = value;
             if (scoreText != null) scoreText.text = value.ToString();

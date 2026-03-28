@@ -701,6 +701,11 @@ namespace MergeGame.Core
             var balls = FindObjectsByType<BallController>(FindObjectsSortMode.None);
             foreach (var ball in balls)
             {
+                // Disable physics and coroutines so no merges/score happen after clear
+                ball.StopAllCoroutines();
+                ball.enabled = false;
+                var rb = ball.GetComponent<Rigidbody2D>();
+                if (rb != null) rb.simulated = false;
                 Destroy(ball.gameObject);
             }
         }

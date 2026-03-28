@@ -118,10 +118,15 @@ namespace MergeGame.UI
 
         public void ShowPlaying()
         {
+            // Reset score display BEFORE transitioning so HUD is clean when it appears
+            if (scoreText != null) scoreText.text = "0";
+            if (scoreTickUp != null) scoreTickUp.SetImmediate(0);
+
             if (ScreenManager.Instance != null)
                 ScreenManager.Instance.TransitionTo(Screen.Gameplay);
 
-            UpdateScore(0);
+            // Reset again after transition in case objects were re-enabled
+            if (scoreText != null) scoreText.text = "0";
             if (scoreTickUp != null) scoreTickUp.SetImmediate(0);
             if (ScoreManager.Instance != null)
                 UpdateHighScore(ScoreManager.Instance.HighScore);

@@ -1,5 +1,9 @@
 ## NEXT UP
 
+Particle bug on home screen.
+
+Adjust points down even more? Reduce Combo percentages maybe.
+
 In-game menu to view leaderboard, see ball sizes, show personal best, and quit the game.
 
 Add BETA? with click modal that things might change. Feedback welcome. Add some way to send feedback.
