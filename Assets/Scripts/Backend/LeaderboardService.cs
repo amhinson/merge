@@ -76,6 +76,7 @@ namespace MergeGame.Backend
 
         // Cached leaderboard for live rank comparison
         private List<LeaderboardEntry> cachedLeaderboard = new List<LeaderboardEntry>();
+        public List<LeaderboardEntry> CachedEntries => cachedLeaderboard;
         private float lastLeaderboardFetch;
         private const float LeaderboardCacheInterval = 45f; // seconds
 

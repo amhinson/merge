@@ -213,6 +213,9 @@ namespace MergeGame.Editor
             shareSheetPanel.AddComponent<ShareSheetScreen>();
             SetProperty(shareSheetPanel.GetComponent<ShareSheetScreen>(), "tierConfig", tierConfig);
 
+            var pausedPanel = CreateNewScreenPanel(safeArea.transform, "PausedScreen", tierConfig);
+            pausedPanel.AddComponent<PausedScreen>();
+
             var newSettingsPanel = CreateNewScreenPanel(safeArea.transform, "NewSettingsScreen", tierConfig);
             newSettingsPanel.AddComponent<NewSettingsScreen>();
 
@@ -226,6 +229,7 @@ namespace MergeGame.Editor
             var homePlayedCG = homePlayedPanel.GetComponent<CanvasGroup>();
             var resultOverlayCG = resultOverlayPanel.GetComponent<CanvasGroup>();
             var shareSheetCG = shareSheetPanel.GetComponent<CanvasGroup>();
+            var pausedCG = pausedPanel.GetComponent<CanvasGroup>();
             var newSettingsCG = newSettingsPanel.GetComponent<CanvasGroup>();
             var newLeaderboardCG = newLeaderboardPanel.GetComponent<CanvasGroup>();
 
@@ -240,6 +244,7 @@ namespace MergeGame.Editor
             homePlayedPanel.SetActive(false);
             resultOverlayPanel.SetActive(false);
             shareSheetPanel.SetActive(false);
+            pausedPanel.SetActive(false);
             newSettingsPanel.SetActive(false);
             newLeaderboardPanel.SetActive(false);
 
@@ -262,6 +267,7 @@ namespace MergeGame.Editor
             smSO.FindProperty("gameScreen").objectReferenceValue = gameplayCG;
             smSO.FindProperty("resultOverlay").objectReferenceValue = resultOverlayCG;
             smSO.FindProperty("shareSheet").objectReferenceValue = shareSheetCG;
+            smSO.FindProperty("pausedOverlay").objectReferenceValue = pausedCG;
             smSO.FindProperty("settingsScreen").objectReferenceValue = newSettingsCG;
             smSO.FindProperty("leaderboardScreen").objectReferenceValue = newLeaderboardCG;
             smSO.ApplyModifiedPropertiesWithoutUndo();
@@ -358,46 +364,37 @@ namespace MergeGame.Editor
             // ===== HEADER BAR (top) =====
             // Safe area inset is 0 at editor time — GameplayHUDFitter adjusts at runtime.
             float safeTop = 0f;
-            // Back/close button (top-left) — smooth border, transparent bg, matching home screen style
-            var backBtn = new GameObject("BackButton");
-            backBtn.transform.SetParent(panel.transform, false);
-            var backBtnRT = backBtn.AddComponent<RectTransform>();
-            SetAnchors(backBtnRT, 0, 1, 0, 1);
-            backBtnRT.anchoredPosition = new Vector2(16, -(safeTop + 14));
-            backBtnRT.sizeDelta = new Vector2(34, 34);
-            backBtnRT.pivot = new Vector2(0, 1);
-            // Border only — no fill, camera bg shows through perfectly
-            var backBorderGO = new GameObject("Border");
-            backBorderGO.transform.SetParent(backBtn.transform, false);
-            var bbRT = backBorderGO.AddComponent<RectTransform>();
-            bbRT.anchorMin = Vector2.zero; bbRT.anchorMax = Vector2.one;
-            bbRT.offsetMin = Vector2.zero; bbRT.offsetMax = Vector2.zero;
-            var bbImg = backBorderGO.AddComponent<Image>();
-            bbImg.sprite = CreateOutlineSprite();
-            bbImg.type = Image.Type.Simple;
-            bbImg.color = HexColor("232838");
-            bbImg.raycastTarget = false;
-            // X label (on top of everything)
-            var backLabelGO = new GameObject("XLabel");
-            backLabelGO.transform.SetParent(backBtn.transform, false);
-            var blRT = backLabelGO.AddComponent<RectTransform>();
-            blRT.anchorMin = Vector2.zero; blRT.anchorMax = Vector2.one;
-            blRT.offsetMin = Vector2.zero; blRT.offsetMax = Vector2.zero;
-            var backTMP = backLabelGO.AddComponent<TextMeshProUGUI>();
-            var dmMonoFont = Resources.Load<TMP_FontAsset>("Fonts/DMMono-Medium SDF");
-            backTMP.text = "x";
-            backTMP.font = dmMonoFont;
-            backTMP.fontSize = 14;
-            backTMP.color = new Color(1, 1, 1, 0.3f); // visible muted white
-            backTMP.alignment = TextAlignmentOptions.Center;
-            backTMP.raycastTarget = false;
-            // Hit area (invisible, must be last for proper layering)
-            var backBtnImg = backBtn.AddComponent<Image>();
-            backBtnImg.color = Color.clear;
-            var backBtnComp = backBtn.AddComponent<Button>();
-            backBtnComp.targetGraphic = bbImg;
-            backTMP.alignment = TextAlignmentOptions.Center;
-            backTMP.raycastTarget = false;
+            // Menu button (top-left) — hamburger icon, opens pause overlay
+            var menuBtn = new GameObject("MenuButton");
+            menuBtn.transform.SetParent(panel.transform, false);
+            var menuBtnRT = menuBtn.AddComponent<RectTransform>();
+            SetAnchors(menuBtnRT, 0, 1, 0, 1);
+            menuBtnRT.anchoredPosition = new Vector2(16, -(safeTop + 14));
+            menuBtnRT.sizeDelta = new Vector2(36, 34);
+            menuBtnRT.pivot = new Vector2(0, 1);
+            // Border only — no fill, camera bg shows through
+            var menuBorderGO = new GameObject("Border");
+            menuBorderGO.transform.SetParent(menuBtn.transform, false);
+            var mbRT = menuBorderGO.AddComponent<RectTransform>();
+            mbRT.anchorMin = Vector2.zero; mbRT.anchorMax = Vector2.one;
+            mbRT.offsetMin = Vector2.zero; mbRT.offsetMax = Vector2.zero;
+            var mbImg = menuBorderGO.AddComponent<Image>();
+            mbImg.sprite = CreateOutlineSprite();
+            mbImg.type = Image.Type.Simple;
+            mbImg.color = HexColor("232838");
+            mbImg.raycastTarget = true;
+            // Hamburger icon
+            var menuIconGO = new GameObject("Icon");
+            menuIconGO.transform.SetParent(menuBtn.transform, false);
+            var miRT = menuIconGO.AddComponent<RectTransform>();
+            miRT.anchorMin = new Vector2(0.5f, 0.5f); miRT.anchorMax = new Vector2(0.5f, 0.5f);
+            miRT.sizeDelta = new Vector2(18, 14);
+            var menuIconImg = menuIconGO.AddComponent<RawImage>();
+            menuIconImg.texture = PixelUIGenerator.GenerateMenuIcon(24, 18, new Color(1, 1, 1, 0.3f));
+            menuIconImg.raycastTarget = false;
+            // Button component
+            var menuBtnComp = menuBtn.AddComponent<Button>();
+            menuBtnComp.targetGraphic = mbImg;
 
             // Score block (next to back button) — disable raycast on text so they don't block the button
             var scoreLabelTMP = CreateText(panel.transform, "ScoreLabel", "SCORE", 7, new Color(1, 1, 1, 0.22f));
@@ -536,134 +533,11 @@ namespace MergeGame.Editor
             shakeCountRT.anchorMin = new Vector2(0.7f, 0); shakeCountRT.anchorMax = new Vector2(1, 1);
             shakeCountRT.offsetMin = Vector2.zero; shakeCountRT.offsetMax = Vector2.zero;
 
-            // ===== EXIT CONFIRM MODAL =====
-            var confirmPanel = new GameObject("ExitConfirm");
-            confirmPanel.transform.SetParent(panel.transform, false);
-            var cpRT = confirmPanel.AddComponent<RectTransform>();
-            SetAnchors(cpRT, 0, 0, 1, 1);
-            // Dark scrim
-            var cpBg = confirmPanel.AddComponent<Image>();
-            cpBg.color = new Color(0.031f, 0.031f, 0.055f, 0.88f); // OC.overlayDark
-
-            // Modal card (centered)
-            var modalCard = new GameObject("ModalCard");
-            modalCard.transform.SetParent(confirmPanel.transform, false);
-            var mcRT = modalCard.AddComponent<RectTransform>();
-            mcRT.anchorMin = new Vector2(0.5f, 0.5f);
-            mcRT.anchorMax = new Vector2(0.5f, 0.5f);
-            mcRT.pivot = new Vector2(0.5f, 0.5f);
-            mcRT.sizeDelta = new Vector2(260, 160);
-            var mcBg = modalCard.AddComponent<Image>();
-            mcBg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
-            mcBg.type = Image.Type.Sliced;
-            mcBg.color = HexColor("161B24");
-            // Card border
-            var mcOutline = new GameObject("Outline");
-            mcOutline.transform.SetParent(modalCard.transform, false);
-            var mcOutRT = mcOutline.AddComponent<RectTransform>();
-            mcOutRT.anchorMin = Vector2.zero; mcOutRT.anchorMax = Vector2.one;
-            mcOutRT.offsetMin = Vector2.zero; mcOutRT.offsetMax = Vector2.zero;
-            var mcOutImg = mcOutline.AddComponent<Image>();
-            mcOutImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
-            mcOutImg.type = Image.Type.Sliced;
-            mcOutImg.color = HexColor("232838");
-            mcOutImg.raycastTarget = false;
-
-            // "Quit game?" text
-            var confirmText = CreateText(modalCard.transform, "ConfirmText", "Quit game?", 12, TextColor);
-            var ctRT = confirmText.rectTransform;
-            ctRT.anchorMin = new Vector2(0, 0.55f); ctRT.anchorMax = new Vector2(1, 0.9f);
-            ctRT.offsetMin = new Vector2(16, 0); ctRT.offsetMax = new Vector2(-16, 0);
-            confirmText.alignment = TextAlignmentOptions.Center;
-
-            // Subtitle (shown for scored games)
-            var subtitleText = CreateText(modalCard.transform, "SubtitleText", "", 8, MutedText);
-            var subRT = subtitleText.rectTransform;
-            subRT.anchorMin = new Vector2(0, 0.38f); subRT.anchorMax = new Vector2(1, 0.55f);
-            subRT.offsetMin = new Vector2(16, 0); subRT.offsetMax = new Vector2(-16, 0);
-            subtitleText.alignment = TextAlignmentOptions.Center;
-
-            // Button row (fixed 44px height, pinned to bottom of card)
-            var btnRow = new GameObject("ButtonRow");
-            btnRow.transform.SetParent(modalCard.transform, false);
-            var brRT = btnRow.AddComponent<RectTransform>();
-            brRT.anchorMin = new Vector2(0, 0); brRT.anchorMax = new Vector2(1, 0);
-            brRT.pivot = new Vector2(0.5f, 0);
-            brRT.anchoredPosition = new Vector2(0, 16);
-            brRT.sizeDelta = new Vector2(-32, 44); // 16px padding each side, 44px height
-            var brHLG = btnRow.AddComponent<HorizontalLayoutGroup>();
-            brHLG.spacing = 8;
-            brHLG.childAlignment = TextAnchor.MiddleCenter;
-            brHLG.childControlWidth = true;
-            brHLG.childControlHeight = true;
-            brHLG.childForceExpandWidth = true;
-            brHLG.childForceExpandHeight = true;
-
-            // QUIT button (primary pink with scanlines)
-            var quitBtnGO = new GameObject("YesBtn");
-            quitBtnGO.transform.SetParent(btnRow.transform, false);
-            var quitBtnImg = quitBtnGO.AddComponent<Image>();
-            quitBtnImg.sprite = MurgeUI.SmoothRoundedRect;
-            quitBtnImg.type = Image.Type.Sliced;
-            quitBtnImg.color = HexColor("E8587A"); // pink/danger
-            var yesBtn = quitBtnGO.AddComponent<Button>();
-            yesBtn.targetGraphic = quitBtnImg;
-            // Scanlines
-            var quitScanGO = new GameObject("Scanlines");
-            quitScanGO.transform.SetParent(quitBtnGO.transform, false);
-            var qsRT = quitScanGO.AddComponent<RectTransform>();
-            qsRT.anchorMin = Vector2.zero; qsRT.anchorMax = Vector2.one;
-            qsRT.offsetMin = Vector2.zero; qsRT.offsetMax = Vector2.zero;
-            var qsImg = quitScanGO.AddComponent<Image>();
-            qsImg.sprite = MurgeUI.GetScanlineSprite();
-            qsImg.type = Image.Type.Simple;
-            qsImg.color = new Color(0, 0, 0, 0.22f);
-            qsImg.raycastTarget = false;
-            quitBtnGO.AddComponent<RectMask2D>(); // clip scanlines to rounded shape
-            // Label
-            var quitLabel = CreateText(quitBtnGO.transform, "Label", "QUIT", 11, HexColor("0F1117"));
-            quitLabel.alignment = TextAlignmentOptions.Center;
-            quitLabel.characterSpacing = 2;
-            var qlRT = quitLabel.rectTransform;
-            qlRT.anchorMin = Vector2.zero; qlRT.anchorMax = Vector2.one;
-            qlRT.offsetMin = Vector2.zero; qlRT.offsetMax = Vector2.zero;
-
-            // CANCEL button — outline style matching skip buttons
-            var cancelBtnGO = new GameObject("NoBtn");
-            cancelBtnGO.transform.SetParent(btnRow.transform, false);
-            // Border background
-            var cancelBtnImg = cancelBtnGO.AddComponent<Image>();
-            cancelBtnImg.sprite = MurgeUI.SmoothRoundedRect;
-            cancelBtnImg.type = Image.Type.Sliced;
-            cancelBtnImg.color = HexColor("232838"); // OC.border
-            // Inner fill (inset to create border effect)
-            var cancelInner = new GameObject("Inner");
-            cancelInner.transform.SetParent(cancelBtnGO.transform, false);
-            var ciRT = cancelInner.AddComponent<RectTransform>();
-            ciRT.anchorMin = Vector2.zero; ciRT.anchorMax = Vector2.one;
-            ciRT.offsetMin = new Vector2(1.5f, 1.5f); ciRT.offsetMax = new Vector2(-1.5f, -1.5f);
-            var ciImg = cancelInner.AddComponent<Image>();
-            ciImg.sprite = MurgeUI.SmoothRoundedRect;
-            ciImg.type = Image.Type.Sliced;
-            ciImg.color = HexColor("0F1117"); // OC.bg
-            ciImg.raycastTarget = false;
-            // Label
-            var noBtn = cancelBtnGO.AddComponent<Button>();
-            noBtn.targetGraphic = cancelBtnImg;
-            var cancelLabel = CreateText(cancelBtnGO.transform, "Label", "CANCEL", 9, new Color(1, 1, 1, 0.22f));
-            cancelLabel.alignment = TextAlignmentOptions.Center;
-            cancelLabel.characterSpacing = 1;
-            var clRT = cancelLabel.rectTransform;
-            clRT.anchorMin = Vector2.zero; clRT.anchorMax = Vector2.one;
-            clRT.offsetMin = Vector2.zero; clRT.offsetMax = Vector2.zero;
-
-            confirmPanel.SetActive(false);
-
             // Runtime safe area adjustment for HUD elements
             panel.AddComponent<GameplayHUDFitter>();
 
-            // Exit confirmation — finds its own children by name at runtime
-            panel.AddComponent<SimpleExitConfirm>();
+            // Menu button opens paused overlay — uses manual tap detection (same as old SimpleExitConfirm)
+            panel.AddComponent<PauseMenuButton>();
 
             return (panel, scoreText, shakeBtn.GetComponent<Button>(), shakeCountTMP,
                 nextImg, miniLB, scoreTickUp, nextBallUI, anchorRT);

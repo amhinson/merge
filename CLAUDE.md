@@ -81,7 +81,7 @@ Playing → Drop ball → Merge same tiers → Score with combo multiplier → G
 
 ### Ball Tiers (11 total, index 0-10)
 
-Point values in `Assets/ScriptableObjects/BallData_Tier[1-11].asset`. Combo multiplier in `ScoreManager.cs`: `1.0 + (chainLength - 1) * 0.5`, capped at 4x.
+Point values in `Assets/ScriptableObjects/BallData_Tier[1-11].asset`. Combo multiplier in `ScoreManager.cs`: `1.0 + (chainLength - 1) * 0.25`, capped at 2.5x.
 
 ## Supabase Backend
 

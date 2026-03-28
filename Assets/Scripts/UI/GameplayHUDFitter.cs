@@ -21,7 +21,7 @@ namespace MergeGame.UI
             if (safeTop <= 0f) return; // no notch, nothing to adjust
 
             // Find and offset each HUD element by the safe area inset
-            OffsetChild("BackButton", safeTop);
+            OffsetChild("MenuButton", safeTop);
             OffsetChild("ScoreLabel", safeTop);
             OffsetChild("Score", safeTop);
             OffsetChild("ComboUI", safeTop);

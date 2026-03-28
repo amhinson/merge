@@ -13,6 +13,7 @@ namespace MergeGame.UI
         Game,
         ResultOverlay,  // overlay — keeps Game visible underneath
         ShareSheet,     // overlay — keeps underlying screen visible
+        Paused,         // overlay — paused menu over gameplay
         Settings,
         Leaderboard,
 
@@ -41,6 +42,7 @@ namespace MergeGame.UI
         [Header("Overlays")]
         [SerializeField] private CanvasGroup resultOverlay;
         [SerializeField] private CanvasGroup shareSheet;
+        [SerializeField] private CanvasGroup pausedOverlay;
 
         [Header("Legacy (backward compat — optional)")]
         [SerializeField] private CanvasGroup titleScreen;
@@ -125,7 +127,7 @@ namespace MergeGame.UI
 
         private static bool IsOverlay(Screen screen)
         {
-            return screen == Screen.ResultOverlay || screen == Screen.ShareSheet;
+            return screen == Screen.ResultOverlay || screen == Screen.ShareSheet || screen == Screen.Paused;
         }
 
         private void ShowOverlay(Screen screen)
@@ -195,6 +197,7 @@ namespace MergeGame.UI
         {
             SetGroupActive(resultOverlay, false);
             SetGroupActive(shareSheet, false);
+            SetGroupActive(pausedOverlay, false);
 
             // Legacy
             if (resultsScreen != null && resultsScreen != resultOverlay)
@@ -308,6 +311,7 @@ namespace MergeGame.UI
                 case Screen.Game:          return gameScreen ?? gameplayScreen;
                 case Screen.ResultOverlay: return resultOverlay ?? resultsScreen;
                 case Screen.ShareSheet:    return shareSheet;
+                case Screen.Paused:        return pausedOverlay;
                 case Screen.Settings:      return settingsScreen;
                 case Screen.Leaderboard:   return leaderboardScreen;
                 default: return null;

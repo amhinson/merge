@@ -445,6 +445,32 @@ namespace MergeGame.Visual
 
         /// <summary>
         /// Create the standard 9-slice RoundedRect sprite used by the Murge design system.
+        /// <summary>
+        /// Hamburger menu icon: three horizontal bars.
+        /// </summary>
+        public static Texture2D GenerateMenuIcon(int width, int height, Color lineColor)
+        {
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            ClearTexture(tex);
+
+            int lineHeight = Mathf.Max(1, height / 8);
+            int[] yPositions = {
+                Mathf.RoundToInt(height * 0.20f),
+                Mathf.RoundToInt(height * 0.50f),
+                Mathf.RoundToInt(height * 0.80f),
+            };
+
+            foreach (int yPos in yPositions)
+                for (int x = 0; x < width; x++)
+                    for (int dy = 0; dy < lineHeight; dy++)
+                        if (yPos + dy < height)
+                            tex.SetPixel(x, yPos + dy, lineColor);
+
+            tex.Apply();
+            return tex;
+        }
+
         /// 32x32 white, 8px corner radius. Tint via Image.color.
         /// Cached after first creation.
         /// </summary>

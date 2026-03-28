@@ -61,6 +61,13 @@ namespace MergeGame.Core
         private float dropBlockedCooldown;
         private bool touchStartedOnUI;
 
+        /// <summary>Reset input state after returning from an overlay.</summary>
+        public void ResetInputState()
+        {
+            touchStartedOnUI = false;
+            // Keep the cooldown so the resume tap doesn't trigger a drop
+        }
+
         public event System.Action<BallData> OnNextBallChanged;
 
         private void Awake()
