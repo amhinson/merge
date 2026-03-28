@@ -362,13 +362,14 @@ namespace MergeGame.UI
             float elapsed = 0f;
             while (elapsed < lifetime)
             {
+                if (prt == null) yield break;
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / lifetime);
                 prt.anchoredPosition = startPos + dir * speed * t;
                 cg.alpha = 1f - t;
                 yield return null;
             }
-            Destroy(prt.gameObject);
+            if (prt != null) Destroy(prt.gameObject);
         }
 
         // ───── Ball creation ─────
@@ -402,6 +403,13 @@ namespace MergeGame.UI
         {
             if (sittingBall != null) { Destroy(sittingBall); sittingBall = null; }
             if (droppingBall != null) { Destroy(droppingBall); droppingBall = null; }
+            // Clean up any stray particles
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                var child = transform.GetChild(i);
+                if (child.name.StartsWith("P"))
+                    Destroy(child.gameObject);
+            }
         }
     }
 }
