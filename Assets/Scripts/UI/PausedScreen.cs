@@ -545,6 +545,10 @@ namespace MergeGame.UI
 
         private void OnQuitClicked()
         {
+            // Dismiss immediately (no fade) so it doesn't overlap with results
+            var cg = GetComponent<CanvasGroup>();
+            if (cg != null) { cg.alpha = 0; cg.blocksRaycasts = false; }
+            gameObject.SetActive(false);
             if (ScreenManager.Instance != null)
                 ScreenManager.Instance.DismissOverlay();
             if (GameManager.Instance != null)

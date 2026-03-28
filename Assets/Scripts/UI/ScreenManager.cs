@@ -89,8 +89,11 @@ namespace MergeGame.UI
                 return;
             }
 
-            // Transitioning to a base screen — dismiss any overlays first
-            DismissAllOverlays();
+            // If a curtain transition is needed (Game involved), let the coroutine
+            // handle overlay dismissal behind the opaque curtain to avoid flashes
+            bool willUseCurtain = (screen == Screen.Game || BaseScreen == Screen.Game);
+            if (!willUseCurtain)
+                DismissAllOverlays();
 
             if (activeTransition != null) StopCoroutine(activeTransition);
             activeTransition = StartCoroutine(TransitionCoroutine(screen));
@@ -209,12 +212,14 @@ namespace MergeGame.UI
         private IEnumerator TransitionCoroutine(Screen target)
         {
             CanvasGroup next = GetScreenGroup(target);
-            bool needsCurtain = (target == Screen.Game || CurrentScreen == Screen.Game);
+            bool needsCurtain = (target == Screen.Game || BaseScreen == Screen.Game);
 
             if (needsCurtain)
             {
                 // Fade to black, switch, fade from black — covers world-space content
                 yield return FadeCurtain(0f, 1f, transitionDuration * 0.6f);
+                // Everything hidden behind opaque curtain — safe to switch
+                DismissAllOverlays();
                 HideAllBaseScreens();
                 SetGroupActive(next, true);
                 CurrentScreen = target;
@@ -278,7 +283,12 @@ namespace MergeGame.UI
             }
 
             curtainGO.SetActive(true);
+            // Must be last sibling EVERY time — overlays may have been added on top since last use
             curtainGO.transform.SetAsLastSibling();
+
+            // Ensure curtain starts at the correct alpha immediately to avoid flash
+            curtainImage.color = new Color(
+                curtainImage.color.r, curtainImage.color.g, curtainImage.color.b, fromAlpha);
 
             float elapsed = 0f;
             while (elapsed < duration)

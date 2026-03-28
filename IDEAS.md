@@ -9,7 +9,9 @@ Prompt after 2 day streak to connect account so you don't lose scores.
 Also have a place in settings to connect & manage this.
 Make big note about how it is only for convenience to persist scores. No personal identifiable data besides ID (?) is stored on our end.
 
-Post on Reddit and other places online to promote. Get strategy from Claude.
+iPad sizing tweaks.
+
+Post on Reddit and other places online to promote and get Android closed testers. Get strategy from Claude.
 
 ## EVENTUALLY
 
