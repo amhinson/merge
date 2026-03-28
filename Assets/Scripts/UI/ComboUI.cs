@@ -53,7 +53,8 @@ namespace MergeGame.UI
             if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
 
             displayedChain = chainLength;
-            comboText.text = $"x{chainLength} COMBO";
+            float mult = Mathf.Min(1f + (chainLength - 1) * 0.25f, 2.5f);
+            comboText.text = $"x{mult:0.##} COMBO";
             canvasGroup.alpha = 1f;
 
             // Pulse animation

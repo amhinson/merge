@@ -7,7 +7,7 @@ namespace MergeGame.Core
         public static ScoreManager Instance { get; private set; }
 
         private const string HighScoreKey = "HighScore";
-        private const float MaxMultiplier = 4.0f;
+        private const float MaxMultiplier = 2.5f;
 
         public int CurrentScore { get; private set; }
         public int HighScore { get; private set; }
@@ -58,11 +58,11 @@ namespace MergeGame.Core
 
         /// <summary>
         /// Add score with chain combo multiplier.
-        /// multiplier = 1.0 + (chainLength - 1) * 0.5, capped at 4x.
+        /// multiplier = 1.0 + (chainLength - 1) * 0.25, capped at 2.5x.
         /// </summary>
         public int AddScoreWithCombo(int basePoints, int chainLength, Vector3 worldPosition)
         {
-            float multiplier = 1f + (chainLength - 1) * 0.5f;
+            float multiplier = 1f + (chainLength - 1) * 0.25f;
             multiplier = Mathf.Min(multiplier, MaxMultiplier);
 
             int finalPoints = Mathf.RoundToInt(basePoints * multiplier);

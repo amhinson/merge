@@ -677,13 +677,13 @@ namespace MergeGame.UI
                     {
                         chainAnimPlayed = true;
                         if (chainAnimCoroutine != null) StopCoroutine(chainAnimCoroutine);
-                        chainCountLabel.text = "CHAIN";
+                        chainCountLabel.text = "BEST CHAIN";
                         chainAnimCoroutine = StartCoroutine(AnimateChainBadge(chain));
                     }
                     // On subsequent Populate calls, just ensure final state is shown
                     else
                     {
-                        chainCountLabel.text = $"x{chain} CHAIN";
+                        chainCountLabel.text = $"BEST CHAIN: {chain}";
                         chainBadge.GetComponent<CanvasGroup>().alpha = 1f;
                         chainBadge.transform.localScale = Vector3.one;
                     }
@@ -1110,7 +1110,7 @@ namespace MergeGame.UI
             // Tick up the counter from 0 to target
             for (int i = 1; i <= targetChain; i++)
             {
-                chainCountLabel.text = $"x{i} CHAIN";
+                chainCountLabel.text = $"BEST CHAIN: {i}";
 
                 // Quick scale pulse on each tick
                 chainBadge.transform.localScale = Vector3.one * 1.08f;

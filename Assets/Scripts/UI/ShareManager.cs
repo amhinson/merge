@@ -187,7 +187,7 @@ namespace MergeGame.UI
             if (shareChainLabel != null)
             {
                 int chain = GameSession.LongestChain;
-                shareChainLabel.text = chain >= 2 ? $"x{chain} CHAIN" : "";
+                shareChainLabel.text = chain >= 2 ? $"BEST CHAIN: {chain}" : "";
             }
         }
 
