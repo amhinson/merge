@@ -17,6 +17,7 @@ namespace MergeGame.UI
     {
         private bool isBuilt;
         private TextMeshProUGUI personalBestValue;
+        private GameObject personalBestCard;
         private Transform leaderboardRowContainer;
         private GameObject leaderboardLoading;
         private void OnEnable()
@@ -121,6 +122,7 @@ namespace MergeGame.UI
         {
             var card = MurgeUI.CreateCard(parent);
             card.name = "PersonalBestCard";
+            personalBestCard = card;
             var cardLE = card.AddComponent<LayoutElement>();
             cardLE.preferredHeight = 60; cardLE.minHeight = 60;
 
@@ -314,6 +316,21 @@ namespace MergeGame.UI
 
         private void BuildButtons(Transform parent)
         {
+            // Subtitle — only for scored games, above quit button
+            if (!GameSession.IsPractice)
+            {
+                var subtitleGO = MurgeUI.CreateUIObject("QuitSubtitle", parent);
+                var subLE = subtitleGO.AddComponent<LayoutElement>();
+                subLE.preferredHeight = 16; subLE.minHeight = 16;
+                var subTMP = subtitleGO.AddComponent<TextMeshProUGUI>();
+                subTMP.text = "your score will be submitted";
+                subTMP.font = MurgeUI.DMMono;
+                subTMP.fontSize = OFont.body;
+                subTMP.color = OC.dim;
+                subTMP.alignment = TextAlignmentOptions.Center;
+                subTMP.raycastTarget = false;
+            }
+
             // QUIT GAME — pink ghost button
             var quitGO = MurgeUI.CreateUIObject("QuitButton", parent);
             var quitBgImg = quitGO.AddComponent<Image>();
@@ -356,9 +373,12 @@ namespace MergeGame.UI
 
         private void Populate()
         {
-            // Personal best
-            if (personalBestValue != null && ScoreManager.Instance != null)
-                personalBestValue.text = ScoreManager.Instance.HighScore.ToString("N0");
+            // Personal best — show the score from before this game started
+            int preGameBest = ScoreManager.Instance != null ? ScoreManager.Instance.PreGameHighScore : 0;
+            if (personalBestCard != null)
+                personalBestCard.SetActive(preGameBest > 0);
+            if (personalBestValue != null)
+                personalBestValue.text = preGameBest.ToString("N0");
 
             // Leaderboard
             PopulateLeaderboard();

@@ -26,8 +26,12 @@ namespace MergeGame.Core
             HighScore = PlayerPrefs.GetInt(HighScoreKey, 0);
         }
 
+        /// <summary>High score as it was before the current game started.</summary>
+        public int PreGameHighScore { get; private set; }
+
         public void ResetScore()
         {
+            PreGameHighScore = HighScore;
             CurrentScore = 0;
             OnScoreChanged?.Invoke(CurrentScore);
         }

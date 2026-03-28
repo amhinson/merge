@@ -1,6 +1,6 @@
 ## NEXT UP
 
-note QUIT will submit score, like what used to be there.
+Animate balls in intro & home screen.
 
 Add BETA? with click modal that things might change. Feedback welcome. Add some way to send feedback.
 
