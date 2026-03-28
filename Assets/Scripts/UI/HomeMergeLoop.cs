@@ -39,8 +39,12 @@ namespace MergeGame.UI
         private const float ScaleDuration = 0.18f;  // exact match: physicsConfig.mergeScaleDuration
         private const float FadeDuration = 0.4f;
 
-        // Pre-cached sprites per tier
+        // Pre-cached sprites per tier — periodically refreshed for waveform animation
         private Sprite[] cachedSprites;
+        private float spritePhase;
+        private float lastSpriteUpdate;
+        private const float SpriteUpdateInterval = 0.1f;
+        private const float SpritePhaseSpeed = 1f / 30f; // 30s cycle
 
         // Screenshot mode: show a single static ball instead of animating.
         // Uses PlayerPrefs so it survives domain reload when entering Play mode.
@@ -88,7 +92,7 @@ namespace MergeGame.UI
                 var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
                 tex.filterMode = FilterMode.Bilinear;
                 tex.SetPixels(pixels);
-                tex.Apply(false, true);
+                tex.Apply();
                 cachedSprites[tier] = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
                     new Vector2(0.5f, 0.5f), texSize);
             }
@@ -116,6 +120,54 @@ namespace MergeGame.UI
         {
             if (loopCoroutine != null) { StopCoroutine(loopCoroutine); loopCoroutine = null; }
             ClearBalls();
+        }
+
+        private void Update()
+        {
+            if (cachedSprites == null) return;
+            if (Time.time - lastSpriteUpdate < SpriteUpdateInterval) return;
+            lastSpriteUpdate = Time.time;
+
+            spritePhase += SpritePhaseSpeed * SpriteUpdateInterval;
+            if (spritePhase >= 1f) spritePhase -= 1f;
+
+            // Only refresh sprites for visible balls (1-2 at a time, not all 11)
+            if (sittingBall != null) RefreshBallSprite(sittingBall);
+            if (droppingBall != null) RefreshBallSprite(droppingBall);
+        }
+
+        private void RefreshBallSprite(GameObject ball)
+        {
+            var img = ball.GetComponent<Image>();
+            if (img == null) return;
+            int tIdx = ball.name.LastIndexOf('T');
+            if (tIdx < 0) return;
+            if (!int.TryParse(ball.name.Substring(tIdx + 1), out int tier)) return;
+            if (tier < 0 || tier >= TierSizes.Length) return;
+
+            float size = TierSizes[tier];
+            float renderRadius = Mathf.Max(size / (2f * BallRenderer.PixelsPerUnit), 0.5f);
+            var color = BallRenderer.GetBallColor(tier);
+            float phase = spritePhase + tier * 0.09f;
+            var pixels = BallRenderer.GenerateBallPixels(tier, color, renderRadius, phase, out int texSize);
+
+            var oldSprite = cachedSprites[tier];
+            if (oldSprite != null && oldSprite.texture != null &&
+                oldSprite.texture.width == texSize && oldSprite.texture.height == texSize)
+            {
+                oldSprite.texture.SetPixels(pixels);
+                oldSprite.texture.Apply();
+            }
+            else
+            {
+                var tex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
+                tex.filterMode = FilterMode.Bilinear;
+                tex.SetPixels(pixels);
+                tex.Apply();
+                cachedSprites[tier] = Sprite.Create(tex, new Rect(0, 0, texSize, texSize),
+                    new Vector2(0.5f, 0.5f), texSize);
+                img.sprite = cachedSprites[tier];
+            }
         }
 
         private void StartLoop()
@@ -392,9 +444,12 @@ namespace MergeGame.UI
             img.color = Color.white;
             img.raycastTarget = false;
 
-            // Use pre-cached sprite (no per-ball texture generation)
-            if (cachedSprites != null && tier < cachedSprites.Length && cachedSprites[tier] != null)
+            // Use cached sprite at current animation phase (avoids jump on merge)
+            if (cachedSprites != null && tier < cachedSprites.Length)
+            {
+                RefreshBallSprite(go);
                 img.sprite = cachedSprites[tier];
+            }
 
             return go;
         }

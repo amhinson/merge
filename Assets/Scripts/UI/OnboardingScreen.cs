@@ -724,6 +724,11 @@ namespace MergeGame.UI
             img.type = Image.Type.Simple;
             img.preserveAspect = true;
             img.color = Color.white;
+
+            // Animate waveform
+            var animator = go.AddComponent<Visual.UIBallAnimator>();
+            animator.Initialize(tierIndex, uiRadius);
+
             return go;
         }
 
