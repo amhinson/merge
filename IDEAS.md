@@ -1,8 +1,9 @@
 ## NEXT UP
 
-Animate balls in intro & home screen.
+Remove Coming Soon Achievement.
+Add Send Feedback Achievement.
 
-Add BETA? with click modal that things might change. Feedback welcome. Add some way to send feedback.
+Add Haptic & Sound to in-game menu.
 
 Use supabase anonymous auth. Optional sign in/up when app starts, but make it discrete.
 Prompt after 2 day streak to connect account so you don't lose scores.

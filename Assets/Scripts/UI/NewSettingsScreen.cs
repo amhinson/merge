@@ -77,7 +77,7 @@ namespace MergeGame.UI
             AddSpacer(content.transform, 20);
             BuildGameCenterRow(content.transform);
             AddSpacer(content.transform, 20);
-            BuildComingSoon(content.transform);
+            BuildBetaFeedback(content.transform);
 
             // Save button (pinned to bottom)
             BuildSaveButton(transform);
@@ -462,57 +462,112 @@ namespace MergeGame.UI
 #endif
         }
 
-        private void BuildComingSoon(Transform parent)
+        private void BuildBetaFeedback(Transform parent)
         {
-            var card = MurgeUI.CreateUIObject("ComingSoon", parent);
-            var cLE = card.AddComponent<LayoutElement>();
-            cLE.preferredHeight = 44; cLE.minHeight = 44;
+            // Container with border — uses VLG + padding directly
+            var container = MurgeUI.CreateUIObject("BetaFeedback", parent);
+            var containerImg = container.AddComponent<Image>();
+            containerImg.sprite = MurgeUI.SmoothRoundedRect;
+            containerImg.type = Image.Type.Sliced;
+            containerImg.color = OC.A(OC.border, 0.4f);
+            containerImg.raycastTarget = false;
 
-            // Transparent bg with subtle border (approximating dashed with low-opacity solid)
-            var bdr = MurgeUI.CreateUIObject("Border", card.transform);
-            MurgeUI.StretchFill(bdr.GetComponent<RectTransform>());
-            var bdrImg = bdr.AddComponent<Image>();
-            bdrImg.sprite = MurgeUI.SmoothRoundedRect;
-            bdrImg.type = Image.Type.Sliced;
-            bdrImg.color = OC.A(OC.border, 0.4f); // subtle, ~40% opacity
-            bdrImg.raycastTarget = false;
-            // Transparent fill inset
-            var cFill = MurgeUI.CreateUIObject("Fill", card.transform);
-            var cfRT = cFill.GetComponent<RectTransform>();
-            cfRT.anchorMin = Vector2.zero; cfRT.anchorMax = Vector2.one;
-            cfRT.offsetMin = new Vector2(1, 1); cfRT.offsetMax = new Vector2(-1, -1);
-            var cfImg = cFill.AddComponent<Image>();
-            cfImg.sprite = MurgeUI.SmoothRoundedRect;
-            cfImg.type = Image.Type.Sliced;
-            cfImg.color = OC.bg; // matches screen bg = transparent look
-            cfImg.raycastTarget = false;
+            // Inner content area (acts as the "fill" with padding)
+            var content = MurgeUI.CreateUIObject("Content", container.transform);
+            MurgeUI.StretchFill(content.GetComponent<RectTransform>());
+            var cRT = content.GetComponent<RectTransform>();
+            cRT.offsetMin = new Vector2(1, 1); cRT.offsetMax = new Vector2(-1, -1);
+            var innerBg = content.AddComponent<Image>();
+            innerBg.sprite = MurgeUI.SmoothRoundedRect;
+            innerBg.type = Image.Type.Sliced;
+            innerBg.color = OC.bg;
+            innerBg.raycastTarget = false;
 
-            var tmp = MurgeUI.CreateLabel(card.transform, "MORE SETTINGS\nCOMING SOON",
-                MurgeUI.PressStart2P, 7, OC.dim, "Text");
-            tmp.characterSpacing = 1;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.lineSpacing = 12;
-            MurgeUI.StretchFill(tmp.GetComponent<RectTransform>());
+            // Padded VLG inside the fill
+            var padded = MurgeUI.CreateUIObject("Padded", content.transform);
+            MurgeUI.StretchFill(padded.GetComponent<RectTransform>());
+            var pRT = padded.GetComponent<RectTransform>();
+            pRT.offsetMin = new Vector2(16, 16); pRT.offsetMax = new Vector2(-16, -16);
+            var vlg = padded.AddComponent<VerticalLayoutGroup>();
+            vlg.spacing = 10;
+            vlg.childControlWidth = true;
+            vlg.childControlHeight = true;
+            vlg.childForceExpandWidth = true;
+            vlg.childForceExpandHeight = false;
 
-            // Hidden achievement: tap 10 times
-            var hitImg = card.AddComponent<Image>();
-            hitImg.color = Color.clear;
-            var btn = card.AddComponent<Button>();
-            btn.targetGraphic = hitImg;
-            btn.onClick.AddListener(OnComingSoonTapped);
-        }
+            // BETA label
+            var betaLabel = MurgeUI.CreateLabel(padded.transform, "BETA",
+                MurgeUI.PressStart2P, 9, OC.amber, "BetaLabel");
+            betaLabel.characterSpacing = 2;
+            betaLabel.alignment = TextAlignmentOptions.Left;
+            betaLabel.gameObject.AddComponent<LayoutElement>().preferredHeight = 14;
 
-        private int comingSoonTapCount;
+            // Body copy
+            var body = MurgeUI.CreateLabel(padded.transform,
+                "We're still finding our footing. Ball sizes, scoring, and formats may shift as we dial things in. Scores might reset along the way -- we'll give a heads up when that happens.",
+                MurgeUI.DMMono, 12, OC.muted, "BodyText");
+            body.alignment = TextAlignmentOptions.Left;
+            body.textWrappingMode = TextWrappingModes.Normal;
+            body.lineSpacing = 25;
 
-        private void OnComingSoonTapped()
-        {
-            comingSoonTapCount++;
-            if (comingSoonTapCount >= 10)
+            // Secondary copy
+            var secondary = MurgeUI.CreateLabel(padded.transform,
+                "Have thoughts? We'd love to hear them.",
+                MurgeUI.DMMono, 12, OC.muted, "SecondaryText");
+            secondary.alignment = TextAlignmentOptions.Left;
+            secondary.textWrappingMode = TextWrappingModes.Normal;
+            secondary.lineSpacing = 25;
+
+            // SEND FEEDBACK button — hug content, not full width
+            var btnWrapper = MurgeUI.CreateUIObject("BtnWrapper", padded.transform);
+            var bwHLG = btnWrapper.AddComponent<HorizontalLayoutGroup>();
+            bwHLG.childAlignment = TextAnchor.MiddleLeft;
+            bwHLG.childControlWidth = false;
+            bwHLG.childControlHeight = false;
+            bwHLG.childForceExpandWidth = false;
+            var bwLE = btnWrapper.AddComponent<LayoutElement>();
+            bwLE.preferredHeight = 36;
+
+            var btnGO = MurgeUI.CreateUIObject("FeedbackBtn", btnWrapper.transform);
+            var btnRT = btnGO.GetComponent<RectTransform>();
+            btnRT.sizeDelta = new Vector2(210, 36);
+            // Border
+            var btnBgImg = btnGO.AddComponent<Image>();
+            btnBgImg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
+            btnBgImg.type = Image.Type.Sliced;
+            btnBgImg.color = OC.border;
+            // Fill
+            var btnFill = MurgeUI.CreateUIObject("Fill", btnGO.transform);
+            var bfRT = btnFill.GetComponent<RectTransform>();
+            bfRT.anchorMin = Vector2.zero; bfRT.anchorMax = Vector2.one;
+            bfRT.offsetMin = new Vector2(1, 1); bfRT.offsetMax = new Vector2(-1, -1);
+            var bfImg = btnFill.AddComponent<Image>();
+            bfImg.sprite = Visual.PixelUIGenerator.GetRoundedRect9Slice();
+            bfImg.type = Image.Type.Sliced;
+            bfImg.color = OC.bg;
+            bfImg.raycastTarget = false;
+            // Label
+            var btnLabel = MurgeUI.CreateUIObject("Label", btnGO.transform);
+            MurgeUI.StretchFill(btnLabel.GetComponent<RectTransform>());
+            var btnTMP = btnLabel.AddComponent<TextMeshProUGUI>();
+            btnTMP.text = "SEND FEEDBACK";
+            btnTMP.font = MurgeUI.PressStart2P;
+            btnTMP.fontSize = 9;
+            btnTMP.color = OC.cyan;
+            btnTMP.characterSpacing = 1;
+            btnTMP.alignment = TextAlignmentOptions.Center;
+            btnTMP.raycastTarget = false;
+            // Button
+            var btn = btnGO.AddComponent<Button>();
+            btn.targetGraphic = btnBgImg;
+            btn.onClick.AddListener(() =>
             {
-                comingSoonTapCount = 0;
-                if (AchievementManager.Instance != null)
-                    AchievementManager.Instance.UnlockHiddenAchievement();
-            }
+                Application.OpenURL("mailto:murgegame@gmail.com?subject=Murge%20Feedback");
+            });
+
+            var containerLE = container.AddComponent<LayoutElement>();
+            containerLE.preferredHeight = 230;
+            containerLE.minHeight = 230;
         }
 
         private void BuildSaveButton(Transform parent)
