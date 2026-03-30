@@ -72,6 +72,10 @@ namespace MergeGame.UI
             var viewportGO = MurgeUI.CreateUIObject("Viewport", scrollGO.transform);
             MurgeUI.StretchFill(viewportGO.GetComponent<RectTransform>());
             viewportGO.AddComponent<RectMask2D>();
+            // Transparent image on viewport so ScrollRect receives all touches
+            var vpImg = viewportGO.AddComponent<Image>();
+            vpImg.color = Color.clear;
+            vpImg.raycastTarget = true;
             scrollRect.viewport = viewportGO.GetComponent<RectTransform>();
 
             var content = MurgeUI.CreateUIObject("Content", viewportGO.transform);
@@ -103,6 +107,20 @@ namespace MergeGame.UI
             AddSpacer(content.transform, 20);
             BuildBetaFeedback(content.transform);
             AddSpacer(content.transform, 20);
+
+            // Disable raycast on all non-interactive graphics so they don't block scrolling.
+            // Only Buttons/Selectables need raycast for taps — everything else should pass through.
+            foreach (var graphic in content.GetComponentsInChildren<Graphic>(true))
+            {
+                if (graphic.GetComponent<Selectable>() != null) continue; // keep buttons tappable
+                if (graphic.GetComponentInParent<Selectable>() != null &&
+                    graphic.transform.parent?.GetComponent<Selectable>() != null) continue; // keep button children
+                graphic.raycastTarget = false;
+            }
+            // Add scroll passthrough to remaining interactive elements (buttons, toggles, input)
+            foreach (var selectable in content.GetComponentsInChildren<Selectable>(true))
+                if (selectable.GetComponent<ScrollPassthrough>() == null)
+                    selectable.gameObject.AddComponent<ScrollPassthrough>();
         }
 
         private void BuildHeader(Transform parent)
@@ -615,8 +633,11 @@ namespace MergeGame.UI
                 {
                     if (Core.PlayerIdentity.Instance != null)
                         Core.PlayerIdentity.Instance.RegisterAfterAuth();
-                    // Re-fetch profile + leaderboard for the new identity, then navigate
-                    RefreshServerDataAndGoHome();
+                    RefreshServerDataAndGoHome(() =>
+                    {
+                        if (AuthLoadingOverlay.Instance != null)
+                            AuthLoadingOverlay.Instance.Hide();
+                    });
                 });
         }
 
@@ -640,6 +661,9 @@ namespace MergeGame.UI
 
         private void PerformSignOut()
         {
+            if (AuthLoadingOverlay.Instance != null)
+                AuthLoadingOverlay.Instance.Show("Signing out...");
+
             AuthManager.Instance.SignOut((success) =>
             {
                 // Clear all local player data — full reset
@@ -678,7 +702,11 @@ namespace MergeGame.UI
                         Core.StreakManager.Instance.ResetStreak();
 
                     // Refresh leaderboard cache and navigate
-                    RefreshServerDataAndGoHome();
+                    RefreshServerDataAndGoHome(() =>
+                    {
+                        if (AuthLoadingOverlay.Instance != null)
+                            AuthLoadingOverlay.Instance.Hide();
+                    });
                 });
             });
         }
@@ -688,7 +716,7 @@ namespace MergeGame.UI
         /// Re-fetch profile + leaderboard for the current user, then navigate to the correct home screen.
         /// Call after any identity change (connect, sign out).
         /// </summary>
-        private void RefreshServerDataAndGoHome()
+        private void RefreshServerDataAndGoHome(System.Action onComplete = null)
         {
             string userId = Core.PlayerIdentity.Instance != null ? Core.PlayerIdentity.Instance.DeviceUUID : "";
             string today = Core.GameSession.TodayDateStr;
@@ -715,17 +743,18 @@ namespace MergeGame.UI
                         Core.GameSession.CurrentPlayer.display_name = profile.display_name;
                         Core.GameSession.CurrentPlayer.current_streak = profile.current_streak;
 
-                        // Mark scored attempt locally if played today
                         if (profile.today_score > 0 && Core.DailySeedManager.Instance != null)
                             Core.DailySeedManager.Instance.MarkScoredAttemptComplete();
                     }
 
                     NavigateHome();
+                    onComplete?.Invoke();
                 });
             }
             else
             {
                 NavigateHome();
+                onComplete?.Invoke();
             }
         }
 

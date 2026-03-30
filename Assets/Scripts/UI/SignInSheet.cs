@@ -248,13 +248,17 @@ namespace MergeGame.UI
 
             NativeSignIn.Instance.SignIn(provider, (success, idToken, error) =>
             {
-                canvasGroup.interactable = true;
-
                 if (!success)
                 {
+                    canvasGroup.interactable = true;
                     Debug.LogWarning($"[SignInSheet] Native {provider} sign-in failed: {error}");
                     return;
                 }
+
+                // Hide the sign-in sheet and show full-screen loading
+                Hide();
+                if (AuthLoadingOverlay.Instance != null)
+                    AuthLoadingOverlay.Instance.Show("Connecting...");
 
                 if (AuthManager.Instance != null)
                 {
@@ -265,11 +269,13 @@ namespace MergeGame.UI
                             if (MergeGame.Core.PlayerIdentity.Instance != null)
                                 MergeGame.Core.PlayerIdentity.Instance.RefreshFromAuth();
                             OnSignInComplete?.Invoke(provider);
-                            Hide();
+                            // Loading overlay dismissed by the caller (settings/onboarding)
                         }
                         else
                         {
                             Debug.LogWarning($"[SignInSheet] Supabase auth failed: {authError}");
+                            if (AuthLoadingOverlay.Instance != null)
+                                AuthLoadingOverlay.Instance.Hide();
                         }
                     });
                 }

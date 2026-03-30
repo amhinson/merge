@@ -80,7 +80,9 @@
       "WebFetch(domain:dev.to)",
       "Bash(./build-android.sh dev:*)",
       "Bash(./install-android.sh dev:*)",
-      "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android)"
+      "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android)",
+      "Bash(while ps:*)",
+      "Bash(do sleep:*)"
     ]
   }
 }

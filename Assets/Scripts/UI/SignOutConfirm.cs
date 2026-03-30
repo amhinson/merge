@@ -162,9 +162,34 @@ namespace MergeGame.UI
                 onConfirm?.Invoke();
             });
 
-            // Cancel
-            var (cancelGO, cancelLabel) = MurgeUI.CreateGhostButton(btnRow.transform, "CANCEL", 40, "CancelBtn");
-            cancelGO.GetComponent<Button>().onClick.AddListener(Hide);
+            // Cancel — border + transparent fill
+            var cancelGO = MurgeUI.CreateUIObject("CancelBtn", btnRow.transform);
+            var caBgImg = cancelGO.AddComponent<Image>();
+            caBgImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            caBgImg.type = Image.Type.Sliced;
+            caBgImg.color = OC.border;
+            var caFill = MurgeUI.CreateUIObject("Fill", cancelGO.transform);
+            var caFillRT = caFill.GetComponent<RectTransform>();
+            caFillRT.anchorMin = Vector2.zero; caFillRT.anchorMax = Vector2.one;
+            caFillRT.offsetMin = new Vector2(1, 1); caFillRT.offsetMax = new Vector2(-1, -1);
+            var caFillImg = caFill.AddComponent<Image>();
+            caFillImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+            caFillImg.type = Image.Type.Sliced;
+            caFillImg.color = OC.surface;
+            caFillImg.raycastTarget = false;
+            var caLabelGO = MurgeUI.CreateUIObject("Label", cancelGO.transform);
+            MurgeUI.StretchFill(caLabelGO.GetComponent<RectTransform>());
+            var caLabel = caLabelGO.AddComponent<TextMeshProUGUI>();
+            caLabel.text = "CANCEL";
+            caLabel.font = MurgeUI.PressStart2P;
+            caLabel.fontSize = OFont.label;
+            caLabel.color = OC.muted;
+            caLabel.characterSpacing = 1;
+            caLabel.alignment = TextAlignmentOptions.Center;
+            caLabel.raycastTarget = false;
+            var caBtn = cancelGO.AddComponent<Button>();
+            caBtn.targetGraphic = caBgImg;
+            caBtn.onClick.AddListener(Hide);
 
             overlayGO.SetActive(false);
         }

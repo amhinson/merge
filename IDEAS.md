@@ -1,15 +1,5 @@
 ## NEXT UP
 
-Smooth out OAuth modal flow, UI-wise with transitions.
-
-Sign out warning button styles.
-
-Sometimes settings can't scroll?
-
-Android app icon was reset.
-
-Prod auth testing.
-
 Make Shake button more obvious.
 
 Update PII message for connecting account.
@@ -21,8 +11,6 @@ The bottom half centimeter or something should not trigger touch.
 On Android that's often how we switch between applications but when I touch the bottom of the screen to switch, it counts it as a touch and drops a ball there.
 
 Fix loading screen required image.
-
-Is Android seed different than iOS seed? Test this.
 
 Remove Coming Soon Achievement.
 Add Send Feedback Achievement.

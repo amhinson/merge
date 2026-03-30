@@ -724,10 +724,54 @@ namespace MergeGame.UI
         private void OnSignInFromOnboarding(string provider)
         {
             Debug.Log($"[Onboarding] Signed in with {provider}");
-            // Refresh identity, register with backend, and skip to home
+            Core.GameSession.MarkOnboardingComplete();
             if (Core.PlayerIdentity.Instance != null)
                 Core.PlayerIdentity.Instance.RegisterAfterAuth();
-            FinishOnboarding();
+
+            // Fetch profile to determine if this account has played today
+            string userId = Core.PlayerIdentity.Instance != null ? Core.PlayerIdentity.Instance.DeviceUUID : "";
+            string today = Core.GameSession.TodayDateStr;
+            Debug.Log($"[Onboarding] Fetching profile for {userId}, date={today}, LS={Backend.LeaderboardService.Instance != null}");
+
+            if (Backend.LeaderboardService.Instance != null && !string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(today))
+            {
+                Backend.LeaderboardService.Instance.InvalidateCache();
+                Backend.LeaderboardService.Instance.FetchLeaderboard(today, null);
+                Backend.LeaderboardService.Instance.FetchPlayerProfile(userId, today, (profile) =>
+                {
+                    if (profile != null)
+                    {
+                        Core.GameSession.TodayScore = profile.today_score;
+                        if (profile.day_number > 0)
+                            Core.GameSession.TodayDayNumber = profile.day_number;
+                        if (Core.GameSession.CurrentPlayer == null)
+                            Core.GameSession.CurrentPlayer = new Player();
+                        Core.GameSession.CurrentPlayer.display_name = profile.display_name;
+                        Core.GameSession.CurrentPlayer.current_streak = profile.current_streak;
+
+                        if (profile.today_score > 0 && Core.DailySeedManager.Instance != null)
+                            Core.DailySeedManager.Instance.MarkScoredAttemptComplete();
+                    }
+
+                    NavigateToCorrectHome();
+                    if (AuthLoadingOverlay.Instance != null)
+                        AuthLoadingOverlay.Instance.Hide();
+                });
+            }
+            else
+            {
+                NavigateToCorrectHome();
+                if (AuthLoadingOverlay.Instance != null)
+                    AuthLoadingOverlay.Instance.Hide();
+            }
+        }
+
+        private void NavigateToCorrectHome()
+        {
+            if (ScreenManager.Instance == null) return;
+            bool hasPlayed = Core.GameSession.HasPlayedToday ||
+                (Core.DailySeedManager.Instance != null && Core.DailySeedManager.Instance.HasCompletedScoredAttempt());
+            ScreenManager.Instance.NavigateTo(hasPlayed ? Screen.HomePlayed : Screen.HomeFresh);
         }
 
         private void FinishOnboarding()
