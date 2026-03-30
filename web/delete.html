@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Delete My Data — Murge</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #0f1117;
+        color: rgba(255, 255, 255, 0.7);
+        font-family: "DM Mono", "SF Mono", monospace;
+        min-height: 100vh;
+        padding: 2rem;
+        line-height: 1.8;
+      }
+      .container {
+        max-width: 640px;
+        margin: 0 auto;
+      }
+      a {
+        color: #4dd9c0;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      h1 {
+        font-family: "Press Start 2P", monospace;
+        font-size: 1rem;
+        color: #fff;
+        letter-spacing: 2px;
+        margin-bottom: 0.25rem;
+      }
+      .subtitle {
+        color: rgba(255, 255, 255, 0.22);
+        font-size: 0.75rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 2rem;
+      }
+      h2 {
+        color: #4dd9c0;
+        font-size: 0.85rem;
+        font-family: "Press Start 2P", monospace;
+        letter-spacing: 1px;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+      }
+      p,
+      li {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+      }
+      ul {
+        padding-left: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .back {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.8rem;
+      }
+      .cta {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.75rem 1.5rem;
+        background: #4dd9c0;
+        color: #0f1117;
+        font-family: "Press Start 2P", monospace;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        border-radius: 6px;
+        text-decoration: none;
+      }
+      .cta:hover {
+        opacity: 0.9;
+        text-decoration: none;
+      }
+      .note {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.8rem;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #232838;
+      }
+      @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DM+Mono:wght@400;500&display=swap");
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="/" class="back">&larr; Back to MURGE</a>
+
+      <h1>DELETE MY DATA</h1>
+      <p class="subtitle">Murge</p>
+
+      <p>
+        We respect your right to control your data. If you'd like us to delete
+        your Murge account and all associated data, you can request it below.
+      </p>
+
+      <h2>WHAT GETS DELETED</h2>
+      <ul>
+        <li>Your player profile (display name, streaks)</li>
+        <li>All daily scores and leaderboard entries</li>
+        <li>Your authentication account (if connected)</li>
+        <li>Any email address associated with your account</li>
+      </ul>
+
+      <h2>WHAT STAYS</h2>
+      <p>
+        Anonymous analytics data (collected by GameAnalytics) is not linked to
+        your identity and cannot be individually deleted.
+      </p>
+
+      <h2>HOW TO REQUEST</h2>
+      <p>
+        Send an email to the address below with your display name (shown in
+        Settings) or the email address linked to your account. We'll process
+        your request within 7 days.
+      </p>
+
+      <a
+        href="mailto:murgegame@gmail.com?subject=Data%20Deletion%20Request&body=Please%20delete%20all%20data%20associated%20with%20my%20account.%0A%0ADisplay%20name%20or%20email%3A%20"
+        class="cta"
+        >REQUEST DELETION</a
+      >
+
+      <p class="note">
+        You can also delete the app from your device to remove all locally
+        stored data (scores, preferences, auth tokens). Server-side data
+        requires a deletion request.
+      </p>
+    </div>
+  </body>
+</html>

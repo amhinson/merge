@@ -2,21 +2,6 @@
 
 TEST the Link Prompt Card!
 
-Update Apple and Google data collection  
- App Store Connect
-
-1. Sign In with Apple — Go to your app > App Privacy > update the data collection to include:
-   - Contact Info > Email Address — collected, linked to identity, for "App Functionality"
-   - Update purpose strings if needed
-2. Sign In with Apple capability — already enabled in your App ID
-   Google Play Console
-3. Data Safety section — Update to declare:
-   - Email address — collected, optional, for "Account management"
-   - Other personal info (display name) — collected, optional, for "App functionality"
-   - Declare that data is not shared with third parties
-   - Declare that users can request data deletion
-4. Login credentials — If Google Play asks about login methods, note that Google Sign In and anonymous auth are supported
-
 Make Shake button more obvious.
 
 Bump up max display name length.

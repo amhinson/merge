@@ -30,6 +30,7 @@ platform :ios do
         },
         clean: false,
         skip_profile_detection: true,
+        xcargs: "-allowProvisioningUpdates",
       )
     else
       build_app(
@@ -43,6 +44,7 @@ platform :ios do
         },
         clean: false,
         skip_profile_detection: true,
+        xcargs: "-allowProvisioningUpdates",
       )
     end
 
@@ -71,6 +73,7 @@ platform :ios do
         },
         clean: false,
         skip_profile_detection: true,
+        xcargs: "-allowProvisioningUpdates",
       )
     else
       build_app(
@@ -84,6 +87,7 @@ platform :ios do
         },
         clean: false,
         skip_profile_detection: true,
+        xcargs: "-allowProvisioningUpdates",
       )
     end
   end
