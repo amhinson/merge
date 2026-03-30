@@ -1,41 +1,45 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders, verifyApiKey } from "../_shared/auth.ts";
+import { corsHeaders, getAuthenticatedUserId } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const authError = verifyApiKey(req);
-  if (authError) return authError;
-
   try {
+    const url = new URL(req.url);
+    const queryBody = {
+      user_id: url.searchParams.get("user_id"),
+      device_uuid: url.searchParams.get("device_uuid"),
+    };
+
+    const { userId, error: authError } = await getAuthenticatedUserId(req, queryBody);
+    if (authError) return authError;
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const url = new URL(req.url);
-    const device_uuid = url.searchParams.get("device_uuid");
     const game_date = url.searchParams.get("game_date");
 
-    if (!device_uuid || !game_date) {
+    if (!game_date) {
       return new Response(
-        JSON.stringify({ error: "device_uuid and game_date parameters required" }),
+        JSON.stringify({ error: "game_date parameter required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // Single query: get rank + total using window functions
     const { data, error } = await supabase.rpc("get_player_rank", {
-      p_device_uuid: device_uuid,
+      p_user_id: userId,
       p_game_date: game_date,
     });
 
     if (error) {
       // Fallback if RPC doesn't exist yet — use old method
-      return await fallbackRank(supabase, device_uuid, game_date);
+      return await fallbackRank(supabase, userId!, game_date);
     }
 
     if (!data || data.length === 0) {
@@ -61,11 +65,11 @@ serve(async (req) => {
 });
 
 // Fallback using 3 queries (works without the DB function)
-async function fallbackRank(supabase: any, device_uuid: string, game_date: string) {
+async function fallbackRank(supabase: any, user_id: string, game_date: string) {
   const { data: playerScore } = await supabase
     .from("daily_scores")
     .select("score")
-    .eq("device_uuid", device_uuid)
+    .eq("user_id", user_id)
     .eq("game_date", game_date)
     .single();
 

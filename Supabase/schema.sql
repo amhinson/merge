@@ -4,23 +4,24 @@
 -- ============================================================
 
 -- Players table
--- device_uuid is the identity key. Future account system can add a parent table
--- that links one or more device_uuids.
+-- user_id is the Supabase auth user ID (from anonymous or linked auth)
 CREATE TABLE IF NOT EXISTS players (
-    device_uuid TEXT PRIMARY KEY,
+    user_id TEXT PRIMARY KEY,
     display_name TEXT NOT NULL DEFAULT 'Player',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     current_streak INTEGER NOT NULL DEFAULT 0,
     longest_streak INTEGER NOT NULL DEFAULT 0,
     name_changes_today INTEGER NOT NULL DEFAULT 0,
-    name_change_date DATE
+    name_change_date DATE,
+    auth_provider TEXT DEFAULT 'anonymous',
+    auth_email TEXT
 );
 
 -- Daily scores table
 -- One scored attempt per player per day
 CREATE TABLE IF NOT EXISTS daily_scores (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    device_uuid TEXT NOT NULL REFERENCES players(device_uuid),
+    user_id TEXT NOT NULL REFERENCES players(user_id),
     display_name TEXT DEFAULT 'Player',
     game_date DATE NOT NULL,
     score INTEGER NOT NULL,
@@ -28,15 +29,15 @@ CREATE TABLE IF NOT EXISTS daily_scores (
     merge_counts INTEGER[] DEFAULT '{}',
     longest_chain INTEGER NOT NULL DEFAULT 0,
     submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (device_uuid, game_date)
+    UNIQUE (user_id, game_date)
 );
 
 -- Indexes for leaderboard queries
 CREATE INDEX IF NOT EXISTS idx_daily_scores_date_score
     ON daily_scores (game_date, score DESC);
 
-CREATE INDEX IF NOT EXISTS idx_daily_scores_uuid_date
-    ON daily_scores (device_uuid, game_date);
+CREATE INDEX IF NOT EXISTS idx_daily_scores_user_date
+    ON daily_scores (user_id, game_date);
 
 -- ============================================================
 -- Functions
@@ -44,20 +45,20 @@ CREATE INDEX IF NOT EXISTS idx_daily_scores_uuid_date
 
 -- Single-query rank lookup using window functions
 -- Called by get-player-rank edge function via supabase.rpc()
-CREATE OR REPLACE FUNCTION get_player_rank(p_device_uuid TEXT, p_game_date DATE)
+CREATE OR REPLACE FUNCTION get_player_rank(p_user_id TEXT, p_game_date DATE)
 RETURNS TABLE(rank BIGINT, total_players BIGINT) AS $$
   SELECT
     r.rank,
     r.total_players
   FROM (
     SELECT
-      device_uuid,
+      user_id,
       RANK() OVER (ORDER BY score DESC) AS rank,
       COUNT(*) OVER () AS total_players
     FROM daily_scores
     WHERE game_date = p_game_date
   ) r
-  WHERE r.device_uuid = p_device_uuid;
+  WHERE r.user_id = p_user_id;
 $$ LANGUAGE sql STABLE;
 
 -- ============================================================
@@ -69,17 +70,26 @@ ALTER TABLE players ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_scores ENABLE ROW LEVEL SECURITY;
 
 -- Players: anyone can read (for leaderboard display names)
--- Insert/update only via Edge Functions (service role)
 CREATE POLICY "Players are viewable by everyone"
     ON players FOR SELECT
     USING (true);
 
+-- Players: authenticated users can insert/update their own row
+CREATE POLICY "Users can manage own player"
+    ON players FOR ALL
+    USING (auth.uid()::text = user_id)
+    WITH CHECK (auth.uid()::text = user_id);
+
 -- Daily scores: anyone can read (leaderboard)
--- Insert only via Edge Functions (service role)
 CREATE POLICY "Scores are viewable by everyone"
     ON daily_scores FOR SELECT
     USING (true);
 
--- Edge Functions use the service_role key, which bypasses RLS.
--- The anon key (used by the game client) can only SELECT.
--- This means all writes go through Edge Functions, which validate data.
+-- Daily scores: authenticated users can insert their own scores
+CREATE POLICY "Users can insert own scores"
+    ON daily_scores FOR INSERT
+    WITH CHECK (auth.uid()::text = user_id);
+
+-- Edge Functions still use service_role key which bypasses RLS.
+-- The anon key can SELECT. Authenticated users can write their own data.
+-- TODO: Once JWT auth is fully rolled out, remove API key auth from edge functions.

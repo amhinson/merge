@@ -31,6 +31,7 @@ FUNCTIONS=(
     "get-player-profile"
     "register-player"
     "sync-streak"
+    "migrate-player"
 )
 
 echo "🚀 Deploying ${#FUNCTIONS[@]} functions..."

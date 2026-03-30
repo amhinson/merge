@@ -89,6 +89,9 @@ namespace MergeGame.Backend
                     request.downloadHandler = new DownloadHandlerBuffer();
                     request.SetRequestHeader("Content-Type", "application/json");
                     request.SetRequestHeader("apikey", supabaseKey);
+                    // Include JWT if authenticated (transition: both API key and JWT)
+                    if (AuthManager.Instance != null && AuthManager.Instance.IsAuthenticated)
+                        request.SetRequestHeader("Authorization", $"Bearer {AuthManager.Instance.AccessToken}");
                     request.timeout = 15;
 
                     yield return request.SendWebRequest();
@@ -117,6 +120,8 @@ namespace MergeGame.Backend
             using (var request = UnityWebRequest.Get(url))
             {
                 request.SetRequestHeader("apikey", supabaseKey);
+                if (AuthManager.Instance != null && AuthManager.Instance.IsAuthenticated)
+                    request.SetRequestHeader("Authorization", $"Bearer {AuthManager.Instance.AccessToken}");
                 request.timeout = 30;
 
                 yield return request.SendWebRequest();

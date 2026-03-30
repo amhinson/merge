@@ -15,7 +15,8 @@ namespace MergeGame.Core
     [System.Serializable]
     public class SyncStreakRequest
     {
-        public string device_uuid;
+        public string user_id;
+        public string device_uuid; // legacy fallback
         public int current_streak;
         public int longest_streak;
     }
@@ -103,9 +104,10 @@ namespace MergeGame.Core
             bool leaderboardDone = false;
             bool rankDone = false;
 
-            // 1. Player profile (~200-400ms)
+            // 1. Player profile (~200-400ms) — skip if not authenticated (first launch)
             float profileStart = Time.realtimeSinceStartup;
-            if (LeaderboardService.Instance != null && PlayerIdentity.Instance != null)
+            bool isAuthenticated = Backend.AuthManager.Instance != null && Backend.AuthManager.Instance.IsAuthenticated;
+            if (isAuthenticated && LeaderboardService.Instance != null && PlayerIdentity.Instance != null)
             {
                 LeaderboardService.Instance.FetchPlayerProfile(
                     PlayerIdentity.Instance.DeviceUUID,
@@ -137,14 +139,13 @@ namespace MergeGame.Core
                 profileDone = true;
             }
 
-            // 2. Leaderboard for today (~200-400ms)
+            // 2. Leaderboard for today (~200-400ms) — skip if not authenticated
             float lbStart = Time.realtimeSinceStartup;
-            if (LeaderboardService.Instance != null)
+            if (isAuthenticated && LeaderboardService.Instance != null)
             {
                 LeaderboardService.Instance.FetchLeaderboard(GameSession.TodayDateStr, (entries) =>
                 {
                     Debug.Log($"[Preload] Leaderboard: {(Time.realtimeSinceStartup - lbStart) * 1000:F0}ms, {entries?.Count ?? 0} entries");
-                    // Cached in LeaderboardService — home screen will read from cache
                     leaderboardDone = true;
                 });
             }
@@ -156,7 +157,7 @@ namespace MergeGame.Core
             // 3. Player rank (~150-300ms) — only if scored today
             float rankStart = Time.realtimeSinceStartup;
             bool hasPlayed = DailySeedManager.Instance != null && DailySeedManager.Instance.HasCompletedScoredAttempt();
-            if (hasPlayed && LeaderboardService.Instance != null)
+            if (isAuthenticated && hasPlayed && LeaderboardService.Instance != null)
             {
                 LeaderboardService.Instance.FetchPlayerRankFull(GameSession.TodayDateStr, (rank, total) =>
                 {
@@ -350,6 +351,8 @@ namespace MergeGame.Core
                             Debug.Log($"GameManager: Score submit result: {success}");
                             if (success)
                             {
+                                // Invalidate leaderboard cache so home screen shows new score
+                                LeaderboardService.Instance.InvalidateCache();
                                 // Now that score is saved, fetch rank
                                 LeaderboardService.Instance.FetchPlayerRankFull(
                                     daily.GameDate, (rank, total) =>
@@ -389,7 +392,8 @@ namespace MergeGame.Core
 
             var request = new SyncStreakRequest
             {
-                device_uuid = PlayerIdentity.Instance.DeviceUUID,
+                user_id = PlayerIdentity.Instance.DeviceUUID,
+                device_uuid = PlayerIdentity.Instance.DeviceUUID, // legacy fallback
                 current_streak = StreakManager.Instance.CurrentStreak,
                 longest_streak = StreakManager.Instance.LongestStreak
             };

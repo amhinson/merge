@@ -16,18 +16,35 @@ platform :ios do
     build_path = File.expand_path("../Build/iOS")
     archive_path = File.expand_path("../Build/Murge.xcarchive")
 
-    build_app(
-      project: "#{build_path}/Unity-iPhone.xcodeproj",
-      scheme: "Unity-iPhone",
-      archive_path: archive_path,
-      export_method: "app-store",
-      configuration: "Release",
-      export_options: {
-        signingStyle: "automatic",
-      },
-      clean: false,
-      skip_profile_detection: true,
-    )
+    # Use workspace if Podfile exists (CocoaPods), otherwise project
+    workspace_path = "#{build_path}/Unity-iPhone.xcworkspace"
+    if File.exist?(workspace_path)
+      build_app(
+        workspace: workspace_path,
+        scheme: "Unity-iPhone",
+        archive_path: archive_path,
+        export_method: "app-store",
+        configuration: "Release",
+        export_options: {
+          signingStyle: "automatic",
+        },
+        clean: false,
+        skip_profile_detection: true,
+      )
+    else
+      build_app(
+        project: "#{build_path}/Unity-iPhone.xcodeproj",
+        scheme: "Unity-iPhone",
+        archive_path: archive_path,
+        export_method: "app-store",
+        configuration: "Release",
+        export_options: {
+          signingStyle: "automatic",
+        },
+        clean: false,
+        skip_profile_detection: true,
+      )
+    end
 
     upload_to_testflight(
       api_key: @api_key,
@@ -41,18 +58,34 @@ platform :ios do
     build_path = File.expand_path("../Build/iOS")
     archive_path = File.expand_path("../Build/Murge.xcarchive")
 
-    build_app(
-      project: "#{build_path}/Unity-iPhone.xcodeproj",
-      scheme: "Unity-iPhone",
-      archive_path: archive_path,
-      export_method: "app-store",
-      configuration: "Release",
-      export_options: {
-        signingStyle: "automatic",
-      },
-      clean: false,
-      skip_profile_detection: true,
-    )
+    workspace_path = "#{build_path}/Unity-iPhone.xcworkspace"
+    if File.exist?(workspace_path)
+      build_app(
+        workspace: workspace_path,
+        scheme: "Unity-iPhone",
+        archive_path: archive_path,
+        export_method: "app-store",
+        configuration: "Release",
+        export_options: {
+          signingStyle: "automatic",
+        },
+        clean: false,
+        skip_profile_detection: true,
+      )
+    else
+      build_app(
+        project: "#{build_path}/Unity-iPhone.xcodeproj",
+        scheme: "Unity-iPhone",
+        archive_path: archive_path,
+        export_method: "app-store",
+        configuration: "Release",
+        export_options: {
+          signingStyle: "automatic",
+        },
+        clean: false,
+        skip_profile_detection: true,
+      )
+    end
   end
 
   desc "Upload existing IPA to TestFlight"

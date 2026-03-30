@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders, verifyApiKey } from "../_shared/auth.ts";
+import { corsHeaders, getAuthenticatedUserId } from "../_shared/auth.ts";
 
 const ADJECTIVES = [
   // Phish song references
@@ -58,25 +58,17 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const authError = verifyApiKey(req);
-  if (authError) return authError;
-
   try {
+    const body = await req.json();
+    const { userId, error: authError } = await getAuthenticatedUserId(req, body);
+    if (authError) return authError;
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { device_uuid, display_name } = await req.json();
-
-    if (!device_uuid) {
-      return new Response(
-        JSON.stringify({ error: "device_uuid required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-
+    const display_name = body.display_name as string || "";
     const generatedName = display_name || generateDefaultName();
 
     // Upsert — creates if new, does nothing if exists (preserves streaks)
@@ -84,11 +76,11 @@ serve(async (req) => {
       .from("players")
       .upsert(
         {
-          device_uuid,
+          user_id: userId,
           display_name: generatedName,
         },
         {
-          onConflict: "device_uuid",
+          onConflict: "user_id",
           ignoreDuplicates: true,
         }
       );
@@ -104,7 +96,7 @@ serve(async (req) => {
     const { data: player } = await supabase
       .from("players")
       .select("display_name")
-      .eq("device_uuid", device_uuid)
+      .eq("user_id", userId)
       .single();
 
     return new Response(

@@ -65,7 +65,22 @@
       "Bash(./deploy-android.sh upload-only:*)",
       "Bash(./deploy-android.sh)",
       "Bash(./build-ios.sh prod:*)",
-      "Bash(fastlane ios:*)"
+      "Bash(fastlane ios:*)",
+      "WebFetch(domain:supabase.com)",
+      "Bash(gem list:*)",
+      "Bash(gem install:*)",
+      "Bash(ruby:*)",
+      "Bash(pbcopy)",
+      "Bash(keytool -list -v -keystore /Users/alex/projects/personal/merge/murge.keystore -alias murge -storepass \"$MURGE_KEYSTORE_PASS:-changeit\")",
+      "Bash(npx supabase:*)",
+      "Bash(pod install:*)",
+      "Bash(./build-ios.sh dev:*)",
+      "Bash(security cms:*)",
+      "Bash(open:*)",
+      "WebFetch(domain:dev.to)",
+      "Bash(./build-android.sh dev:*)",
+      "Bash(./install-android.sh dev:*)",
+      "Bash(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android)"
     ]
   }
 }

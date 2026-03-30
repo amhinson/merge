@@ -1,12 +1,31 @@
 ## NEXT UP
 
+Smooth out OAuth modal flow, UI-wise with transitions.
+
+Sign out warning button styles.
+
+Sometimes settings can't scroll?
+
+Android app icon was reset.
+
+Prod auth testing.
+
+Make Shake button more obvious.
+
+Update PII message for connecting account.
+Need to update settings for Apple and Google?
+
+Bump up max display name length.
+
+The bottom half centimeter or something should not trigger touch.
+On Android that's often how we switch between applications but when I touch the bottom of the screen to switch, it counts it as a touch and drops a ball there.
+
+Fix loading screen required image.
+
+Is Android seed different than iOS seed? Test this.
+
 Remove Coming Soon Achievement.
 Add Send Feedback Achievement.
-
-Use supabase anonymous auth. Optional sign in/up when app starts, but make it discrete.
-Prompt after 2 day streak to connect account so you don't lose scores.
-Also have a place in settings to connect & manage this.
-Make big note about how it is only for convenience to persist scores. No personal identifiable data besides ID (?) is stored on our end.
 
 iPad sizing tweaks.
 
@@ -16,6 +35,8 @@ The leaderboard isn't that relevant for a uew user. They just want to merge.
 Post on Reddit and other places online to promote and get Android closed testers. Get strategy from Claude.
 
 ## EVENTUALLY
+
+Make sure all important files/secrets/etc are backed up securely somewhere. keystore, secrets etc
 
 User profile.
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.

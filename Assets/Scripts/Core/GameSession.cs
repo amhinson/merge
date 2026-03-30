@@ -10,7 +10,8 @@ namespace MergeGame.Core
     [Serializable]
     public class Player
     {
-        public string device_uuid;
+        public string user_id;
+        public string device_uuid; // legacy
         public string display_name;
         public string created_at;
         public int current_streak;
@@ -21,7 +22,8 @@ namespace MergeGame.Core
     public class DailyScore
     {
         public long   id;
-        public string device_uuid;
+        public string user_id;
+        public string device_uuid; // legacy
         public string game_date;
         public int    score;
         public int    day_number;
@@ -46,7 +48,7 @@ namespace MergeGame.Core
         public const string AppDomain = "murgegame.com";
         public const string AppEmail = "murgegame@gmail.com";
 
-        public static string  DeviceUUID     { get; private set; }
+        public static string  DeviceUUID     { get; set; }
         public static Player  CurrentPlayer  { get; set; }
         public static int     TodayScore     { get; set; }
         public static bool    HasPlayedToday => TodayScore > 0;

@@ -1,32 +1,33 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders, verifyApiKey } from "../_shared/auth.ts";
+import { corsHeaders, getAuthenticatedUserId } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const authError = verifyApiKey(req);
-  if (authError) return authError;
-
   try {
+    const body = await req.json();
+
+    const { userId, error: authError } = await getAuthenticatedUserId(req, body);
+    if (authError) return authError;
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     const {
-      device_uuid,
       display_name,
       score,
       game_date,
       day_number,
       merge_counts,
       longest_chain,
-    } = await req.json();
+    } = body;
 
-    if (!device_uuid || !game_date || score == null) {
+    if (!game_date || score == null) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         {
@@ -83,8 +84,8 @@ serve(async (req) => {
     const { error: playerError } = await supabase
       .from("players")
       .upsert(
-        { device_uuid, display_name: display_name || "Player" },
-        { onConflict: "device_uuid" },
+        { user_id: userId, display_name: display_name || "Player" },
+        { onConflict: "user_id" },
       );
 
     if (playerError) {
@@ -103,7 +104,7 @@ serve(async (req) => {
     const { data: existing } = await supabase
       .from("daily_scores")
       .select("id")
-      .eq("device_uuid", device_uuid)
+      .eq("user_id", userId)
       .eq("game_date", game_date)
       .single();
 
@@ -118,7 +119,7 @@ serve(async (req) => {
     }
 
     const { error: scoreError } = await supabase.from("daily_scores").insert({
-      device_uuid,
+      user_id: userId,
       display_name: display_name || "Player",
       game_date,
       score,

@@ -603,8 +603,8 @@ namespace MergeGame.UI
                         divLE.minHeight = 1;
                     }
 
-                    bool isMe = !string.IsNullOrEmpty(entry.device_uuid) &&
-                                entry.device_uuid == GameSession.DeviceUUID;
+                    bool isMe = !string.IsNullOrEmpty(entry.GetUserId()) &&
+                                entry.GetUserId() == GameSession.DeviceUUID;
                     if (isMe) playerInTop3 = true;
 
                     // Use rank from API (handles ties correctly)

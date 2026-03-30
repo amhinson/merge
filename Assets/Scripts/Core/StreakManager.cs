@@ -86,6 +86,13 @@ namespace MergeGame.Core
             OnStreakUpdated?.Invoke(CurrentStreak, LongestStreak);
         }
 
+        public void ResetStreak()
+        {
+            CurrentStreak = 0;
+            LongestStreak = 0;
+            SaveStreak();
+        }
+
         private void SaveStreak()
         {
             PlayerPrefs.SetInt(CurrentStreakKey, CurrentStreak);

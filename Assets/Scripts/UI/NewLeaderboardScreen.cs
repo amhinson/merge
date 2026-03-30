@@ -264,7 +264,7 @@ namespace MergeGame.UI
                 return;
             }
 
-            string query = $"game_date={selectedDateStr}&device_uuid={uuid}&limit={PageSize}&offset={offset}";
+            string query = $"game_date={selectedDateStr}&user_id={uuid}&device_uuid={uuid}&limit={PageSize}&offset={offset}";
             Debug.Log($"[Leaderboard] Fetching: {query}");
             SupabaseClient.Instance.CallFunctionGet("get-leaderboard", query, (success, response) =>
             {
@@ -314,7 +314,7 @@ namespace MergeGame.UI
 
             foreach (var entry in entries)
             {
-                bool isMe = !string.IsNullOrEmpty(entry.device_uuid) && entry.device_uuid == uuid;
+                bool isMe = !string.IsNullOrEmpty(entry.GetUserId()) && entry.GetUserId() == uuid;
 
                 var row = MurgeUI.CreateUIObject($"R{entry.rank}", rowContent);
                 var rowLE = row.AddComponent<LayoutElement>();

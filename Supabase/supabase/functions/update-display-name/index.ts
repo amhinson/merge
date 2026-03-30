@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders, verifyApiKey } from "../_shared/auth.ts";
+import { corsHeaders, getAuthenticatedUserId } from "../_shared/auth.ts";
 import { containsProfanity } from "../_shared/profanity.ts";
 
 const MAX_NAME_CHANGES_PER_DAY = 3;
@@ -10,20 +10,22 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const authError = verifyApiKey(req);
-  if (authError) return authError;
-
   try {
+    const body = await req.json();
+
+    const { userId, error: authError } = await getAuthenticatedUserId(req, body);
+    if (authError) return authError;
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { device_uuid, display_name } = await req.json();
+    const { display_name } = body;
 
-    if (!device_uuid || !display_name) {
+    if (!display_name) {
       return new Response(
-        JSON.stringify({ error: "device_uuid and display_name required" }),
+        JSON.stringify({ error: "display_name required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -48,7 +50,7 @@ serve(async (req) => {
     const { data: player } = await supabase
       .from("players")
       .select("display_name, name_changes_today, name_change_date")
-      .eq("device_uuid", device_uuid)
+      .eq("user_id", userId)
       .single();
 
     if (player) {
@@ -78,7 +80,7 @@ serve(async (req) => {
           name_changes_today: changestoday + 1,
           name_change_date: today,
         })
-        .eq("device_uuid", device_uuid);
+        .eq("user_id", userId);
 
       if (error) {
         return new Response(
@@ -93,7 +95,7 @@ serve(async (req) => {
     await supabase
       .from("daily_scores")
       .update({ display_name: sanitized })
-      .eq("device_uuid", device_uuid)
+      .eq("user_id", userId)
       .eq("game_date", today);
 
     return new Response(

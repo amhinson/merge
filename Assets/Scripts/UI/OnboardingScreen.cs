@@ -495,6 +495,7 @@ namespace MergeGame.UI
             vlg.spacing = 0;
 
             BuildLogoBlock(content.transform);
+            BuildSignInButton(transform); // absolute positioned, top-right
             AddFlex(content.transform, 1f);
             BuildDemoArena(content.transform);
             AddFlex(content.transform, 0.6f);
@@ -693,11 +694,69 @@ namespace MergeGame.UI
 
         // ───── Helpers ─────
 
+        private void BuildSignInButton(Transform parent)
+        {
+            var btnGO = MurgeUI.CreateUIObject("SignInBtn", parent);
+            var btnRT = btnGO.GetComponent<RectTransform>();
+            btnRT.anchorMin = new Vector2(1, 1);
+            btnRT.anchorMax = new Vector2(1, 1);
+            btnRT.pivot = new Vector2(1, 1);
+            btnRT.anchoredPosition = new Vector2(-20, -(OS.safeAreaTop + 20));
+            btnRT.sizeDelta = new Vector2(80, 30);
+
+            var tmp = btnGO.AddComponent<TextMeshProUGUI>();
+            tmp.text = "Sign in";
+            tmp.font = MurgeUI.DMMono;
+            tmp.fontSize = 12;
+            tmp.color = OC.muted;
+            tmp.alignment = TextAlignmentOptions.Right;
+            tmp.verticalAlignment = VerticalAlignmentOptions.Middle;
+
+            var btn = btnGO.AddComponent<Button>();
+            btn.targetGraphic = tmp;
+            btn.onClick.AddListener(() =>
+            {
+                if (SignInSheet.Instance != null)
+                    SignInSheet.Instance.Show(OnSignInFromOnboarding);
+            });
+        }
+
+        private void OnSignInFromOnboarding(string provider)
+        {
+            Debug.Log($"[Onboarding] Signed in with {provider}");
+            // Refresh identity, register with backend, and skip to home
+            if (Core.PlayerIdentity.Instance != null)
+                Core.PlayerIdentity.Instance.RegisterAfterAuth();
+            FinishOnboarding();
+        }
+
         private void FinishOnboarding()
         {
             GameSession.MarkOnboardingComplete();
             if (MurgeAnalytics.Instance != null)
                 MurgeAnalytics.Instance.TrackOnboardingComplete();
+
+            // Create anonymous auth session if not already signed in
+            if (Backend.AuthManager.Instance != null && !Backend.AuthManager.Instance.IsAuthenticated)
+            {
+                Backend.AuthManager.Instance.CreateAnonymousSession((success) =>
+                {
+                    if (success && PlayerIdentity.Instance != null)
+                    {
+                        PlayerIdentity.Instance.RefreshFromAuth();
+                        PlayerIdentity.Instance.RegisterAfterAuth();
+                    }
+                    NavigateToHome();
+                });
+            }
+            else
+            {
+                NavigateToHome();
+            }
+        }
+
+        private void NavigateToHome()
+        {
             if (ScreenManager.Instance != null)
                 ScreenManager.Instance.NavigateTo(Screen.HomeFresh);
         }

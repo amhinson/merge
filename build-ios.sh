@@ -1,9 +1,11 @@
 #!/bin/bash
-# Build iOS and upload to TestFlight.
+# Build iOS and optionally upload to TestFlight.
 # Usage:
-#   ./build-ios.sh dev      # Development build (dev Supabase)
-#   ./build-ios.sh prod     # Release build (prod Supabase)
-#   ./build-ios.sh all      # Both dev and prod (sequentially)
+#   ./build-ios.sh dev           # Build + upload to TestFlight
+#   ./build-ios.sh prod          # Build + upload to TestFlight
+#   ./build-ios.sh all           # Both dev and prod
+#   ./build-ios.sh dev --no-upload   # Build only (Xcode project + pods, no fastlane)
+#   ./build-ios.sh prod --no-upload  # Build only
 #
 # Build number auto-increments from .build-number file.
 # Override with: BUILD_NUMBER=42 ./build-ios.sh prod
@@ -78,22 +80,46 @@ build_env() {
 
     echo "Xcode project generated"
 
-    # Archive, export, and upload via fastlane
-    echo ""
-    echo "Building and uploading via fastlane..."
-    cd "$PROJECT_PATH"
-    fastlane ios beta \
-        || { echo "Fastlane failed ($env)"; exit 1; }
+    # Install CocoaPods dependencies (Google Sign In SDK)
+    if [ -f "$BUILD_DIR/Podfile" ]; then
+        echo ""
+        echo "Running pod install..."
+        cd "$BUILD_DIR"
+        pod install || { echo "pod install failed"; exit 1; }
+        cd "$PROJECT_PATH"
+        echo "Pods installed"
+    fi
 
-    echo ""
-    echo "  $env build #$build_num — uploaded to TestFlight"
-    echo "========================================"
-    echo ""
+    if [ "$NO_UPLOAD" = "true" ]; then
+        echo ""
+        echo "  $env build #$build_num — Xcode project ready"
+        echo "  Opening in Xcode..."
+        echo "========================================"
+        echo ""
+        open "$BUILD_DIR/Unity-iPhone.xcworkspace"
+    else
+        # Archive, export, and upload via fastlane
+        echo ""
+        echo "Building and uploading via fastlane..."
+        cd "$PROJECT_PATH"
+        fastlane ios beta \
+            || { echo "Fastlane failed ($env)"; exit 1; }
+
+        echo ""
+        echo "  $env build #$build_num — uploaded to TestFlight"
+        echo "========================================"
+        echo ""
+    fi
 }
 
 # ===== Main =====
 
 ENV="${1:-dev}"
+NO_UPLOAD="false"
+if [ "$2" = "--no-upload" ] || [ "$1" = "--no-upload" ]; then
+    NO_UPLOAD="true"
+    if [ "$1" = "--no-upload" ]; then ENV="dev"; fi
+fi
 
 if [ ! -f "$UNITY_PATH" ]; then
     echo "Unity not found at $UNITY_PATH"

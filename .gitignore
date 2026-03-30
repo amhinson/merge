@@ -73,3 +73,10 @@ play-service-account.json
 report.xml
 Murge.app.dSYM.zip
 Murge.ipa
+
+# Apple
+*.p8
+client_*.plist
+
+# Google
+client_secret_*.json

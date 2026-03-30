@@ -114,6 +114,14 @@ namespace MergeGame.UI
 
         protected override void BuildCTABlock(Transform parent)
         {
+            // Link prompt — show once for anonymous users with 2+ day streak
+            if (LinkPromptCard.ShouldShow())
+            {
+                LinkPromptCard.Build(parent);
+                var spacer = MurgeUI.CreateUIObject("LinkSpacer", parent);
+                spacer.AddComponent<LayoutElement>().preferredHeight = 8;
+            }
+
             // Action row: Share (primary) + Play Again (ghost/outline)
             var actionRow = MurgeUI.CreateUIObject("ActionRow", parent);
             var actionHLG = actionRow.AddComponent<HorizontalLayoutGroup>();

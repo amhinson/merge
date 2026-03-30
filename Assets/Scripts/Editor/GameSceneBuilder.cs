@@ -88,6 +88,7 @@ namespace MergeGame.Editor
             managers.AddComponent<HapticManager>();
             managers.AddComponent<AchievementManager>();
             managers.AddComponent<SupabaseClient>();
+            managers.AddComponent<AuthManager>();
             managers.AddComponent<LeaderboardService>();
             managers.AddComponent<NetworkMonitor>();
             managers.AddComponent<OfflineSyncQueue>();

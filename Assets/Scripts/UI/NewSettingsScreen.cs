@@ -44,6 +44,7 @@ namespace MergeGame.UI
             sfxOn = MergeGame.Audio.AudioManager.Instance != null && MergeGame.Audio.AudioManager.Instance.IsSfxEnabled;
             UpdateToggleVisual(false);
             UpdateSfxToggleVisual(false);
+            RefreshAccountUI();
         }
 
         private void BuildUI()
@@ -55,14 +56,29 @@ namespace MergeGame.UI
             // Header (top, fixed)
             BuildHeader(transform);
 
-            // Content area (between header and save button)
-            var content = MurgeUI.CreateUIObject("Content", transform);
-            var cRT = content.GetComponent<RectTransform>();
-            cRT.anchorMin = Vector2.zero;
-            cRT.anchorMax = Vector2.one;
-            cRT.offsetMin = new Vector2(24, 80 + (int)OS.safeAreaBottom); // above save button area
-            cRT.offsetMax = new Vector2(-24, -(OS.safeAreaTop + 56)); // below header
+            // Scrollable content area
+            var scrollGO = MurgeUI.CreateUIObject("Scroll", transform);
+            var scrollRT = scrollGO.GetComponent<RectTransform>();
+            scrollRT.anchorMin = Vector2.zero;
+            scrollRT.anchorMax = Vector2.one;
+            scrollRT.offsetMin = new Vector2(24, (int)OS.safeAreaBottom + 16);
+            scrollRT.offsetMax = new Vector2(-24, -(OS.safeAreaTop + 56));
+            var scrollRect = scrollGO.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Elastic;
+            scrollRect.scrollSensitivity = 20f;
 
+            var viewportGO = MurgeUI.CreateUIObject("Viewport", scrollGO.transform);
+            MurgeUI.StretchFill(viewportGO.GetComponent<RectTransform>());
+            viewportGO.AddComponent<RectMask2D>();
+            scrollRect.viewport = viewportGO.GetComponent<RectTransform>();
+
+            var content = MurgeUI.CreateUIObject("Content", viewportGO.transform);
+            var cRT = content.GetComponent<RectTransform>();
+            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1);
+            cRT.pivot = new Vector2(0.5f, 1);
+            cRT.offsetMin = Vector2.zero; cRT.offsetMax = Vector2.zero;
             var vlg = content.AddComponent<VerticalLayoutGroup>();
             vlg.childAlignment = TextAnchor.UpperLeft;
             vlg.childControlWidth = true;
@@ -70,6 +86,9 @@ namespace MergeGame.UI
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
             vlg.spacing = 0;
+            var csf = content.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            scrollRect.content = cRT;
 
             AddSpacer(content.transform, 8);
             BuildUsernameSection(content.transform);
@@ -78,10 +97,12 @@ namespace MergeGame.UI
             AddSpacer(content.transform, 20);
             BuildGameCenterRow(content.transform);
             AddSpacer(content.transform, 20);
+            BuildAccountSection(content.transform);
+            AddSpacer(content.transform, 20);
+            BuildSaveButton(content.transform);
+            AddSpacer(content.transform, 20);
             BuildBetaFeedback(content.transform);
-
-            // Save button (pinned to bottom)
-            BuildSaveButton(transform);
+            AddSpacer(content.transform, 20);
         }
 
         private void BuildHeader(Transform parent)
@@ -463,6 +484,259 @@ namespace MergeGame.UI
 #endif
         }
 
+        private GameObject accountCard;
+        private TextMeshProUGUI accountStatusLabel;
+        private TextMeshProUGUI accountDetailLabel;
+        private GameObject connectRow;
+        private GameObject signedInRow;
+        private GameObject signOutRow;
+
+        private void BuildAccountSection(Transform parent)
+        {
+            // Section label
+            var sectionLabel = MurgeUI.CreateLabel(parent, "ACCOUNT",
+                MurgeUI.PressStart2P, OFont.labelXs, OC.muted, "AccountLabel");
+            sectionLabel.alignment = TextAlignmentOptions.Left;
+            sectionLabel.characterSpacing = 3;
+            sectionLabel.gameObject.AddComponent<LayoutElement>().preferredHeight = 16;
+            AddSpacer(parent, 6);
+
+            accountCard = MurgeUI.CreateCard(parent);
+            accountCard.name = "AccountCard";
+
+            // Connect row (anonymous state) — entire card is tappable
+            connectRow = MurgeUI.CreateUIObject("ConnectRow", accountCard.transform);
+            var crRT = connectRow.GetComponent<RectTransform>();
+            crRT.anchorMin = Vector2.zero; crRT.anchorMax = Vector2.one;
+            crRT.offsetMin = Vector2.zero; crRT.offsetMax = Vector2.zero;
+
+            // Invisible hit area covering the whole card
+            var crHitImg = connectRow.AddComponent<Image>();
+            crHitImg.color = Color.clear;
+            var crBtn = connectRow.AddComponent<Button>();
+            crBtn.targetGraphic = crHitImg;
+            crBtn.onClick.AddListener(OnConnectAccountClicked);
+
+            // Content inside with padding
+            var crContent = MurgeUI.CreateUIObject("Content", connectRow.transform);
+            MurgeUI.StretchFill(crContent.GetComponent<RectTransform>());
+            var ccRT = crContent.GetComponent<RectTransform>();
+            ccRT.offsetMin = new Vector2(14, 12); ccRT.offsetMax = new Vector2(-14, -12);
+            var crVLG = crContent.AddComponent<VerticalLayoutGroup>();
+            crVLG.spacing = 4;
+            crVLG.childControlWidth = true;
+            crVLG.childControlHeight = true;
+            crVLG.childForceExpandWidth = true;
+            crVLG.childForceExpandHeight = false;
+
+            var connectLabel = MurgeUI.CreateUIObject("Label", crContent.transform);
+            var cbTMP = connectLabel.AddComponent<TextMeshProUGUI>();
+            cbTMP.text = "Connect account  >";
+            cbTMP.font = MurgeUI.DMMono;
+            cbTMP.fontSize = 14;
+            cbTMP.color = Color.white;
+            cbTMP.alignment = TextAlignmentOptions.Left;
+            cbTMP.raycastTarget = false;
+            connectLabel.AddComponent<LayoutElement>().preferredHeight = 20;
+
+            var privacyNote = MurgeUI.CreateLabel(crContent.transform,
+                "We only store your player ID. No personal data.",
+                MurgeUI.DMMono, 9, OC.dim, "Privacy");
+            privacyNote.alignment = TextAlignmentOptions.Left;
+            privacyNote.raycastTarget = false;
+            privacyNote.gameObject.AddComponent<LayoutElement>().preferredHeight = 14;
+
+            // Signed in row (linked state)
+            signedInRow = MurgeUI.CreateUIObject("SignedInRow", accountCard.transform);
+            var siRT = signedInRow.GetComponent<RectTransform>();
+            siRT.anchorMin = Vector2.zero; siRT.anchorMax = Vector2.one;
+            siRT.offsetMin = new Vector2(14, 0); siRT.offsetMax = new Vector2(-14, 0);
+            var siVLG = signedInRow.AddComponent<VerticalLayoutGroup>();
+            siVLG.spacing = 4;
+            siVLG.childControlWidth = true;
+            siVLG.childControlHeight = true;
+            siVLG.childForceExpandWidth = true;
+            siVLG.childForceExpandHeight = false;
+            siVLG.padding = new RectOffset(0, 0, 12, 8);
+
+            accountStatusLabel = MurgeUI.CreateLabel(signedInRow.transform, "",
+                MurgeUI.DMMono, 14, Color.white, "Status").GetComponent<TextMeshProUGUI>();
+            accountStatusLabel.alignment = TextAlignmentOptions.Left;
+            accountStatusLabel.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
+
+            accountDetailLabel = MurgeUI.CreateLabel(signedInRow.transform, "",
+                MurgeUI.DMMono, 10, OC.muted, "Detail").GetComponent<TextMeshProUGUI>();
+            accountDetailLabel.alignment = TextAlignmentOptions.Left;
+            accountDetailLabel.gameObject.AddComponent<LayoutElement>().preferredHeight = 14;
+
+            // Sign out button — inside the VLG, after email
+            signOutRow = MurgeUI.CreateUIObject("SignOutBtn", signedInRow.transform);
+            var soLE = signOutRow.AddComponent<LayoutElement>();
+            soLE.preferredHeight = 28;
+            var soTMP = signOutRow.AddComponent<TextMeshProUGUI>();
+            soTMP.text = "Sign out";
+            soTMP.font = MurgeUI.DMMono;
+            soTMP.fontSize = 11;
+            soTMP.color = OC.muted;
+            soTMP.alignment = TextAlignmentOptions.Left;
+            var soBtn = signOutRow.AddComponent<Button>();
+            soBtn.targetGraphic = soTMP;
+            soBtn.onClick.AddListener(OnSignOutClicked);
+
+            var cardLE = accountCard.AddComponent<LayoutElement>();
+            cardLE.preferredHeight = 86;
+            cardLE.minHeight = 86;
+
+            RefreshAccountUI();
+        }
+
+        private void RefreshAccountUI()
+        {
+            if (accountCard == null) return;
+
+            bool isAnonymous = AuthManager.Instance == null || AuthManager.Instance.IsAnonymous;
+            connectRow.SetActive(isAnonymous);
+            signedInRow.SetActive(!isAnonymous);
+            signOutRow.SetActive(!isAnonymous);
+
+            if (!isAnonymous && AuthManager.Instance != null)
+            {
+                string provider = AuthManager.Instance.AuthProvider;
+                string providerDisplay = provider == "apple" ? "Signed in with Apple" : "Signed in with Google";
+                accountStatusLabel.text = providerDisplay;
+                accountDetailLabel.text = AuthManager.Instance.AuthEmail ?? "";
+            }
+        }
+
+        private void OnConnectAccountClicked()
+        {
+            if (SignInSheet.Instance != null)
+                SignInSheet.Instance.Show((provider) =>
+                {
+                    if (Core.PlayerIdentity.Instance != null)
+                        Core.PlayerIdentity.Instance.RegisterAfterAuth();
+                    // Re-fetch profile + leaderboard for the new identity, then navigate
+                    RefreshServerDataAndGoHome();
+                });
+        }
+
+        private void OnSignOutClicked()
+        {
+            if (AuthManager.Instance == null) return;
+
+            // Show confirmation
+            if (SignOutConfirm.Instance != null)
+            {
+                SignOutConfirm.Instance.Show(() =>
+                {
+                    PerformSignOut();
+                });
+            }
+            else
+            {
+                PerformSignOut();
+            }
+        }
+
+        private void PerformSignOut()
+        {
+            AuthManager.Instance.SignOut((success) =>
+            {
+                // Clear all local player data — full reset
+                PlayerPrefs.SetString("player_display_name", "");
+                PlayerPrefs.SetInt("HighScore", 0);
+                PlayerPrefs.SetInt("current_streak", 0);
+                PlayerPrefs.SetInt("longest_streak", 0);
+                PlayerPrefs.DeleteKey("last_streak_date");
+                PlayerPrefs.DeleteKey("player_uuid");
+                string today = System.DateTime.Now.ToString("yyyy-MM-dd");
+                PlayerPrefs.DeleteKey($"scored_attempt_{today}");
+                PlayerPrefs.DeleteKey($"merge_counts_{today}");
+                PlayerPrefs.DeleteKey("saved_game_state");
+                PlayerPrefs.DeleteKey("freeplay_toast_date");
+                PlayerPrefs.DeleteKey("link_prompt_dismissed");
+                PlayerPrefs.Save();
+
+                // Clear in-memory display name before creating new session
+                if (Core.PlayerIdentity.Instance != null)
+                    Core.PlayerIdentity.Instance.ClearDisplayName();
+
+                // Create new anonymous session + register, then go home
+                AuthManager.Instance.CreateAnonymousSession((anonSuccess) =>
+                {
+                    if (anonSuccess && Core.PlayerIdentity.Instance != null)
+                        Core.PlayerIdentity.Instance.RegisterAfterAuth();
+
+                    // Reset runtime state
+                    Core.GameSession.TodayScore = 0;
+                    Core.GameSession.ResultRank = 0;
+                    Core.GameSession.ResultTotalPlayers = 0;
+                    Core.GameSession.MergeCounts = new int[11];
+                    if (Core.ScoreManager.Instance != null)
+                        Core.ScoreManager.Instance.ResetScore();
+                    if (Core.StreakManager.Instance != null)
+                        Core.StreakManager.Instance.ResetStreak();
+
+                    // Refresh leaderboard cache and navigate
+                    RefreshServerDataAndGoHome();
+                });
+            });
+        }
+
+
+        /// <summary>
+        /// Re-fetch profile + leaderboard for the current user, then navigate to the correct home screen.
+        /// Call after any identity change (connect, sign out).
+        /// </summary>
+        private void RefreshServerDataAndGoHome()
+        {
+            string userId = Core.PlayerIdentity.Instance != null ? Core.PlayerIdentity.Instance.DeviceUUID : "";
+            string today = Core.GameSession.TodayDateStr;
+
+            // Invalidate and re-fetch leaderboard cache with new user_id
+            if (LeaderboardService.Instance != null)
+            {
+                LeaderboardService.Instance.InvalidateCache();
+                LeaderboardService.Instance.FetchLeaderboard(today, null);
+            }
+
+            // Fetch profile to see if this user has played today
+            if (LeaderboardService.Instance != null && !string.IsNullOrEmpty(userId))
+            {
+                LeaderboardService.Instance.FetchPlayerProfile(userId, today, (profile) =>
+                {
+                    if (profile != null)
+                    {
+                        Core.GameSession.TodayScore = profile.today_score;
+                        if (profile.day_number > 0)
+                            Core.GameSession.TodayDayNumber = profile.day_number;
+                        if (Core.GameSession.CurrentPlayer == null)
+                            Core.GameSession.CurrentPlayer = new Player();
+                        Core.GameSession.CurrentPlayer.display_name = profile.display_name;
+                        Core.GameSession.CurrentPlayer.current_streak = profile.current_streak;
+
+                        // Mark scored attempt locally if played today
+                        if (profile.today_score > 0 && Core.DailySeedManager.Instance != null)
+                            Core.DailySeedManager.Instance.MarkScoredAttemptComplete();
+                    }
+
+                    NavigateHome();
+                });
+            }
+            else
+            {
+                NavigateHome();
+            }
+        }
+
+        private void NavigateHome()
+        {
+            if (ScreenManager.Instance == null) return;
+            bool hasPlayed = Core.GameSession.HasPlayedToday ||
+                (Core.DailySeedManager.Instance != null && Core.DailySeedManager.Instance.HasCompletedScoredAttempt());
+            ScreenManager.Instance.NavigateTo(hasPlayed ? Screen.HomePlayed : Screen.HomeFresh);
+        }
+
         private void BuildBetaFeedback(Transform parent)
         {
             // Container with border — uses VLG + padding directly
@@ -573,16 +847,7 @@ namespace MergeGame.UI
 
         private void BuildSaveButton(Transform parent)
         {
-            var wrapper = MurgeUI.CreateUIObject("SaveWrapper", parent);
-            var wRT = wrapper.GetComponent<RectTransform>();
-            wRT.anchorMin = new Vector2(0, 0);
-            wRT.anchorMax = new Vector2(1, 0);
-            wRT.pivot = new Vector2(0.5f, 0);
-            wRT.anchoredPosition = new Vector2(0, 30 + OS.safeAreaBottom);
-            wRT.sizeDelta = new Vector2(-48, 44); // -48 = 24px padding each side
-
-            var (saveGO, saveTMP) = MurgeUI.CreatePrimaryButton(wrapper.transform, "SAVE", 44, "SaveButton");
-            MurgeUI.StretchFill(saveGO.GetComponent<RectTransform>());
+            var (saveGO, saveTMP) = MurgeUI.CreatePrimaryButton(parent, "SAVE", 44, "SaveButton");
 
             saveButton = saveGO.GetComponent<Button>();
             saveLabel = saveTMP;

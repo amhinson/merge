@@ -7,10 +7,14 @@ namespace MergeGame.Backend
     [Serializable]
     public class LeaderboardEntry
     {
-        public string device_uuid;
+        public string user_id;
+        public string device_uuid; // legacy — server may return either
         public string display_name;
         public int score;
         public int rank;
+
+        /// <summary>Returns whichever ID field the server populated.</summary>
+        public string GetUserId() => !string.IsNullOrEmpty(user_id) ? user_id : device_uuid;
     }
 
     [Serializable]
@@ -41,7 +45,8 @@ namespace MergeGame.Backend
     [Serializable]
     public class SubmitScoreRequest
     {
-        public string device_uuid;
+        public string user_id;
+        public string device_uuid; // legacy fallback
         public string display_name;
         public int score;
         public string game_date;
@@ -53,14 +58,16 @@ namespace MergeGame.Backend
     [Serializable]
     public class ProfileRequest
     {
-        public string device_uuid;
+        public string user_id;
+        public string device_uuid; // legacy fallback
         public string game_date;
     }
 
     [Serializable]
     public class UpdateNameRequest
     {
-        public string device_uuid;
+        public string user_id;
+        public string device_uuid; // legacy fallback
         public string display_name;
     }
 
@@ -77,6 +84,12 @@ namespace MergeGame.Backend
         // Cached leaderboard for live rank comparison
         private List<LeaderboardEntry> cachedLeaderboard = new List<LeaderboardEntry>();
         public List<LeaderboardEntry> CachedEntries => cachedLeaderboard;
+
+        /// <summary>Invalidate the cache so the next fetch hits the server.</summary>
+        public void InvalidateCache()
+        {
+            lastLeaderboardFetch = 0;
+        }
         private float lastLeaderboardFetch;
         private const float LeaderboardCacheInterval = 45f; // seconds
 
@@ -110,7 +123,8 @@ namespace MergeGame.Backend
 
             var request = new SubmitScoreRequest
             {
-                device_uuid = identity.DeviceUUID,
+                user_id = identity.DeviceUUID,
+                device_uuid = identity.DeviceUUID, // legacy fallback
                 display_name = identity.DisplayName,
                 score = score,
                 game_date = gameDate,
@@ -145,7 +159,8 @@ namespace MergeGame.Backend
                 return;
             }
 
-            SupabaseClient.Instance.CallFunctionGet("get-leaderboard", $"game_date={gameDate}", (success, response) =>
+            string userId = MergeGame.Core.PlayerIdentity.Instance != null ? MergeGame.Core.PlayerIdentity.Instance.DeviceUUID : "";
+            SupabaseClient.Instance.CallFunctionGet("get-leaderboard", $"game_date={gameDate}&user_id={userId}", (success, response) =>
             {
                 Debug.Log($"Leaderboard fetch success={success}, response={response}");
                 if (success && !string.IsNullOrEmpty(response))
@@ -185,7 +200,7 @@ namespace MergeGame.Backend
                 return;
             }
 
-            string query = $"device_uuid={identity.DeviceUUID}&game_date={gameDate}";
+            string query = $"user_id={identity.DeviceUUID}&device_uuid={identity.DeviceUUID}&game_date={gameDate}";
             SupabaseClient.Instance.CallFunctionGet("get-player-rank", query, (success, response) =>
             {
                 if (success)
@@ -216,7 +231,8 @@ namespace MergeGame.Backend
                 callback?.Invoke(-1, 0);
                 return;
             }
-            string query = $"device_uuid={MergeGame.Core.PlayerIdentity.Instance.DeviceUUID}&game_date={gameDate}";
+            string uuid = MergeGame.Core.PlayerIdentity.Instance.DeviceUUID;
+            string query = $"user_id={uuid}&device_uuid={uuid}&game_date={gameDate}";
             SupabaseClient.Instance.CallFunctionGet("get-player-rank", query, (success, response) =>
             {
                 if (success)
@@ -273,7 +289,7 @@ namespace MergeGame.Backend
                 return;
             }
 
-            var profileReq = new ProfileRequest { device_uuid = deviceUUID, game_date = gameDate };
+            var profileReq = new ProfileRequest { user_id = deviceUUID, device_uuid = deviceUUID, game_date = gameDate };
             string json = JsonUtility.ToJson(profileReq);
             SupabaseClient.Instance.CallFunction("get-player-profile", json, (success, response) =>
             {
@@ -309,7 +325,7 @@ namespace MergeGame.Backend
                 return;
             }
 
-            var nameReq = new UpdateNameRequest { device_uuid = identity.DeviceUUID, display_name = newName };
+            var nameReq = new UpdateNameRequest { user_id = identity.DeviceUUID, device_uuid = identity.DeviceUUID, display_name = newName };
             string json = JsonUtility.ToJson(nameReq);
             SupabaseClient.Instance.CallFunction("update-display-name", json, (success, response) =>
             {

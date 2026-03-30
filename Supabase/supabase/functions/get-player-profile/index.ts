@@ -1,38 +1,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders, verifyApiKey } from "../_shared/auth.ts";
+import { corsHeaders, getAuthenticatedUserId } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const authError = verifyApiKey(req);
-  if (authError) return authError;
-
   try {
+    const url = new URL(req.url);
+    // Support both GET (query params) and POST (body)
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const queryBody = {
+      ...body,
+      user_id: body.user_id || url.searchParams.get("user_id"),
+      device_uuid: body.device_uuid || url.searchParams.get("device_uuid"),
+    };
+
+    const { userId, error: authError } = await getAuthenticatedUserId(req, queryBody);
+    if (authError) return authError;
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const url = new URL(req.url);
-    // Support both GET (query params) and POST (body)
-    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const device_uuid = url.searchParams.get("device_uuid") || body.device_uuid;
-
-    if (!device_uuid) {
-      return new Response(
-        JSON.stringify({ error: "device_uuid parameter required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // Get player info
     const { data: player, error: playerError } = await supabase
       .from("players")
       .select("*")
-      .eq("device_uuid", device_uuid)
+      .eq("user_id", userId)
       .single();
 
     if (playerError || !player) {
@@ -43,7 +40,7 @@ serve(async (req) => {
     }
 
     // Get today's score if a game_date was provided (body already parsed above)
-    const game_date = body.game_date || url.searchParams.get("game_date");
+    const game_date = queryBody.game_date || url.searchParams.get("game_date");
 
     let today_score = 0;
     let day_number = 0;
@@ -53,7 +50,7 @@ serve(async (req) => {
       const { data: todayData } = await supabase
         .from("daily_scores")
         .select("score, day_number, merge_counts")
-        .eq("device_uuid", device_uuid)
+        .eq("user_id", userId)
         .eq("game_date", game_date)
         .single();
 

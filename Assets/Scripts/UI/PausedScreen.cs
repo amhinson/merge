@@ -619,8 +619,8 @@ namespace MergeGame.UI
                     divLE.preferredHeight = 1; divLE.minHeight = 1;
                 }
 
-                bool isMe = !string.IsNullOrEmpty(entry.device_uuid) &&
-                            entry.device_uuid == GameSession.DeviceUUID;
+                bool isMe = !string.IsNullOrEmpty(entry.GetUserId()) &&
+                            entry.GetUserId() == GameSession.DeviceUUID;
 
                 Color rankColor = entry.rank == 1 ? OC.amber
                     : entry.rank == 2 ? OC.A(Color.white, 0.5f)

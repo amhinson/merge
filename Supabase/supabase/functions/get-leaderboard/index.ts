@@ -7,18 +7,21 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Leaderboard is public read — only need API key, not full auth
   const authError = verifyApiKey(req);
   if (authError) return authError;
 
   try {
+    const url = new URL(req.url);
+    // user_id is optional — used only for is_current_player flag
+    const userId = url.searchParams.get("user_id") || url.searchParams.get("device_uuid") || "";
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const url = new URL(req.url);
     const game_date = url.searchParams.get("game_date");
-    const device_uuid = url.searchParams.get("device_uuid") || "";
     const limit = parseInt(url.searchParams.get("limit") || "100");
     const offset = parseInt(url.searchParams.get("offset") || "0");
 
@@ -32,7 +35,7 @@ serve(async (req) => {
     // Read display_name directly from daily_scores — no JOIN needed
     const { data, error } = await supabase
       .from("daily_scores")
-      .select("device_uuid, score, display_name")
+      .select("user_id, score, display_name")
       .eq("game_date", game_date)
       .order("score", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -41,7 +44,7 @@ serve(async (req) => {
       // Fallback: try with players join (for old rows without display_name)
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("daily_scores")
-        .select(`device_uuid, score, players!inner(display_name)`)
+        .select(`user_id, score, players!inner(display_name)`)
         .eq("game_date", game_date)
         .order("score", { ascending: false })
         .range(offset, offset + limit - 1);
@@ -53,14 +56,14 @@ serve(async (req) => {
         );
       }
 
-      const entries = rankEntries(fallbackData || [], offset, device_uuid, true);
+      const entries = rankEntries(fallbackData || [], offset, userId, true);
       return new Response(JSON.stringify(entries), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const entries = rankEntries(data || [], offset, device_uuid, false);
+    const entries = rankEntries(data || [], offset, userId, false);
     return new Response(JSON.stringify(entries), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -73,7 +76,7 @@ serve(async (req) => {
   }
 });
 
-function rankEntries(data: any[], offset: number, device_uuid: string, useJoin: boolean) {
+function rankEntries(data: any[], offset: number, user_id: string, useJoin: boolean) {
   let currentRank = offset + 1;
   let previousScore = -1;
   return data.map((row: any, index: number) => {
@@ -82,13 +85,13 @@ function rankEntries(data: any[], offset: number, device_uuid: string, useJoin: 
       previousScore = row.score;
     }
     return {
-      device_uuid: row.device_uuid,
+      user_id: row.user_id,
       display_name: useJoin
         ? (row.players?.display_name || "Player")
         : (row.display_name || "Player"),
       score: row.score,
       rank: currentRank,
-      is_current_player: row.device_uuid === device_uuid,
+      is_current_player: row.user_id === user_id,
     };
   });
 }
