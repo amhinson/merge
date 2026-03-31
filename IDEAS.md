@@ -2,8 +2,6 @@
 
 TEST the Link Prompt Card!
 
-Make Shake button more obvious.
-
 Bump up max display name length.
 
 The bottom half centimeter or something should not trigger touch.

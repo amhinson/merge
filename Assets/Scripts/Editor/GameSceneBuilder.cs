@@ -494,7 +494,7 @@ namespace MergeGame.Editor
             var shakeAreaRT = shakeArea.AddComponent<RectTransform>();
             // Anchor at top-center
             SetAnchors(shakeAreaRT, 0.5f, 1, 0.5f, 1);
-            shakeAreaRT.anchoredPosition = new Vector2(0, -(safeTop + 14));
+            shakeAreaRT.anchoredPosition = new Vector2(0, -(safeTop + 22));
             shakeAreaRT.sizeDelta = new Vector2(120, 36);
             shakeAreaRT.pivot = new Vector2(0.5f, 1);
 
@@ -507,28 +507,29 @@ namespace MergeGame.Editor
             var shakeBtnImg = shakeBtn.AddComponent<Image>();
             shakeBtnImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
             shakeBtnImg.type = Image.Type.Sliced;
-            shakeBtnImg.color = HexColor("161B24");
+            shakeBtnImg.color = HexColor("4DD9C0");
             shakeBtn.AddComponent<Button>().targetGraphic = shakeBtnImg;
-            // Shake outline
-            var shakeOutline = new GameObject("Outline");
-            shakeOutline.transform.SetParent(shakeBtn.transform, false);
-            var shakeOutlineRT = shakeOutline.AddComponent<RectTransform>();
-            shakeOutlineRT.anchorMin = Vector2.zero; shakeOutlineRT.anchorMax = Vector2.one;
-            shakeOutlineRT.offsetMin = Vector2.zero; shakeOutlineRT.offsetMax = Vector2.zero;
-            var shakeOutlineImg = shakeOutline.AddComponent<Image>();
-            shakeOutlineImg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
-            shakeOutlineImg.type = Image.Type.Sliced;
-            shakeOutlineImg.color = HexColor("232838");
-            shakeOutlineImg.raycastTarget = false;
+            // Scanline overlay
+            var shakeScanGO = new GameObject("Scanlines");
+            shakeScanGO.transform.SetParent(shakeBtn.transform, false);
+            var shakeScanImg = shakeScanGO.AddComponent<Image>();
+            shakeScanImg.sprite = MurgeUI.GetScanlineSprite();
+            shakeScanImg.type = Image.Type.Simple;
+            shakeScanImg.color = new Color(0, 0, 0, 0.25f);
+            shakeScanImg.raycastTarget = false;
+            var shakeScanRT = shakeScanGO.GetComponent<RectTransform>();
+            shakeScanRT.anchorMin = Vector2.zero; shakeScanRT.anchorMax = Vector2.one;
+            shakeScanRT.offsetMin = Vector2.zero; shakeScanRT.offsetMax = Vector2.zero;
+            shakeBtn.AddComponent<RectMask2D>();
             // Shake label with count inline — "Shake · 3"
-            var shakeTMP = CreateText(shakeBtn.transform, "ShakeLabel", "Shake", 8, new Color(1, 1, 1, 0.35f));
+            var shakeTMP = CreateText(shakeBtn.transform, "ShakeLabel", "Shake", 8, HexColor("0F1117"));
             shakeTMP.alignment = TextAlignmentOptions.Center;
             var shakeTMPRT = shakeTMP.rectTransform;
             shakeTMPRT.anchorMin = new Vector2(0, 0); shakeTMPRT.anchorMax = new Vector2(0.7f, 1);
             shakeTMPRT.offsetMin = Vector2.zero; shakeTMPRT.offsetMax = Vector2.zero;
 
             // Count to the right of the label
-            var shakeCountTMP = CreateText(shakeBtn.transform, "ShakeCount", "3", 8, new Color(1, 1, 1, 0.22f));
+            var shakeCountTMP = CreateText(shakeBtn.transform, "ShakeCount", "3", 8, HexColor("0F1117"));
             shakeCountTMP.alignment = TextAlignmentOptions.Center;
             var shakeCountRT = shakeCountTMP.rectTransform;
             shakeCountRT.anchorMin = new Vector2(0.7f, 0); shakeCountRT.anchorMax = new Vector2(1, 1);

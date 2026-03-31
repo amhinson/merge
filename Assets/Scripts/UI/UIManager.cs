@@ -213,13 +213,23 @@ namespace MergeGame.UI
         private void UpdateShakeCount(int remaining)
         {
             if (shakeCountText != null)
+            {
                 shakeCountText.text = remaining.ToString();
+                shakeCountText.color = remaining > 0 ? OC.bg : OC.muted;
+            }
             if (shakeButton != null)
             {
                 shakeButton.interactable = remaining > 0;
                 var img = shakeButton.GetComponent<Image>();
                 if (img != null)
-                    img.color = remaining > 0 ? new Color(0.086f, 0.106f, 0.141f) : new Color(0.06f, 0.06f, 0.08f);
+                    img.color = remaining > 0 ? OC.cyan : OC.surface;
+                var label = shakeButton.transform.Find("ShakeLabel");
+                if (label != null)
+                {
+                    var tmp = label.GetComponent<TMPro.TextMeshProUGUI>();
+                    if (tmp != null)
+                        tmp.color = remaining > 0 ? OC.bg : OC.muted;
+                }
             }
         }
 
