@@ -7,9 +7,6 @@ Add Send Feedback Achievement.
 
 iPad sizing tweaks.
 
-Go straight from onboarding into game from LETS PLAY?
-The leaderboard isn't that relevant for a uew user. They just want to merge.
-
 Post on Reddit and other places online to promote and get Android closed testers. Get strategy from Claude.
 
 ## EVENTUALLY

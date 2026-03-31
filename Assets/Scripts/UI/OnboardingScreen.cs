@@ -776,6 +776,9 @@ namespace MergeGame.UI
 
         private void FinishOnboarding()
         {
+            // Show loading state on the button
+            SetButtonLoading(true);
+
             GameSession.MarkOnboardingComplete();
             if (MurgeAnalytics.Instance != null)
                 MurgeAnalytics.Instance.TrackOnboardingComplete();
@@ -790,19 +793,29 @@ namespace MergeGame.UI
                         PlayerIdentity.Instance.RefreshFromAuth();
                         PlayerIdentity.Instance.RegisterAfterAuth();
                     }
-                    NavigateToHome();
+                    StartFirstGame();
                 });
             }
             else
             {
-                NavigateToHome();
+                StartFirstGame();
             }
         }
 
-        private void NavigateToHome()
+        private void SetButtonLoading(bool loading)
         {
-            if (ScreenManager.Instance != null)
-                ScreenManager.Instance.NavigateTo(Screen.HomeFresh);
+            if (startButton == null) return;
+            var btn = startButton.GetComponent<Button>();
+            if (btn != null) btn.interactable = !loading;
+            var label = startButton.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (label != null) label.text = loading ? "..." : "LET'S PLAY";
+        }
+
+        private void StartFirstGame()
+        {
+            GameSession.IsPractice = false;
+            if (GameManager.Instance != null)
+                GameManager.Instance.OnPlayButtonPressed();
         }
 
         private GameObject CreateDemoBall(Transform parent, int tierIndex, Vector2 pos, float forcedSize)
