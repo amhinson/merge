@@ -55,9 +55,15 @@ namespace MergeGame.Audio
             PlayClip(dropClip, 1f, 0.2f);
         }
 
-        public void PlayMerge(int tierIndex)
+        // Major scale intervals in semitones: C D E F G A B C
+        private static readonly int[] ScaleSteps = { 0, 2, 4, 5, 7, 9, 11, 12 };
+
+        public void PlayMerge(int tierIndex, int chainLength = 1)
         {
-            float pitch = baseMergePitch + (tierIndex * mergePitchIncrement);
+            int index = chainLength - 1;
+            int octaves = index / ScaleSteps.Length;
+            int step = index % ScaleSteps.Length;
+            float pitch = Mathf.Pow(2f, octaves + ScaleSteps[step] / 12f);
             PlayClip(mergeClip, pitch, mergeVolume);
         }
 
@@ -73,7 +79,6 @@ namespace MergeGame.Audio
 
             audioSource.pitch = pitch;
             audioSource.PlayOneShot(clip, volume);
-            audioSource.pitch = 1f;
         }
 
         /// <summary>
