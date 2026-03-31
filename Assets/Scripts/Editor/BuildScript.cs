@@ -70,6 +70,7 @@ namespace MergeGame.Editor
                     : BuildOptions.None,
             };
 
+            WriteBuildNumberResource(buildNumber ?? "1");
             Debug.Log($"Building iOS ({(development ? "DEV" : "PROD")}) bundle={bundleId} to {buildPath}");
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
@@ -191,6 +192,7 @@ namespace MergeGame.Editor
                 options = development ? BuildOptions.Development : BuildOptions.None,
             };
 
+            WriteBuildNumberResource(buildNumber ?? versionCode.ToString());
             Debug.Log($"Building Android ({(development ? "DEV" : "PROD")}) bundle={bundleId} format={ext} to {buildPath}");
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
@@ -205,6 +207,17 @@ namespace MergeGame.Editor
                 if (Application.isBatchMode)
                     EditorApplication.Exit(1);
             }
+        }
+
+        // ===== Shared Helpers =====
+
+        private static void WriteBuildNumberResource(string buildNumber)
+        {
+            string dir = "Assets/Resources";
+            if (!System.IO.Directory.Exists(dir))
+                System.IO.Directory.CreateDirectory(dir);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(dir, "build-number.txt"), buildNumber);
+            AssetDatabase.Refresh();
         }
 
         // ===== iOS Helpers =====

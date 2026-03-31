@@ -105,6 +105,8 @@ namespace MergeGame.UI
             AddSpacer(content.transform, 20);
             BuildSaveButton(content.transform);
             AddSpacer(content.transform, 20);
+            BuildVersionLabel(content.transform);
+            AddSpacer(content.transform, 20);
             BuildBetaFeedback(content.transform);
             AddSpacer(content.transform, 20);
 
@@ -764,6 +766,18 @@ namespace MergeGame.UI
             bool hasPlayed = Core.GameSession.HasPlayedToday ||
                 (Core.DailySeedManager.Instance != null && Core.DailySeedManager.Instance.HasCompletedScoredAttempt());
             ScreenManager.Instance.NavigateTo(hasPlayed ? Screen.HomePlayed : Screen.HomeFresh);
+        }
+
+        private void BuildVersionLabel(Transform parent)
+        {
+            var res = Resources.Load<TextAsset>("build-number");
+            string build = res != null ? res.text.Trim() : "";
+            string version = Application.version;
+            string text = string.IsNullOrEmpty(build) ? $"v{version}" : $"v{version} (build {build})";
+            var label = MurgeUI.CreateLabel(parent, text,
+                MurgeUI.DMMono, 10, OC.dim, "VersionLabel");
+            label.alignment = TextAlignmentOptions.Center;
+            label.gameObject.AddComponent<LayoutElement>().preferredHeight = 16;
         }
 
         private void BuildBetaFeedback(Transform parent)

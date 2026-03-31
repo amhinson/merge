@@ -1,5 +1,11 @@
 ## NEXT UP
 
+the ball merges need to have an increasing pitch according to size.
+
+bump up impulse to other close balls, relatively to merge ball size.
+
+Look into toggles not taking effect.
+
 Fix loading screen required image.
 
 Remove Coming Soon Achievement.
