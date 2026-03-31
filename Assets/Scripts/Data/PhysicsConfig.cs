@@ -26,9 +26,9 @@ namespace MergeGame.Data
         [Header("Merge Behavior")]
         public float mergeAbsorbDuration = 0.12f;
         public float mergeScaleDuration = 0.18f;
-        public float mergeRadialImpulse = 1.5f;
+        public float mergeRadialImpulse = 2.5f;
         [Tooltip("How far (in multiples of merged ball radius) the radial impulse reaches")]
-        public float mergeRadialRange = 3f;
+        public float mergeRadialRange = 4f;
         public float postMergePopForce = 1.5f;
         [Tooltip("Minimum time (seconds) between successive merges for visual clarity")]
         public float chainReactionDelay = 0.05f;
