@@ -189,7 +189,7 @@ namespace MergeGame.Core
             if (DropBlocked) return;
 
             // If the touch/click started over a UI element, ignore this entire touch
-            if (Input.GetMouseButtonDown(0) && IsPointerOverUI())
+            if (Input.GetMouseButtonDown(0) && (IsPointerOverUI() || IsTouchInNavBarZone()))
             {
                 touchStartedOnUI = true;
             }
@@ -251,6 +251,30 @@ namespace MergeGame.Core
 
             // Mouse fallback (editor)
             return EventSystem.current.IsPointerOverGameObject();
+        }
+
+        /// <summary>
+        /// On Android, ignore touches in the bottom edge where the navigation
+        /// bar / gesture area lives to prevent accidental drops.
+        /// </summary>
+        private bool IsTouchInNavBarZone()
+        {
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            float deadZone = Screen.height * 0.05f;
+            if (Input.touchCount > 0)
+            {
+                for (int i = 0; i < Input.touchCount; i++)
+                {
+                    if (Input.GetTouch(i).position.y < deadZone)
+                        return true;
+                }
+            }
+            else if (Input.mousePosition.y < deadZone)
+            {
+                return true;
+            }
+            #endif
+            return false;
         }
 
         private Vector3 cachedNextBallWorldPos;

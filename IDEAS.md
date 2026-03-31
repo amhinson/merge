@@ -4,9 +4,6 @@ TEST the Link Prompt Card!
 
 Bump up max display name length.
 
-The bottom half centimeter or something should not trigger touch.
-On Android that's often how we switch between applications but when I touch the bottom of the screen to switch, it counts it as a touch and drops a ball there.
-
 Fix loading screen required image.
 
 Remove Coming Soon Achievement.
