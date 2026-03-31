@@ -1,7 +1,5 @@
 ## NEXT UP
 
-TEST the Link Prompt Card!
-
 Fix loading screen required image.
 
 Remove Coming Soon Achievement.

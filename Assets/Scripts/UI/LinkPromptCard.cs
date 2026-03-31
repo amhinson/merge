@@ -80,7 +80,7 @@ namespace MergeGame.UI
 
             // Privacy note
             var privacy = MurgeUI.CreateLabel(content.transform,
-                "Your scores and name are linked to your account. No other data is collected.",
+                "Your provider may share your name and email. We only use it to link your scores.",
                 MurgeUI.DMMono, 9, OC.dim, "Privacy");
             privacy.alignment = TextAlignmentOptions.Left;
             privacy.gameObject.AddComponent<LayoutElement>().preferredHeight = 14;
