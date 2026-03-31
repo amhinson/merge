@@ -2,8 +2,6 @@
 
 TEST the Link Prompt Card!
 
-Bump up max display name length.
-
 Fix loading screen required image.
 
 Remove Coming Soon Achievement.

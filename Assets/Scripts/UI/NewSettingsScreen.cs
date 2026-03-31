@@ -257,7 +257,7 @@ namespace MergeGame.UI
             nameInput.textViewport = textArea.GetComponent<RectTransform>();
             nameInput.textComponent = textTMP;
             nameInput.placeholder = phTMP;
-            nameInput.characterLimit = 16;
+            nameInput.characterLimit = OS.displayNameMaxLength;
             nameInput.contentType = TMP_InputField.ContentType.Alphanumeric;
             nameInput.caretColor = OC.cyan;
             nameInput.selectionColor = OC.A(OC.cyan, 0.3f);

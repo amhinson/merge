@@ -652,7 +652,7 @@ namespace MergeGame.Editor
             niBg.color = new Color(0.1f, 0.1f, 0.14f);
 
             var nameInput = nameInputObj.AddComponent<TMP_InputField>();
-            nameInput.characterLimit = 16;
+            nameInput.characterLimit = OS.displayNameMaxLength;
 
             // Input text area (with padding)
             var textArea = new GameObject("TextArea");

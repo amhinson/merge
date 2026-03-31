@@ -50,6 +50,7 @@ namespace MergeGame.Data
 
     public static class OS
     {
+        public const int displayNameMaxLength = 20;
         public const float screenPadH = 24f;
         public const float screenPadV = 16f;
         public const float cardRadius = 4f;

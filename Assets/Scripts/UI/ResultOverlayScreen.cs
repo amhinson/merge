@@ -815,7 +815,7 @@ namespace MergeGame.UI
             namePromptInput = inputGO.AddComponent<TMP_InputField>();
             namePromptInput.textComponent = inputTMP;
             namePromptInput.placeholder = placeholderTMP;
-            namePromptInput.characterLimit = 16;
+            namePromptInput.characterLimit = OS.displayNameMaxLength;
             namePromptInput.contentType = TMP_InputField.ContentType.Alphanumeric;
             namePromptInput.caretColor = OC.cyan;
             namePromptInput.selectionColor = OC.A(OC.cyan, 0.3f);
