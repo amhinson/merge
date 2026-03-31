@@ -1,15 +1,9 @@
 ## NEXT UP
 
-bump up impulse to other close balls, relatively to merge ball size.
-
-Look into toggles not taking effect.
-
 Fix loading screen required image.
 
 Remove Coming Soon Achievement.
 Add Send Feedback Achievement.
-
-iPad sizing tweaks.
 
 Post on Reddit and other places online to promote and get Android closed testers. Get strategy from Claude.
 

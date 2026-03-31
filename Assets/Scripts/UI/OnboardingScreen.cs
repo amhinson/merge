@@ -653,7 +653,7 @@ namespace MergeGame.UI
             tagRT.anchorMin = new Vector2(0, 0);
             tagRT.anchorMax = new Vector2(1, 0);
             tagRT.pivot = new Vector2(0.5f, 0);
-            tagRT.anchoredPosition = new Vector2(0, 60 + OS.safeAreaBottom + 44 + 16);
+            tagRT.anchoredPosition = new Vector2(0, 60 + OS.safeAreaBottom + 44);
             tagRT.sizeDelta = new Vector2(0, 36);
 
             var tmp = MurgeUI.CreateLabel(ctaTagline.transform,
