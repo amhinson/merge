@@ -41,7 +41,7 @@ namespace MergeGame.Core
             new AchievementDef { id = AchievementId.ReachTier11, gameCenterId = "reach_tier11", displayName = "Reach tier 11" },
             new AchievementDef { id = AchievementId.SevenDayStreak, gameCenterId = "seven_day_streak", displayName = "7-day streak" },
             new AchievementDef { id = AchievementId.CompletedAllOfOnboarding, gameCenterId = "completed_all_of_onboarding", displayName = "Completed full onboarding (all 11 tiers)" },
-            new AchievementDef { id = AchievementId.HiddenAchievement, gameCenterId = "hidden_secret", displayName = "Hidden: tap coming soon 10x" },
+            new AchievementDef { id = AchievementId.HiddenAchievement, gameCenterId = "hidden_secret", displayName = "Hidden: TBD" },
         };
 
         private void Awake()

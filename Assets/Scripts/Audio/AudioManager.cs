@@ -12,8 +12,6 @@ namespace MergeGame.Audio
         public AudioClip gameOverClip;
 
         [Header("Settings")]
-        [SerializeField] private float baseMergePitch = 0.8f;
-        [SerializeField] private float mergePitchIncrement = 0.1f;
         [SerializeField] [Range(0f, 1f)] private float mergeVolume = 0.3f;
 
         private const string SfxEnabledKey = "sfx_enabled";

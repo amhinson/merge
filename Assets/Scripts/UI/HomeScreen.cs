@@ -649,7 +649,7 @@ namespace MergeGame.UI
                 ydLE.preferredHeight = 1;
                 ydLE.minHeight = 1;
 
-                string rankText = GameSession.ResultRank > 0 ? $"#{GameSession.ResultRank}" : "#—";
+                string rankText = GameSession.ResultRank > 0 ? $"#{GameSession.ResultRank}" : "#-";
                 string playerName = GameSession.CurrentPlayer?.display_name ?? "YOU";
 
                 // Use fallback for score if TodayScore is 0

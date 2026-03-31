@@ -2,12 +2,11 @@
 
 Fix loading screen required image.
 
-Remove Coming Soon Achievement.
-Add Send Feedback Achievement.
-
 Post on Reddit and other places online to promote and get Android closed testers. Get strategy from Claude.
 
 ## EVENTUALLY
+
+Add more achievements.
 
 Make sure all important files/secrets/etc are backed up securely somewhere. keystore, secrets etc
 
