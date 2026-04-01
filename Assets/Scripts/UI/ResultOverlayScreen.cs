@@ -836,7 +836,7 @@ namespace MergeGame.UI
             ccRT.anchorMin = new Vector2(0.7f, 0.65f); ccRT.anchorMax = new Vector2(1, 1);
             ccRT.offsetMin = new Vector2(0, 0); ccRT.offsetMax = new Vector2(-14, -8);
             namePromptCharCount = charCountGO.AddComponent<TextMeshProUGUI>();
-            namePromptCharCount.text = "0/16";
+            namePromptCharCount.text = $"0/{OS.displayNameMaxLength}";
             namePromptCharCount.font = MurgeUI.DMMono;
             namePromptCharCount.fontSize = OFont.bodyXs;
             namePromptCharCount.color = OC.dim;
@@ -848,7 +848,7 @@ namespace MergeGame.UI
             namePromptInput.onValueChanged.AddListener((_) =>
             {
                 int len = namePromptInput.text.Length;
-                namePromptCharCount.text = $"{len}/16";
+                namePromptCharCount.text = $"{len}/{OS.displayNameMaxLength}";
                 namePromptCharCount.color = len > 0 ? OC.muted : OC.dim;
             });
 

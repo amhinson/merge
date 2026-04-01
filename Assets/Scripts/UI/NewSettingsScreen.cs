@@ -266,7 +266,7 @@ namespace MergeGame.UI
             nameInput.onValueChanged.AddListener((_) => UpdateCharCount());
 
             // Char counter
-            charCountLabel = MurgeUI.CreateLabel(row.transform, "0/16",
+            charCountLabel = MurgeUI.CreateLabel(row.transform, $"0/{OS.displayNameMaxLength}",
                 MurgeUI.PressStart2P, 7, OC.dim, "CharCount");
             var ccRT = charCountLabel.GetComponent<RectTransform>();
             ccRT.anchorMin = new Vector2(1, 0); ccRT.anchorMax = new Vector2(1, 1);
@@ -925,7 +925,7 @@ namespace MergeGame.UI
         private void UpdateCharCount()
         {
             if (charCountLabel != null && nameInput != null)
-                charCountLabel.text = $"{nameInput.text.Length}/16";
+                charCountLabel.text = $"{nameInput.text.Length}/{OS.displayNameMaxLength}";
         }
 
         private void OnToggleHaptic()
