@@ -85,7 +85,11 @@
       "Bash(do sleep:*)",
       "Bash(kill %1)",
       "Bash(adb devices:*)",
-      "Bash(adb install:*)"
+      "Bash(adb install:*)",
+      "Read(//Applications/Unity/Hub/Editor/**)",
+      "Bash(fastlane --version)",
+      "Bash(xcrun --show-sdk-path)",
+      "Bash(xcode-select -p)"
     ]
   }
 }

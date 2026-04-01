@@ -2,11 +2,7 @@
 
 ## EVENTUALLY
 
-Make sure all important files/secrets/etc are backed up securely somewhere. keystore, secrets etc
-
-Setting to change key and pitch of chain sound. For fun!
-
-Rate and review prompt.
+Show Rate and review prompt at certain spots.
 
 Add more achievements.
 
@@ -15,9 +11,6 @@ Would be cool to have a simple list of past scores and ranking per day (might ne
 Note any top 3 finished on profile.
 
 Merge reactions are still a bit weird when space is tight, especially with large balls. It jumps immediately.
-
-Ball design doesn't inspire me. Waves seem stale. Colors a bit boring?
-This is the primary game UI! It should be exciting!
 
 Wavelength react somehow to nearby?
 

@@ -96,6 +96,7 @@ namespace MergeGame.Editor
             managers.AddComponent<MergeParticles>();
             managers.AddComponent<GameAnalyticsSDK.GameAnalytics>();
             managers.AddComponent<MurgeAnalytics>();
+            managers.AddComponent<ReviewManager>();
 
             // Debug overlay removed from production builds
 
