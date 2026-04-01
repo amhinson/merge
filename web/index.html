@@ -42,25 +42,30 @@
       line-height: 1.7;
       margin-bottom: 2.5rem;
     }
+    .play-btn {
+      display: inline-block;
+      background: #4DD9C0;
+      color: #0F1117;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      padding: 0.9rem 2.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      margin-bottom: 2.5rem;
+      transition: opacity 0.2s;
+    }
+    .play-btn:hover { opacity: 0.85; }
     .badges {
       display: flex;
       gap: 1rem;
       justify-content: center;
+      align-items: center;
       flex-wrap: wrap;
       margin-bottom: 2rem;
     }
-    .badge {
-      display: inline-block;
-      background: #161B24;
-      border: 1px solid #232838;
-      border-radius: 8px;
-      padding: 0.75rem 1.5rem;
-      color: #4DD9C0;
-      font-size: 0.85rem;
-      text-decoration: none;
-      transition: border-color 0.2s;
-    }
-    .badge:hover { border-color: #4DD9C0; }
+    .badges a { display: inline-block; }
+    .badges img { height: 44px; }
     .features {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -128,8 +133,12 @@
       </div>
     </div>
 
+    <a href="/play" class="play-btn">PLAY IN BROWSER</a>
+
     <div class="badges">
-      <a href="#" class="badge">App Store — Coming Soon</a>
+      <a href="https://apps.apple.com/app/murge/id6761138098">
+        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store">
+      </a>
     </div>
 
     <footer>

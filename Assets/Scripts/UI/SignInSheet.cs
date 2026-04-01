@@ -158,9 +158,41 @@ namespace MergeGame.UI
 #elif UNITY_ANDROID && !UNITY_EDITOR
             BuildProviderButton(content.transform, "Continue with Google", "google");
 #elif UNITY_WEBGL && !UNITY_EDITOR
-            if (NativeSignIn.IsAppleSignInAvailableOnWeb())
-                BuildProviderButton(content.transform, "Continue with Apple", "apple");
-            BuildProviderButton(content.transform, "Continue with Google", "google");
+            if (NativeSignIn.IsRunningInIframe())
+            {
+                // In an iframe (e.g. itch.io) — can't do OAuth. Show link instead.
+                var msgTMP = MurgeUI.CreateLabel(content.transform,
+                    "Sign in is available at\nmurgegame.com/play",
+                    MurgeUI.DMMono, 11, OC.muted, "IframeMsg");
+                msgTMP.alignment = TextAlignmentOptions.Center;
+                msgTMP.gameObject.AddComponent<LayoutElement>().preferredHeight = 44;
+
+                var linkGO = MurgeUI.CreateUIObject("PlayLink", content.transform);
+                var linkLE = linkGO.AddComponent<LayoutElement>();
+                linkLE.preferredHeight = 44;
+                var linkBg = linkGO.AddComponent<Image>();
+                linkBg.sprite = PixelUIGenerator.GetRoundedRect9Slice();
+                linkBg.type = Image.Type.Sliced;
+                linkBg.color = OC.cyan;
+                var linkLabel = MurgeUI.CreateUIObject("Label", linkGO.transform);
+                MurgeUI.StretchFill(linkLabel.GetComponent<RectTransform>());
+                var linkTMP = linkLabel.AddComponent<TextMeshProUGUI>();
+                linkTMP.text = "Open murgegame.com";
+                linkTMP.font = MurgeUI.PressStart2P;
+                linkTMP.fontSize = 8;
+                linkTMP.color = OC.bg;
+                linkTMP.alignment = TextAlignmentOptions.Center;
+                linkTMP.raycastTarget = false;
+                var linkBtn = linkGO.AddComponent<Button>();
+                linkBtn.targetGraphic = linkBg;
+                linkBtn.onClick.AddListener(() => Application.OpenURL("https://murgegame.com/play/"));
+            }
+            else
+            {
+                if (NativeSignIn.IsAppleSignInAvailableOnWeb())
+                    BuildProviderButton(content.transform, "Continue with Apple", "apple");
+                BuildProviderButton(content.transform, "Continue with Google", "google");
+            }
 #else
             // Editor: show both for testing
             BuildProviderButton(content.transform, "Continue with Apple", "apple");

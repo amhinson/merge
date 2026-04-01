@@ -11,3 +11,14 @@
   from = "/delete"
   to = "/delete.html"
   status = 200
+
+[[redirects]]
+  from = "/auth-callback"
+  to = "/auth-callback.html"
+  status = 200
+
+# Serve the WebGL game at /play
+[[redirects]]
+  from = "/play"
+  to = "/play/index.html"
+  status = 200

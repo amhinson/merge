@@ -93,6 +93,9 @@ namespace MergeGame.Backend
 
         [DllImport("__Internal")]
         private static extern bool WebAuth_IsAppleDevice();
+
+        [DllImport("__Internal")]
+        private static extern bool WebAuth_IsIframe();
 #endif
 
         /// <summary>Whether Apple Sign In is available on this WebGL platform.</summary>
@@ -100,6 +103,17 @@ namespace MergeGame.Backend
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             try { return WebAuth_IsAppleDevice(); }
+            catch { return false; }
+#else
+            return false;
+#endif
+        }
+
+        /// <summary>Whether the game is running inside an iframe (e.g. itch.io embed).</summary>
+        public static bool IsRunningInIframe()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            try { return WebAuth_IsIframe(); }
             catch { return false; }
 #else
             return false;

@@ -62,6 +62,7 @@ Supabase/supabase/.gitignore
 
 # Local Netlify folder
 .netlify
+web/play/
 Screenshots/
 
 # Unity

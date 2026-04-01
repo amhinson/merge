@@ -698,6 +698,10 @@ namespace MergeGame.UI
 
         private void BuildSignInButton(Transform parent)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // Hide sign-in button when in an iframe (e.g. itch.io) — OAuth won't work
+            if (Backend.NativeSignIn.IsRunningInIframe()) return;
+#endif
             var btnGO = MurgeUI.CreateUIObject("SignInBtn", parent);
             var btnRT = btnGO.GetComponent<RectTransform>();
             btnRT.anchorMin = new Vector2(1, 1);

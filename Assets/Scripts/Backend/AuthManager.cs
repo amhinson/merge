@@ -576,6 +576,38 @@ namespace MergeGame.Backend
             OnAuthStateChanged?.Invoke();
         }
 
+        // ───── WebGL Popup Auth (iframe) ─────
+
+        /// <summary>
+        /// Called from JavaScript via SendMessage when OAuth tokens arrive
+        /// from the popup callback page (used when running in an iframe).
+        /// </summary>
+        public void OnWebAuthTokensReceived(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return;
+
+            try
+            {
+                var tokens = JsonUtility.FromJson<WebGLTokenResponse>(json);
+                if (string.IsNullOrEmpty(tokens.access_token)) return;
+
+                Debug.Log("[Auth] WebGL popup auth tokens received");
+
+                string oldUserId = UserId;
+                bool wasAnonymous = IsAnonymous && IsAuthenticated;
+
+                AccessToken = tokens.access_token;
+                RefreshToken = tokens.refresh_token;
+                tokenExpiresAtUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + tokens.expires_in;
+
+                StartCoroutine(FetchWebGLUser(oldUserId, wasAnonymous));
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Auth] WebGL popup token parse failed: {e.Message}");
+            }
+        }
+
         // ───── Helpers ─────
 
         private string GetSupabaseUrl()

@@ -250,7 +250,7 @@ namespace MergeGame.Editor
                 ? WebGLCompressionFormat.Disabled
                 : WebGLCompressionFormat.Brotli;
             PlayerSettings.WebGL.decompressionFallback = true;
-            PlayerSettings.WebGL.template = "APPLICATION:Minimal";
+            PlayerSettings.WebGL.template = "PROJECT:Murge";
 
             // Lock to portrait-ish — WebGL respects the browser viewport, but set a default
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;

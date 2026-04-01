@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Signing in...</title></head>
+<body style="background:#0F1117;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+<p>Signing in... redirecting back to game.</p>
+<script>
+  // Supabase redirects here after OAuth with tokens in the URL fragment.
+  // Redirect to murgegame.com/play/ with the tokens so the game can
+  // pick them up directly (no iframe issues).
+  var hash = window.location.hash;
+  if (hash && hash.length > 1) {
+    window.location.replace("https://murgegame.com/play/" + hash);
+  } else {
+    window.location.replace("https://murgegame.com/play/");
+  }
+</script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 var WebAuthPlugin = {
     /**
-     * Opens the Supabase OAuth flow in the same window.
+     * Opens the Supabase OAuth flow.
+     * If running inside an iframe (e.g. itch.io), opens a popup window
+     * to avoid Google's iframe restriction. Otherwise navigates directly.
      * After sign-in, Supabase redirects back with tokens in the URL fragment.
      */
     WebAuth_StartOAuthSignIn: function(supabaseUrlPtr, supabaseKeyPtr, redirectUrlPtr, providerPtr) {
@@ -18,15 +20,20 @@ var WebAuthPlugin = {
     },
 
     /**
+     * Returns true if running inside an iframe (e.g. itch.io embed).
+     */
+    WebAuth_IsIframe: function() {
+        return (window !== window.top);
+    },
+
+    /**
      * Returns true if the browser is on an Apple platform (macOS, iOS, iPadOS).
      */
     WebAuth_IsAppleDevice: function() {
         var ua = navigator.userAgent || "";
         var platform = navigator.platform || "";
-        // Check for iOS/iPadOS/macOS
         if (/iPhone|iPad|iPod/.test(ua)) return true;
         if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(platform)) return true;
-        // iPadOS 13+ reports as Mac with touch support
         if (/Mac/.test(platform) && navigator.maxTouchPoints > 1) return true;
         return false;
     },
