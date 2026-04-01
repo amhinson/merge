@@ -2,8 +2,6 @@
 
 Reset first drop date.
 
-Merge sounds during onboarding.
-
 Post on Reddit and other places online to promote and get Android closed testers. Get strategy from Claude.
 
 ## EVENTUALLY

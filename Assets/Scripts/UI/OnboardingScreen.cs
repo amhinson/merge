@@ -112,6 +112,7 @@ namespace MergeGame.UI
             yield return AbsorbBalls(dropperBall, sittingBall, new Vector2(0, FloorY));
 
             SpawnMergeParticles(demoArena.transform, new Vector2(0, FloorY));
+            if (Audio.AudioManager.Instance != null) Audio.AudioManager.Instance.PlayMerge(currentTier);
 
             Destroy(dropperBall);
             Destroy(sittingBall);
@@ -161,6 +162,7 @@ namespace MergeGame.UI
                 yield return AbsorbBalls(dropperBall, sittingBall, new Vector2(0, FloorY));
 
                 SpawnMergeParticles(demoArena.transform, new Vector2(0, FloorY));
+                if (Audio.AudioManager.Instance != null) Audio.AudioManager.Instance.PlayMerge(10);
 
                 Destroy(dropperBall);
                 Destroy(sittingBall);
