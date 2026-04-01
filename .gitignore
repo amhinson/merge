@@ -69,6 +69,7 @@ Screenshots/
 
 # Deployments
 *.keystore
+*.keystore.zip
 play-service-account.json
 report.xml
 Murge.app.dSYM.zip
