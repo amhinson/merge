@@ -28,25 +28,31 @@ MonoBehaviour:
   gameKey:
   - fdd8fe273580a0f31eac8a465f2a8a40
   - 1f6f17b937e7250ca76a403f0aa14f1c
+  - b8aea4da32dd7f5983eeae2f70cb565f
   secretKey:
   - 6de8c2bf88ad6f1a56656419b1f5c8530a5cff5b
   - 0cbf9b81da32b2d8dbea634a7d636f2af0d9d517
+  - 8691f32308084f2c42df8ca0c8bd181ec094094f
   Build:
+  - 0.1
   - 0.1
   - 0.1
   SelectedPlatformOrganization:
   - 
   - 
+  - 
   SelectedPlatformStudio:
+  - 
   - 
   - 
   SelectedPlatformGame:
   - 
   - 
-  SelectedPlatformGameID: ffffffffffffffff
-  SelectedOrganization: 0000000000000000
-  SelectedStudio: 0000000000000000
-  SelectedGame: 0000000000000000
+  - 
+  SelectedPlatformGameID: ffffffffffffffffffffffff
+  SelectedOrganization: 000000000000000000000000
+  SelectedStudio: 000000000000000000000000
+  SelectedGame: 000000000000000000000000
   NewVersion: 
   Changes: 
   SignUpOpen: 1
@@ -68,7 +74,7 @@ MonoBehaviour:
   ResourceItemTypes: []
   ResourceCurrencies: []
   LastCreatedGamePlatform: 0
-  Platforms: 080000000b000000
+  Platforms: 080000000b00000011000000
   CurrentInspectorState: 1
   ClosedHints: 
   DisplayHints: 0
@@ -96,7 +102,7 @@ MonoBehaviour:
   IncludeGooglePlay: 1
   FpsCriticalThreshold: 20
   FpsCirticalSubmitInterval: 1
-  PlatformFoldOut: 0101
+  PlatformFoldOut: 010101
   CustomDimensions01FoldOut: 0
   CustomDimensions02FoldOut: 0
   CustomDimensions03FoldOut: 0

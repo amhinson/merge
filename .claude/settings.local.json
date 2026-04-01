@@ -91,7 +91,16 @@
       "Bash(xcrun --show-sdk-path)",
       "Bash(xcode-select -p)",
       "Bash(./serve-webgl.sh:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(butler --version)",
+      "Bash(brew install:*)",
+      "Bash(unzip -o /tmp/butler.zip -d /tmp/butler-bin)",
+      "Read(//tmp/**)",
+      "Bash(~/bin/butler:*)",
+      "Bash(unzip -o /tmp/butler-arm.zip -d ~/bin/)",
+      "Bash(./deploy-webgl.sh)",
+      "Bash(bash -x ./deploy-webgl.sh)",
+      "Bash(./deploy-webgl.sh:*)"
     ]
   }
 }
