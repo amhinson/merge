@@ -211,15 +211,57 @@ namespace MergeGame.Backend
                 if (request.result == UnityWebRequest.Result.Success)
                 {
                     var response = JsonUtility.FromJson<AuthResponse>(request.downloadHandler.text);
-                    SetSession(response, isAnonymous: IsAnonymous);
+                    SetSession(response, isAnonymous: IsAnonymous,
+                        provider: AuthProvider, email: AuthEmail);
                     Debug.Log("[Auth] Token refreshed");
                 }
                 else
                 {
                     Debug.LogWarning($"[Auth] Token refresh failed: {request.responseCode}");
-                    // If refresh fails with 401, session is dead — clear it
                     if (request.responseCode == 401)
-                        ClearSession();
+                    {
+                        // Retry once before giving up
+                        yield return new WaitForSeconds(2f);
+                        yield return DoRefreshTokenFinal();
+                    }
+                    else
+                    {
+                        // Network error — try again later
+                        tokenExpiresAtUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 30;
+                    }
+                }
+            }
+        }
+
+        private IEnumerator DoRefreshTokenFinal()
+        {
+            if (string.IsNullOrEmpty(RefreshToken)) { ClearSession(); yield break; }
+
+            string url = $"{AuthUrl}/token?grant_type=refresh_token";
+            string json = $"{{\"refresh_token\":\"{RefreshToken}\"}}";
+
+            using (var request = new UnityWebRequest(url, "POST"))
+            {
+                byte[] body = Encoding.UTF8.GetBytes(json);
+                request.uploadHandler = new UploadHandlerRaw(body);
+                request.downloadHandler = new DownloadHandlerBuffer();
+                request.SetRequestHeader("Content-Type", "application/json");
+                request.SetRequestHeader("apikey", GetSupabaseKey());
+                request.timeout = 15;
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    var response = JsonUtility.FromJson<AuthResponse>(request.downloadHandler.text);
+                    SetSession(response, isAnonymous: IsAnonymous,
+                        provider: AuthProvider, email: AuthEmail);
+                    Debug.Log("[Auth] Token refreshed on retry");
+                }
+                else
+                {
+                    Debug.LogWarning($"[Auth] Token refresh retry failed: {request.responseCode} — clearing session");
+                    ClearSession();
                 }
             }
         }
