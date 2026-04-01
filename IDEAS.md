@@ -1,9 +1,5 @@
 ## NEXT UP
 
-Username count needs to be 20.
-
-Fix loading screen required image.
-
 Remove share, or make it something much simpler. the image is dumb.
 
 Reset first drop date.
