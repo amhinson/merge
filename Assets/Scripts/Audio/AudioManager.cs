@@ -15,11 +15,32 @@ namespace MergeGame.Audio
         [SerializeField] [Range(0f, 1f)] private float mergeVolume = 0.3f;
 
         private const string SfxEnabledKey = "sfx_enabled";
+        private const string ScaleKey = "merge_scale";
+        private const string KeyKey = "merge_key";
 
         private AudioSource audioSource;
         private AudioClip proceduralMergeClip;
 
         public bool IsSfxEnabled { get; private set; }
+
+        // Available merge scales
+        public static readonly string[] ScaleNames = { "Major", "Minor", "Pentatonic", "Blues", "Chromatic", "Whole Tone" };
+        private static readonly int[][] Scales =
+        {
+            new[] { 0, 2, 4, 5, 7, 9, 11, 12 },           // Major
+            new[] { 0, 2, 3, 5, 7, 8, 10, 12 },            // Minor
+            new[] { 0, 2, 4, 7, 9, 12 },                    // Pentatonic
+            new[] { 0, 3, 5, 6, 7, 10, 12 },                // Blues
+            new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }, // Chromatic
+            new[] { 0, 2, 4, 6, 8, 10, 12 },                // Whole Tone
+        };
+
+        public int CurrentScaleIndex { get; private set; }
+
+        // Keys: semitone offset from C, centered so no key is more than 6 semitones away
+        public static readonly string[] KeyNames = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+        private static readonly int[] KeyOffsets =  {  0,   1,    2,   3,   4,   5,   6,   -5,  -4,   -3,  -2,   -1 };
+        public int CurrentKeyIndex { get; private set; }
 
         private void Awake()
         {
@@ -31,6 +52,8 @@ namespace MergeGame.Audio
             Instance = this;
 
             IsSfxEnabled = PlayerPrefs.GetInt(SfxEnabledKey, 1) == 1;
+            CurrentScaleIndex = PlayerPrefs.GetInt(ScaleKey, 0);
+            CurrentKeyIndex = PlayerPrefs.GetInt(KeyKey, 0);
 
             audioSource = GetComponent<AudioSource>();
             if (audioSource == null)
@@ -48,20 +71,33 @@ namespace MergeGame.Audio
             PlayerPrefs.Save();
         }
 
+        public void CycleScale()
+        {
+            CurrentScaleIndex = (CurrentScaleIndex + 1) % Scales.Length;
+            PlayerPrefs.SetInt(ScaleKey, CurrentScaleIndex);
+            PlayerPrefs.Save();
+        }
+
+        public void CycleKey()
+        {
+            CurrentKeyIndex = (CurrentKeyIndex + 1) % KeyNames.Length;
+            PlayerPrefs.SetInt(KeyKey, CurrentKeyIndex);
+            PlayerPrefs.Save();
+        }
+
         public void PlayDrop()
         {
             PlayClip(dropClip, 1f, 0.2f);
         }
 
-        // Major scale intervals in semitones: C D E F G A B C
-        private static readonly int[] ScaleSteps = { 0, 2, 4, 5, 7, 9, 11, 12 };
-
         public void PlayMerge(int tierIndex, int chainLength = 1)
         {
+            int[] scale = Scales[CurrentScaleIndex];
             int index = chainLength - 1;
-            int octaves = index / ScaleSteps.Length;
-            int step = index % ScaleSteps.Length;
-            float pitch = Mathf.Pow(2f, octaves + ScaleSteps[step] / 12f);
+            int octaves = index / scale.Length;
+            int step = index % scale.Length;
+            float semitones = KeyOffsets[CurrentKeyIndex] + scale[step] + octaves * 12;
+            float pitch = Mathf.Pow(2f, semitones / 12f);
             PlayClip(mergeClip, pitch, mergeVolume);
         }
 

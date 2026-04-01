@@ -367,6 +367,154 @@ namespace MergeGame.UI
             sfxSub.verticalAlignment = VerticalAlignmentOptions.Top;
 
             BuildSfxToggle(sfxRow.transform);
+
+            AddSpacer(parent, 8);
+            BuildScaleRow(parent);
+            AddSpacer(parent, 8);
+            BuildKeyRow(parent);
+        }
+
+        private TextMeshProUGUI scaleLabel;
+        private TextMeshProUGUI keyLabel;
+
+        private void BuildScaleRow(Transform parent)
+        {
+            var row = MurgeUI.CreateUIObject("ScaleRow", parent);
+            var rowLE = row.AddComponent<LayoutElement>();
+            rowLE.preferredHeight = 56; rowLE.minHeight = 56;
+
+            // Border + fill
+            var bdr = MurgeUI.CreateUIObject("Border", row.transform);
+            MurgeUI.StretchFill(bdr.GetComponent<RectTransform>());
+            bdr.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
+            bdr.GetComponent<Image>().type = Image.Type.Sliced;
+            bdr.GetComponent<Image>().color = OC.border;
+            bdr.GetComponent<Image>().raycastTarget = false;
+            var fill = MurgeUI.CreateUIObject("Fill", row.transform);
+            var fRT = fill.GetComponent<RectTransform>();
+            fRT.anchorMin = Vector2.zero; fRT.anchorMax = Vector2.one;
+            fRT.offsetMin = new Vector2(1, 1); fRT.offsetMax = new Vector2(-1, -1);
+            fill.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
+            fill.GetComponent<Image>().type = Image.Type.Sliced;
+            fill.GetComponent<Image>().color = OC.surface;
+            fill.GetComponent<Image>().raycastTarget = false;
+
+            var title = MurgeUI.CreateLabel(row.transform, "Merge scale",
+                MurgeUI.DMMono, 14, OC.white, "ScaleTitle");
+            var ttRT = title.GetComponent<RectTransform>();
+            ttRT.anchorMin = new Vector2(0, 0.5f); ttRT.anchorMax = new Vector2(0.5f, 1);
+            ttRT.offsetMin = new Vector2(14, 0); ttRT.offsetMax = new Vector2(0, -8);
+            title.alignment = TextAlignmentOptions.Left;
+            title.verticalAlignment = VerticalAlignmentOptions.Bottom;
+
+            var sub = MurgeUI.CreateLabel(row.transform, "Chain sound pattern",
+                MurgeUI.DMMono, 11, OC.muted, "ScaleSub");
+            var stRT = sub.GetComponent<RectTransform>();
+            stRT.anchorMin = new Vector2(0, 0); stRT.anchorMax = new Vector2(0.5f, 0.5f);
+            stRT.offsetMin = new Vector2(14, 8); stRT.offsetMax = Vector2.zero;
+            sub.alignment = TextAlignmentOptions.Left;
+            sub.verticalAlignment = VerticalAlignmentOptions.Top;
+
+            // Current scale name (right side, tappable)
+            string scaleName = Audio.AudioManager.Instance != null
+                ? Audio.AudioManager.ScaleNames[Audio.AudioManager.Instance.CurrentScaleIndex]
+                : "Major";
+            scaleLabel = MurgeUI.CreateLabel(row.transform, scaleName,
+                MurgeUI.DMMono, 13, OC.cyan, "ScaleValue");
+            var slRT = scaleLabel.GetComponent<RectTransform>();
+            slRT.anchorMin = new Vector2(0.5f, 0); slRT.anchorMax = new Vector2(1, 1);
+            slRT.offsetMin = new Vector2(0, 0); slRT.offsetMax = new Vector2(-14, 0);
+            scaleLabel.alignment = TextAlignmentOptions.Right;
+
+            // Tap the whole row to cycle
+            var hitImg = row.AddComponent<Image>();
+            hitImg.color = Color.clear;
+            var btn = row.AddComponent<Button>();
+            btn.targetGraphic = hitImg;
+            btn.onClick.AddListener(OnCycleScale);
+        }
+
+        private void OnCycleScale()
+        {
+            if (Audio.AudioManager.Instance == null) return;
+            Audio.AudioManager.Instance.CycleScale();
+            if (scaleLabel != null)
+                scaleLabel.text = Audio.AudioManager.ScaleNames[Audio.AudioManager.Instance.CurrentScaleIndex];
+            // Play a quick preview of the first 3 notes
+            StartCoroutine(PreviewScale());
+        }
+
+        private System.Collections.IEnumerator PreviewScale()
+        {
+            for (int i = 1; i <= 3; i++)
+            {
+                if (Audio.AudioManager.Instance != null)
+                    Audio.AudioManager.Instance.PlayMerge(0, i);
+                yield return new WaitForSeconds(0.15f);
+            }
+        }
+
+        private void BuildKeyRow(Transform parent)
+        {
+            var row = MurgeUI.CreateUIObject("KeyRow", parent);
+            var rowLE = row.AddComponent<LayoutElement>();
+            rowLE.preferredHeight = 56; rowLE.minHeight = 56;
+
+            var bdr = MurgeUI.CreateUIObject("Border", row.transform);
+            MurgeUI.StretchFill(bdr.GetComponent<RectTransform>());
+            bdr.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
+            bdr.GetComponent<Image>().type = Image.Type.Sliced;
+            bdr.GetComponent<Image>().color = OC.border;
+            bdr.GetComponent<Image>().raycastTarget = false;
+            var fill = MurgeUI.CreateUIObject("Fill", row.transform);
+            var fRT = fill.GetComponent<RectTransform>();
+            fRT.anchorMin = Vector2.zero; fRT.anchorMax = Vector2.one;
+            fRT.offsetMin = new Vector2(1, 1); fRT.offsetMax = new Vector2(-1, -1);
+            fill.AddComponent<Image>().sprite = MurgeUI.SmoothRoundedRect;
+            fill.GetComponent<Image>().type = Image.Type.Sliced;
+            fill.GetComponent<Image>().color = OC.surface;
+            fill.GetComponent<Image>().raycastTarget = false;
+
+            var title = MurgeUI.CreateLabel(row.transform, "Key",
+                MurgeUI.DMMono, 14, OC.white, "KeyTitle");
+            var ttRT = title.GetComponent<RectTransform>();
+            ttRT.anchorMin = new Vector2(0, 0.5f); ttRT.anchorMax = new Vector2(0.5f, 1);
+            ttRT.offsetMin = new Vector2(14, 0); ttRT.offsetMax = new Vector2(0, -8);
+            title.alignment = TextAlignmentOptions.Left;
+            title.verticalAlignment = VerticalAlignmentOptions.Bottom;
+
+            var sub = MurgeUI.CreateLabel(row.transform, "Starting note",
+                MurgeUI.DMMono, 11, OC.muted, "KeySub");
+            var stRT = sub.GetComponent<RectTransform>();
+            stRT.anchorMin = new Vector2(0, 0); stRT.anchorMax = new Vector2(0.5f, 0.5f);
+            stRT.offsetMin = new Vector2(14, 8); stRT.offsetMax = Vector2.zero;
+            sub.alignment = TextAlignmentOptions.Left;
+            sub.verticalAlignment = VerticalAlignmentOptions.Top;
+
+            string keyName = Audio.AudioManager.Instance != null
+                ? Audio.AudioManager.KeyNames[Audio.AudioManager.Instance.CurrentKeyIndex]
+                : "C";
+            keyLabel = MurgeUI.CreateLabel(row.transform, keyName,
+                MurgeUI.DMMono, 13, OC.cyan, "KeyValue");
+            var klRT = keyLabel.GetComponent<RectTransform>();
+            klRT.anchorMin = new Vector2(0.5f, 0); klRT.anchorMax = new Vector2(1, 1);
+            klRT.offsetMin = new Vector2(0, 0); klRT.offsetMax = new Vector2(-14, 0);
+            keyLabel.alignment = TextAlignmentOptions.Right;
+
+            var hitImg = row.AddComponent<Image>();
+            hitImg.color = Color.clear;
+            var btn = row.AddComponent<Button>();
+            btn.targetGraphic = hitImg;
+            btn.onClick.AddListener(OnCycleKey);
+        }
+
+        private void OnCycleKey()
+        {
+            if (Audio.AudioManager.Instance == null) return;
+            Audio.AudioManager.Instance.CycleKey();
+            if (keyLabel != null)
+                keyLabel.text = Audio.AudioManager.KeyNames[Audio.AudioManager.Instance.CurrentKeyIndex];
+            StartCoroutine(PreviewScale());
         }
 
         private void BuildToggle(Transform parent)
