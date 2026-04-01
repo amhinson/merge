@@ -159,6 +159,8 @@ namespace MergeGame.UI
             soBtn.onClick.AddListener(() =>
             {
                 Hide();
+                if (AuthLoadingOverlay.Instance != null)
+                    AuthLoadingOverlay.Instance.Show("Signing out...");
                 onConfirm?.Invoke();
             });
 

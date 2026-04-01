@@ -1,14 +1,24 @@
 ## NEXT UP
 
+Username count needs to be 20.
+
 Fix loading screen required image.
+
+Remove share, or make it something much simpler. the image is dumb.
+
+Reset first drop date.
 
 Post on Reddit and other places online to promote and get Android closed testers. Get strategy from Claude.
 
 ## EVENTUALLY
 
-Add more achievements.
-
 Make sure all important files/secrets/etc are backed up securely somewhere. keystore, secrets etc
+
+Setting to change key and pitch of chain sound. For fun!
+
+Rate and review prompt.
+
+Add more achievements.
 
 User profile.
 Would be cool to have a simple list of past scores and ranking per day (might need to store the rank somehow?). Related to the Streak.

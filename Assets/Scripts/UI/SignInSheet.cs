@@ -41,6 +41,7 @@ namespace MergeGame.UI
         {
             if (!isBuilt) { BuildUI(); isBuilt = true; }
             OnSignInComplete = onComplete;
+            canvasGroup.interactable = true;
             overlayGO.SetActive(true);
             canvasGroup.alpha = 0f;
             StartCoroutine(FadeIn());

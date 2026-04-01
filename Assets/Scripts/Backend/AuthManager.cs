@@ -23,9 +23,9 @@ namespace MergeGame.Backend
         public string AuthProvider { get; private set; } = "anonymous";
         public string AuthEmail { get; private set; }
 
-        // Token expiry
-        private float tokenExpiresAt;
-        private const float RefreshBufferSeconds = 300f; // refresh 5 min before expiry
+        // Token expiry (absolute Unix timestamp in seconds)
+        private long tokenExpiresAtUnix;
+        private const long RefreshBufferSeconds = 300; // refresh 5 min before expiry
 
         // Persistence keys
         private const string AccessTokenKey = "auth_access_token";
@@ -63,9 +63,10 @@ namespace MergeGame.Backend
         private void Update()
         {
             // Periodic token refresh check
-            if (IsAuthenticated && Time.realtimeSinceStartup > tokenExpiresAt - RefreshBufferSeconds)
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (IsAuthenticated && now > tokenExpiresAtUnix - RefreshBufferSeconds)
             {
-                tokenExpiresAt = float.MaxValue; // prevent re-entry
+                tokenExpiresAtUnix = long.MaxValue; // prevent re-entry
                 StartCoroutine(DoRefreshToken());
             }
         }
@@ -80,7 +81,7 @@ namespace MergeGame.Backend
             IsAnonymous = PlayerPrefs.GetInt(IsAnonymousKey, 1) == 1;
             AuthProvider = PlayerPrefs.GetString(ProviderKey, "anonymous");
             AuthEmail = PlayerPrefs.GetString(EmailKey, "");
-            tokenExpiresAt = PlayerPrefs.GetFloat(TokenExpiryKey, 0f);
+            long.TryParse(PlayerPrefs.GetString(TokenExpiryKey, "0"), out tokenExpiresAtUnix);
 
             if (!string.IsNullOrEmpty(UserId))
                 Debug.Log($"[Auth] Restored session: user={UserId}, anonymous={IsAnonymous}, provider={AuthProvider}");
@@ -94,7 +95,7 @@ namespace MergeGame.Backend
             PlayerPrefs.SetInt(IsAnonymousKey, IsAnonymous ? 1 : 0);
             PlayerPrefs.SetString(ProviderKey, AuthProvider ?? "anonymous");
             PlayerPrefs.SetString(EmailKey, AuthEmail ?? "");
-            PlayerPrefs.SetFloat(TokenExpiryKey, tokenExpiresAt);
+            PlayerPrefs.SetString(TokenExpiryKey, tokenExpiresAtUnix.ToString());
             PlayerPrefs.Save();
         }
 
@@ -106,7 +107,7 @@ namespace MergeGame.Backend
             IsAnonymous = true;
             AuthProvider = "anonymous";
             AuthEmail = "";
-            tokenExpiresAt = 0;
+            tokenExpiresAtUnix = 0;
             PersistSession();
         }
 
@@ -180,7 +181,8 @@ namespace MergeGame.Backend
             if (string.IsNullOrEmpty(RefreshToken)) yield break;
 
             // Check if token is expired or about to expire
-            if (Time.realtimeSinceStartup < tokenExpiresAt - RefreshBufferSeconds)
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (now < tokenExpiresAtUnix - RefreshBufferSeconds)
                 yield break;
 
             yield return DoRefreshToken();
@@ -421,8 +423,8 @@ namespace MergeGame.Backend
             if (response.user != null && !string.IsNullOrEmpty(response.user.id))
                 UserId = response.user.id;
 
-            // Token expires in N seconds — convert to realtime
-            tokenExpiresAt = Time.realtimeSinceStartup + response.expires_in;
+            // Token expires in N seconds — store as absolute Unix timestamp
+            tokenExpiresAtUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + response.expires_in;
 
             PersistSession();
             OnAuthStateChanged?.Invoke();
