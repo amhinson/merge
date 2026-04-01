@@ -40,7 +40,7 @@ namespace MergeGame.Core
     public static class GameSession
     {
         /// <summary>Day 1 of the daily puzzle. Single source of truth — do not duplicate.</summary>
-        public static readonly System.DateTime LaunchDate = new System.DateTime(2026, 3, 20);
+        public static readonly System.DateTime LaunchDate = new System.DateTime(2026, 4, 1);
 
         // App identity — single source of truth for display strings
         public const string AppName = "MURGE";
