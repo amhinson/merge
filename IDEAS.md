@@ -1,8 +1,8 @@
 ## NEXT UP
 
-Reset first drop date.
-
-Post on Reddit and other places online to promote and get Android closed testers. Get strategy from Claude.
+-- Reset first drop date. Clear previous score data
+DELETE FROM daily_scores;  
+UPDATE players SET current_streak = 0, longest_streak = 0;
 
 ## EVENTUALLY
 
