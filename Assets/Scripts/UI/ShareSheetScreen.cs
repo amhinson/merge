@@ -352,12 +352,8 @@ namespace MergeGame.UI
 
         private void OnShareTargetClicked(int targetIndex)
         {
-            // For now, all share targets invoke the same native share
-            // Index: 0=Messages, 1=X, 2=Instagram, 3=Copy, 4=More
-            if (ResultCardGenerator.Instance != null)
-                ResultCardGenerator.Instance.ShareCard();
-            else
-                Debug.Log($"Share target {targetIndex} clicked — ResultCardGenerator not available");
+            if (ShareManager.Instance != null)
+                ShareManager.Instance.ShareResult();
         }
 
         private void AddSpacer(Transform parent, float height)

@@ -34,54 +34,37 @@ namespace MergeGame.UI
             BuildShareCard();
         }
 
+        // Tier → emoji mapping (closest colored circle for each)
+        private static readonly string[] TierEmoji =
+        {
+            "\U0001F7E3", // tier 0:  Fuchsia → 🟣
+            "\u26AA",     // tier 1:  Silver  → ⚪
+            "\U0001F535", // tier 2:  Blue    → 🔵
+            "\U0001F534", // tier 3:  Red     → 🔴
+            "\U0001F535", // tier 4:  Sky     → 🔵
+            "\U0001F7E0", // tier 5:  Orange  → 🟠
+            "\U0001F7E2", // tier 6:  Lime    → 🟢
+            "\U0001F7E3", // tier 7:  Violet  → 🟣
+            "\U0001F7E1", // tier 8:  Amber   → 🟡
+            "\U0001F534", // tier 9:  Pink    → 🔴
+            "\U0001F7E2", // tier 10: Cyan    → 🟢
+        };
+
+        private const int MaxDotsPerRow = 8;
+        private const int MaxTiersToShow = 6;
+
         public void ShareResult()
         {
-            StartCoroutine(CaptureAndShare());
-        }
+            string text = GenerateShareText();
 
-        private IEnumerator CaptureAndShare()
-        {
-            // Populate with current data
-            PopulateCard();
-
-            // Show share card
-            shareCardRoot.SetActive(true);
-
-            // Wait for render
-            yield return new WaitForEndOfFrame();
-
-            // Capture — compact card format
-            int w = 700, h = 500;
-            RenderTexture rt = new RenderTexture(w, h, 24);
-            shareCamera.targetTexture = rt;
-            shareCamera.Render();
-
-            Texture2D screenshot = new Texture2D(w, h, TextureFormat.RGB24, false);
-            RenderTexture.active = rt;
-            screenshot.ReadPixels(new Rect(0, 0, w, h), 0, 0);
-            screenshot.Apply();
-
-            shareCamera.targetTexture = null;
-            RenderTexture.active = null;
-            Destroy(rt);
-
-            // Hide share card
-            shareCardRoot.SetActive(false);
-
-            // Save to file
-            string path = Application.persistentDataPath + "/murge_share.png";
-            System.IO.File.WriteAllBytes(path, screenshot.EncodeToPNG());
-            Destroy(screenshot);
-
-            // Native share
 #if UNITY_EDITOR
-            Debug.Log($"[ShareManager] Would share: {path}");
+            Debug.Log($"[ShareManager] Share text:\n{text}");
+            GUIUtility.systemCopyBuffer = text;
 #else
             try
             {
                 new NativeShare()
-                    .AddFile(path)
-                    .SetText($"{GameSession.AppName} #{GameSession.TodayDayNumber} — {GameSession.TodayScore:N0} pts")
+                    .SetText(text)
                     .Share();
             }
             catch (System.Exception e)
@@ -89,6 +72,47 @@ namespace MergeGame.UI
                 Debug.LogWarning($"NativeShare failed: {e.Message}");
             }
 #endif
+        }
+
+        public static string GenerateShareText()
+        {
+            int score = GameSession.TodayScore;
+            int dayNumber = GameSession.TodayDayNumber;
+            int[] counts = GameSession.MergeCounts ?? new int[11];
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"Murge #{dayNumber} - {score:N0}");
+            sb.AppendLine();
+
+            // Collect tiers that have merges, sorted by tier descending (highest first)
+            var tiers = new System.Collections.Generic.List<(int tier, int count)>();
+            for (int i = counts.Length - 1; i >= 0; i--)
+            {
+                if (counts[i] > 0)
+                    tiers.Add((i, counts[i]));
+            }
+
+            // Take top N tiers
+            int show = Mathf.Min(tiers.Count, MaxTiersToShow);
+            for (int i = 0; i < show; i++)
+            {
+                var (tier, count) = tiers[i];
+                string emoji = tier < TierEmoji.Length ? TierEmoji[tier] : "\u26AA";
+                int dots = Mathf.Min(count, MaxDotsPerRow);
+
+                for (int d = 0; d < dots; d++)
+                    sb.Append(emoji);
+
+                if (count > MaxDotsPerRow)
+                    sb.Append($" +{count - MaxDotsPerRow}");
+
+                sb.AppendLine();
+            }
+
+            sb.AppendLine();
+            sb.Append("murgegame.com");
+
+            return sb.ToString();
         }
 
         private void PopulateCard()
