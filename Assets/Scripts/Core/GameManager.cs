@@ -195,6 +195,18 @@ namespace MergeGame.Core
             }
             Debug.Log($"[Preload] Ball sprites: {(Time.realtimeSinceStartup - bakeStart) * 1000:F0}ms (5 tiers)");
 
+            // === Wait for WebGL OAuth redirect processing (if any) ===
+            if (Backend.AuthManager.Instance != null && Backend.AuthManager.Instance.IsProcessingWebGLTokens)
+            {
+                Debug.Log("[Preload] Waiting for WebGL OAuth tokens...");
+                float webglStart = Time.realtimeSinceStartup;
+                while (Backend.AuthManager.Instance.IsProcessingWebGLTokens
+                    && Time.realtimeSinceStartup - webglStart < 10f)
+                {
+                    yield return null;
+                }
+            }
+
             // === Enforce minimum loading time ===
             float elapsed = Time.realtimeSinceStartup - startTime;
             if (elapsed < minLoadTime)
@@ -203,8 +215,14 @@ namespace MergeGame.Core
             Debug.Log($"[Preload] Total: {(Time.realtimeSinceStartup - startTime) * 1000:F0}ms");
 
             // === Navigate ===
-            if (GameSession.IsFirstLaunch && ScreenManager.Instance != null)
+            // Skip onboarding if user already authenticated (e.g. WebGL OAuth redirect)
+            bool skipOnboarding = Backend.AuthManager.Instance != null
+                && Backend.AuthManager.Instance.IsAuthenticated
+                && !Backend.AuthManager.Instance.IsAnonymous;
+            if (GameSession.IsFirstLaunch && !skipOnboarding && ScreenManager.Instance != null)
+            {
                 ScreenManager.Instance.ShowImmediate(UI.Screen.Onboarding);
+            }
             else if (GameStateSaver.HasSavedGame())
                 ResumeGame();
             else

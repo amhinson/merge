@@ -151,12 +151,13 @@ namespace MergeGame.UI
             title.alignment = TextAlignmentOptions.Center;
             title.gameObject.AddComponent<LayoutElement>().preferredHeight = 24;
 
-            // Apple button (iOS) / Google button (Android) / both in editor
             // Platform-appropriate sign-in options
 #if UNITY_IOS && !UNITY_EDITOR
             BuildProviderButton(content.transform, "Continue with Apple", "apple");
             BuildProviderButton(content.transform, "Continue with Google", "google");
 #elif UNITY_ANDROID && !UNITY_EDITOR
+            BuildProviderButton(content.transform, "Continue with Google", "google");
+#elif UNITY_WEBGL && !UNITY_EDITOR
             BuildProviderButton(content.transform, "Continue with Google", "google");
 #else
             // Editor: show both for testing

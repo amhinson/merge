@@ -209,6 +209,83 @@ namespace MergeGame.Editor
             }
         }
 
+        // ===== WebGL =====
+
+        [MenuItem("MergeGame/Build WebGL (Dev)", false, 50)]
+        public static void BuildWebGLDev()
+        {
+            BuildWebGLInternal(true);
+        }
+
+        [MenuItem("MergeGame/Build WebGL (Prod)", false, 51)]
+        public static void BuildWebGLProd()
+        {
+            BuildWebGLInternal(false);
+        }
+
+        /// <summary>
+        /// Called from command line: -executeMethod BuildScript.BuildWebGL
+        /// </summary>
+        public static void BuildWebGL()
+        {
+            bool isDev = false;
+            string buildNumber = null;
+            var args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "-development") isDev = true;
+                if (args[i] == "-buildNumber" && i + 1 < args.Length) buildNumber = args[i + 1];
+            }
+            BuildWebGLInternal(isDev, buildNumber);
+        }
+
+        private static void BuildWebGLInternal(bool development, string buildNumber = null)
+        {
+            PlayerSettings.productName = "Murge";
+            PlayerSettings.companyName = "Murge";
+            PlayerSettings.bundleVersion = "0.3.0";
+
+            // WebGL-specific settings
+            PlayerSettings.WebGL.compressionFormat = development
+                ? WebGLCompressionFormat.Disabled
+                : WebGLCompressionFormat.Brotli;
+            PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.WebGL.template = "APPLICATION:Minimal";
+
+            // Lock to portrait-ish — WebGL respects the browser viewport, but set a default
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+
+            string buildPath = $"Build/WebGL/murge-{(development ? "dev" : "prod")}";
+
+            // Ensure output directory exists
+            if (!System.IO.Directory.Exists(buildPath))
+                System.IO.Directory.CreateDirectory(buildPath);
+
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[] { "Assets/Scenes/GameScene.unity" },
+                locationPathName = buildPath,
+                target = BuildTarget.WebGL,
+                options = development ? BuildOptions.Development : BuildOptions.None,
+            };
+
+            WriteBuildNumberResource(buildNumber ?? "1");
+            Debug.Log($"Building WebGL ({(development ? "DEV" : "PROD")}) to {buildPath}");
+
+            BuildReport report = BuildPipeline.BuildPlayer(options);
+
+            if (report.summary.result == BuildResult.Succeeded)
+            {
+                Debug.Log($"WebGL build succeeded: {report.summary.totalSize} bytes → {buildPath}");
+            }
+            else
+            {
+                Debug.LogError($"WebGL build failed: {report.summary.result}");
+                if (Application.isBatchMode)
+                    EditorApplication.Exit(1);
+            }
+        }
+
         // ===== Shared Helpers =====
 
         private static void WriteBuildNumberResource(string buildNumber)

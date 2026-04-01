@@ -89,7 +89,9 @@
       "Read(//Applications/Unity/Hub/Editor/**)",
       "Bash(fastlane --version)",
       "Bash(xcrun --show-sdk-path)",
-      "Bash(xcode-select -p)"
+      "Bash(xcode-select -p)",
+      "Bash(./serve-webgl.sh:*)",
+      "Bash(xargs kill:*)"
     ]
   }
 }

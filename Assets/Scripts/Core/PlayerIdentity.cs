@@ -35,7 +35,11 @@ namespace MergeGame.Core
             // Only register if already authenticated (returning user).
             // New users get registered after onboarding creates their anonymous session.
             if (Backend.AuthManager.Instance != null && Backend.AuthManager.Instance.IsAuthenticated)
+            {
+                // Sync identity from auth — Awake() may have run before AuthManager was ready
+                RefreshFromAuth();
                 RegisterWithBackend();
+            }
         }
 
         private void RegisterWithBackend()

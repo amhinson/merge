@@ -78,11 +78,16 @@ namespace MergeGame.Backend
             pendingCallback = null;
         }
 
-        // ───── Google Sign In (iOS + Android) ─────
+        // ───── Google Sign In (iOS + Android + WebGL) ─────
 
 #if UNITY_IOS && !UNITY_EDITOR
         [DllImport("__Internal")]
         private static extern void MurgeGoogleSignIn_Start();
+#endif
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        [DllImport("__Internal")]
+        private static extern void WebAuth_StartGoogleSignIn(string supabaseUrl, string supabaseKey, string redirectUrl);
 #endif
 
         private void SignInWithGoogle()
@@ -103,6 +108,26 @@ namespace MergeGame.Backend
             {
                 Debug.LogWarning($"[NativeSignIn] Google Sign In error: {e.Message}");
                 pendingCallback?.Invoke(false, null, e.Message);
+            }
+#elif UNITY_WEBGL && !UNITY_EDITOR
+            // WebGL uses Supabase OAuth redirect — navigates away from the page.
+            // Tokens are picked up on reload by AuthManager.CheckWebGLTokens().
+            if (SupabaseClient.Instance != null)
+            {
+                string url = SupabaseClient.Instance.IsProduction
+                    ? "https://negfbluxywxsadggnwwd.supabase.co"
+                    : "https://qbgrghcpvmsnoyzmglgv.supabase.co";
+                string key = SupabaseClient.Instance.IsProduction
+                    ? "sb_publishable_7ACIeBkB8iBcNxxDkN7Vhg_MxMuO1fW"
+                    : "sb_publishable_MvO6gq-SZ4E5QmW_tq_ltg_TaR37Wty";
+                string redirect = Application.absoluteURL;
+                if (string.IsNullOrEmpty(redirect))
+                    redirect = "https://murgegame.com/play/";
+                WebAuth_StartGoogleSignIn(url, key, redirect);
+            }
+            else
+            {
+                pendingCallback?.Invoke(false, null, "SupabaseClient not available");
             }
 #else
             Debug.LogWarning("[NativeSignIn] Google Sign In not available on this platform");

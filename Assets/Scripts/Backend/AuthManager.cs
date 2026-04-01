@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using System;
 using System.Collections;
 using System.Text;
+using System.Runtime.InteropServices;
 
 namespace MergeGame.Backend
 {
@@ -38,9 +39,20 @@ namespace MergeGame.Backend
 
         public event Action OnAuthStateChanged;
 
+        /// <summary>Fired when WebGL OAuth redirect tokens are detected on startup.</summary>
+        public event Action OnWebGLSignInComplete;
+
+        /// <summary>True while processing WebGL OAuth redirect tokens.</summary>
+        public bool IsProcessingWebGLTokens { get; private set; }
+
         private string AuthUrl => SupabaseClient.Instance != null
             ? $"{GetSupabaseUrl()}/auth/v1"
             : "";
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        [DllImport("__Internal")]
+        private static extern string WebAuth_GetTokensFromUrl();
+#endif
 
         private void Awake()
         {
@@ -55,9 +67,101 @@ namespace MergeGame.Backend
 
         private void Start()
         {
+            // On WebGL, check if we're returning from an OAuth redirect
+            CheckWebGLTokens();
+
             // If we have a session, check if token needs refresh
             if (IsAuthenticated)
                 StartCoroutine(RefreshTokenIfNeeded());
+        }
+
+        /// <summary>
+        /// On WebGL, check URL fragment for Supabase auth tokens from OAuth redirect.
+        /// If found, establishes a session and fires OnWebGLSignInComplete.
+        /// </summary>
+        private void CheckWebGLTokens()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            try
+            {
+                string json = WebAuth_GetTokensFromUrl();
+                if (string.IsNullOrEmpty(json)) return;
+
+                var tokens = JsonUtility.FromJson<WebGLTokenResponse>(json);
+                if (string.IsNullOrEmpty(tokens.access_token)) return;
+
+                Debug.Log("[Auth] WebGL OAuth tokens detected — establishing session");
+                IsProcessingWebGLTokens = true;
+
+                // Store old user ID for potential migration
+                string oldUserId = UserId;
+                bool wasAnonymous = IsAnonymous && IsAuthenticated;
+
+                // Set session from the OAuth tokens — we need to fetch the user info
+                AccessToken = tokens.access_token;
+                RefreshToken = tokens.refresh_token;
+                tokenExpiresAtUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + tokens.expires_in;
+
+                // Fetch user details to get user_id and email
+                StartCoroutine(FetchWebGLUser(oldUserId, wasAnonymous));
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Auth] WebGL token check failed: {e.Message}");
+            }
+#endif
+        }
+
+        private IEnumerator FetchWebGLUser(string oldUserId, bool wasAnonymous)
+        {
+            string url = $"{AuthUrl}/user";
+
+            using (var request = UnityWebRequest.Get(url))
+            {
+                request.SetRequestHeader("apikey", GetSupabaseKey());
+                request.SetRequestHeader("Authorization", $"Bearer {AccessToken}");
+                request.timeout = 15;
+
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    var user = JsonUtility.FromJson<AuthUser>(request.downloadHandler.text);
+                    UserId = user.id;
+                    AuthEmail = user.email ?? "";
+                    IsAnonymous = false;
+                    AuthProvider = "google";
+                    PersistSession();
+                    OnAuthStateChanged?.Invoke();
+
+                    Debug.Log($"[Auth] WebGL session established: user={UserId}, email={AuthEmail}");
+
+                    // Mark onboarding complete since user authenticated via provider
+                    Core.GameSession.MarkOnboardingComplete();
+
+                    // Sync PlayerIdentity so leaderboard highlights work
+                    if (Core.PlayerIdentity.Instance != null)
+                        Core.PlayerIdentity.Instance.RegisterAfterAuth();
+
+                    // Migrate data if we had an anonymous session
+                    if (wasAnonymous && !string.IsNullOrEmpty(oldUserId) && oldUserId != UserId)
+                    {
+                        Debug.Log($"[Auth] Migrating anonymous data: {oldUserId} -> {UserId}");
+                        yield return MigratePlayerData(oldUserId, UserId);
+                    }
+
+                    IsProcessingWebGLTokens = false;
+                    OnWebGLSignInComplete?.Invoke();
+                }
+                else
+                {
+                    Debug.LogWarning($"[Auth] WebGL user fetch failed: {request.responseCode} {request.downloadHandler?.text}");
+                    // Clear the tokens since we can't establish a full session
+                    AccessToken = "";
+                    RefreshToken = "";
+                    IsProcessingWebGLTokens = false;
+                }
+            }
         }
 
         private void Update()
@@ -517,6 +621,15 @@ namespace MergeGame.Backend
             public string provider;
             public string id_token;
             public string access_token;
+        }
+
+        [Serializable]
+        private class WebGLTokenResponse
+        {
+            public string access_token;
+            public string refresh_token;
+            public int expires_in;
+            public string token_type;
         }
     }
 }
