@@ -130,7 +130,7 @@ namespace MergeGame.Backend
                     UserId = user.id;
                     AuthEmail = user.email ?? "";
                     IsAnonymous = false;
-                    AuthProvider = "google";
+                    AuthProvider = user.app_metadata?.provider ?? "google";
                     PersistSession();
                     OnAuthStateChanged?.Invoke();
 
@@ -613,6 +613,13 @@ namespace MergeGame.Backend
             public string id;
             public string email;
             public bool is_anonymous;
+            public AuthAppMetadata app_metadata;
+        }
+
+        [Serializable]
+        private class AuthAppMetadata
+        {
+            public string provider;
         }
 
         [Serializable]

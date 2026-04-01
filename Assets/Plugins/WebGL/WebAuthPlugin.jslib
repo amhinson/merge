@@ -1,19 +1,34 @@
 var WebAuthPlugin = {
     /**
      * Opens the Supabase OAuth flow in the same window.
-     * After Google sign-in, Supabase redirects back with tokens in the URL fragment.
+     * After sign-in, Supabase redirects back with tokens in the URL fragment.
      */
-    WebAuth_StartGoogleSignIn: function(supabaseUrlPtr, supabaseKeyPtr, redirectUrlPtr) {
+    WebAuth_StartOAuthSignIn: function(supabaseUrlPtr, supabaseKeyPtr, redirectUrlPtr, providerPtr) {
         var supabaseUrl = UTF8ToString(supabaseUrlPtr);
         var supabaseKey = UTF8ToString(supabaseKeyPtr);
         var redirectUrl = UTF8ToString(redirectUrlPtr);
+        var provider = UTF8ToString(providerPtr);
 
         var authUrl = supabaseUrl + "/auth/v1/authorize"
-            + "?provider=google"
+            + "?provider=" + encodeURIComponent(provider)
             + "&redirect_to=" + encodeURIComponent(redirectUrl)
             + "&apikey=" + encodeURIComponent(supabaseKey);
 
         window.location.href = authUrl;
+    },
+
+    /**
+     * Returns true if the browser is on an Apple platform (macOS, iOS, iPadOS).
+     */
+    WebAuth_IsAppleDevice: function() {
+        var ua = navigator.userAgent || "";
+        var platform = navigator.platform || "";
+        // Check for iOS/iPadOS/macOS
+        if (/iPhone|iPad|iPod/.test(ua)) return true;
+        if (/Macintosh|MacIntel|MacPPC|Mac68K/.test(platform)) return true;
+        // iPadOS 13+ reports as Mac with touch support
+        if (/Mac/.test(platform) && navigator.maxTouchPoints > 1) return true;
+        return false;
     },
 
     /**
