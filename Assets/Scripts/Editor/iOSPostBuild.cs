@@ -48,6 +48,9 @@ namespace MergeGame.Editor
             var signInArray = root.CreateArray("com.apple.developer.applesignin");
             signInArray.AddString("Default");
 
+            // Add Game Center entitlement
+            root.SetBoolean("com.apple.developer.game-center", true);
+
             entitlements.WriteToFile(entitlementsPath);
 
             // Add entitlements file to Xcode project

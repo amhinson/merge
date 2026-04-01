@@ -48,7 +48,7 @@ namespace MergeGame.Editor
             // App metadata
             PlayerSettings.productName = "Murge";
             PlayerSettings.companyName = "Murge";
-            PlayerSettings.bundleVersion = "0.2.0";              // display version (CFBundleShortVersionString)
+            PlayerSettings.bundleVersion = "0.3.0";              // display version (CFBundleShortVersionString)
             PlayerSettings.iOS.buildNumber = buildNumber ?? "1";  // build number (CFBundleVersion)
             PlayerSettings.iOS.applicationDisplayName = "Murge";
             PlayerSettings.iOS.appInBackgroundBehavior = iOSAppInBackgroundBehavior.Suspend;
@@ -135,7 +135,7 @@ namespace MergeGame.Editor
 
             PlayerSettings.productName = "Murge";
             PlayerSettings.companyName = "Murge";
-            PlayerSettings.bundleVersion = "0.2.0";
+            PlayerSettings.bundleVersion = "0.3.0";
 
             int versionCode = 1;
             if (buildNumber != null && int.TryParse(buildNumber, out int parsed))

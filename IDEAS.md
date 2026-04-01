@@ -1,9 +1,5 @@
 ## NEXT UP
 
--- Reset first drop date. Clear previous score data
-DELETE FROM daily_scores;  
-UPDATE players SET current_streak = 0, longest_streak = 0;
-
 ## EVENTUALLY
 
 Make sure all important files/secrets/etc are backed up securely somewhere. keystore, secrets etc
