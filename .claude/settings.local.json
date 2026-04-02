@@ -100,7 +100,8 @@
       "Bash(unzip -o /tmp/butler-arm.zip -d ~/bin/)",
       "Bash(./deploy-webgl.sh)",
       "Bash(bash -x ./deploy-webgl.sh)",
-      "Bash(./deploy-webgl.sh:*)"
+      "Bash(./deploy-webgl.sh:*)",
+      "Bash(./build-webgl.sh prod:*)"
     ]
   }
 }
